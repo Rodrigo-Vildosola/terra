@@ -3,15 +3,15 @@ file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
     include/*.h
 )
 
-add_library(engine STATIC ${ENGINE_SRC})
+add_library(${ENGINE_NAME} STATIC ${ENGINE_SRC})
 
-target_include_directories(engine PUBLIC include)
+target_include_directories(${ENGINE_NAME} PUBLIC include)
 
-target_link_libraries(engine
+target_link_libraries(${ENGINE_NAME}
     glfw
     glad
+    # nlohmann_json::nlohmann_json
     # stb
 )
 
-# Include GLM manually (header-only)
-target_include_directories(engine PUBLIC external/glm)
+target_include_directories(${ENGINE_NAME} PUBLIC external/glm)

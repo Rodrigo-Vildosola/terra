@@ -3,7 +3,9 @@ import subprocess
 import sys
 import shutil
 
-# Config
+# 🔧 Load config
+import tools.config as config
+
 REQUIRED_DEPS = [
     "external/glad",
     "external/stb",
@@ -12,10 +14,10 @@ REQUIRED_DEPS = [
     "external/glm"
 ]
 
-BUILD_DIR = ".build"
-EXECUTABLE_NAME = "Game"  # Update if your target is named differently
+# Use config
+BUILD_DIR = config.BUILD_DIR
+EXECUTABLE_NAME = config.GAME_NAME
 
-# Utility
 def run_cmd(cmd, cwd=None, fail_msg=None):
     try:
         print(f"📣 Running: {' '.join(cmd)}")
@@ -24,7 +26,6 @@ def run_cmd(cmd, cwd=None, fail_msg=None):
         print(f"❌ {fail_msg or 'Command failed.'}")
         sys.exit(1)
 
-# Dependency handling
 def init_submodules():
     print("🔄 Initializing git submodules...")
     run_cmd(["git", "submodule", "update", "--init", "--recursive"])
@@ -38,7 +39,7 @@ def check_dependencies():
             print(f"  - {m}")
         print("\n💡 Attempting to auto-init submodules...")
         init_submodules()
-        # Re-check after init
+        # Re-check
         missing = [dep for dep in REQUIRED_DEPS if not os.path.exists(dep)]
         if missing:
             print("❌ Still missing after init. Check manually.")
@@ -46,11 +47,18 @@ def check_dependencies():
     else:
         print("✅ All dependencies are present.")
 
-# Build
 def configure_cmake():
     print("🔧 Configuring CMake...")
     os.makedirs(BUILD_DIR, exist_ok=True)
-    run_cmd(["cmake", "-S", ".", "-B", BUILD_DIR])
+
+    cmake_args = [
+        "cmake",
+        "-S", ".", "-B", BUILD_DIR,
+        f"-DENGINE_NAME={config.ENGINE_NAME}",
+        f"-DGAME_NAME={config.GAME_NAME}",
+        f"-DCMAKE_CXX_STANDARD={config.CXX_STANDARD}",
+    ]
+    run_cmd(cmake_args)
 
 def build():
     print("🛠️ Building project...")
@@ -64,7 +72,6 @@ def clean():
     else:
         print(f"⚠️ {BUILD_DIR}/ does not exist. Nothing to clean.")
 
-# Run
 def run_executable():
     exe_path = os.path.join(BUILD_DIR, EXECUTABLE_NAME)
     if os.name == 'nt':
@@ -76,7 +83,6 @@ def run_executable():
     print(f"🚀 Running {exe_path}...")
     run_cmd([exe_path])
 
-# CLI
 def main():
     if len(sys.argv) < 2:
         print("📋 Usage: python build.py [init | check | build | clean | run | all]")

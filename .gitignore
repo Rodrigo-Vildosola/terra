@@ -22,4 +22,5 @@ vcpkg_installed/
 *.env
 
 .DS_store
+__pycache__/
 # external/
