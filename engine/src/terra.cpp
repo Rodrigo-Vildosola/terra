@@ -47,4 +47,5 @@ void shutdown() {
     glfwDestroyWindow(window);
     glfwTerminate();
 }
+
 }

@@ -1,4 +1,4 @@
-#include "terra.h"
+#include <terra/terra.h>
 
 int main() {
     terra::init();
