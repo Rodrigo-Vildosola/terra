@@ -8,7 +8,7 @@ public:
         : terra::Application("My Example Game", args) {}
 
     void on_init() override {
-        TR_CORE_INFO("Game init");
+        TR_INFO("Game init");
     }
 
     void on_update() override {
@@ -20,7 +20,7 @@ public:
     }
 
     void on_shutdown() override {
-        TR_CORE_INFO("Game shutting down.");
+        TR_INFO("Game shutting down.");
     }
 };
 

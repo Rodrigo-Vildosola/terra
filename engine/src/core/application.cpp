@@ -3,19 +3,32 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-
 namespace terra {
 
-Application* Application::s_instance = nullptr;
 static GLFWwindow* s_window = nullptr;
+Application* Application::s_instance = nullptr;
 
 Application::Application(const std::string& name, CommandLineArgs args)
-    : m_command_line_args(args)
+    : m_command_line_args(args), m_app_name(name)
 {
-    // TR_CORE_ASSERT(!s_instance, "Application already exists!");
+    TR_CORE_ASSERT(!s_instance, "Application already exists!");
     s_instance = this;
+    
+}
 
+Application::~Application() {
+    TR_CORE_INFO("Shutting down Terra Engine...");
+
+    if (s_window) {
+        glfwDestroyWindow(s_window);
+        glfwTerminate();
+        s_window = nullptr;
+    }
+
+    s_instance = nullptr;
+}
+
+void Application::init() {
     TR_CORE_INFO("Initializing Terra Engine...");
 
     if (!glfwInit()) {
@@ -27,7 +40,7 @@ Application::Application(const std::string& name, CommandLineArgs args)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    s_window = glfwCreateWindow(800, 600, name.c_str(), nullptr, nullptr);
+    s_window = glfwCreateWindow(800, 600, m_app_name.c_str(), nullptr, nullptr);
     if (!s_window) {
         TR_CORE_CRITICAL("Failed to create GLFW window");
         glfwTerminate();
@@ -42,15 +55,6 @@ Application::Application(const std::string& name, CommandLineArgs args)
     }
 
     TR_CORE_INFO("OpenGL Initialized: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-}
-
-Application::~Application() {
-    TR_CORE_INFO("Shutting down Terra Engine...");
-
-    glfwDestroyWindow(s_window);
-    glfwTerminate();
-
-    s_instance = nullptr;
 }
 
 void Application::run() {

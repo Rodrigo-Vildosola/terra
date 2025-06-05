@@ -23,7 +23,8 @@ public:
     Application(const std::string& name = "Terra Application", CommandLineArgs args = {});
     virtual ~Application();
 
-    void run();  // Main loop
+    void init();
+    void run();
 
     virtual void on_init() {}
     virtual void on_update() {}
@@ -39,9 +40,10 @@ protected:
 
 private:
     CommandLineArgs m_command_line_args;
+    std::string m_app_name;
+    static Application* s_instance;
 
     float m_last_frame_time = 0.0f;
-    static Application* s_instance;
 };
 
 Application* create_application(CommandLineArgs args);  // implemented by the game
