@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cstdint>  // for fixed-size types
+#include <cstdint>
 
 #include "terra/core/platform_detection.h"
 #include "terra/core/assert.h"
+
 
 #ifdef TR_DEBUG
 	#if defined(TR_PLATFORM_WINDOWS)
@@ -15,22 +16,12 @@
         #include <signal.h>
         #define TR_DEBUGBREAK() raise(SIGTRAP)
 	#endif
-	#define TR_ENABLE_ASSERTS
+
+	// #define TR_ENABLE_ASSERTS
 #else
 	#define TR_DEBUGBREAK()
 #endif
 
-
-#define TR_EXPAND_MACRO(x) x
-#define TR_STRINGIFY_MACRO(x) #x
-
-
-#define BIT(x) (1 << x)
-
-#define TR_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
-
-
-// Integers
 namespace terra {
 
 using i8  = std::int8_t;
@@ -43,9 +34,7 @@ using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using u64 = std::uint64_t;
 
-// Floats
 using f32 = float;
 using f64 = double;
-
 
 }

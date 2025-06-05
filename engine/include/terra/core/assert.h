@@ -1,6 +1,7 @@
 #pragma once
 
 #include "terra/core/logger.h"
+#include "terra/core/macros.h"
 #include <filesystem>
 
 #ifdef TR_ENABLE_ASSERTS

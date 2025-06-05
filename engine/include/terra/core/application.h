@@ -1,7 +1,10 @@
 #pragma once
 
+#include "terra/core/base.h"
 #include "terra/core/logger.h"
 #include <string>
+
+int main(int argc, char** argv);
 
 namespace terra {
 
