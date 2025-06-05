@@ -18,7 +18,27 @@ add_subdirectory(external/glad)
 add_subdirectory(external/stb)
 add_subdirectory(external/nlohmann)
 add_subdirectory(external/glm)
+add_subdirectory(external/spdlog)
 
 # Targets
 add_subdirectory(engine)
 add_subdirectory(game)
+
+# Add optimization flags for GCC and Clang
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-O2 -Wall -Wextra -Wpedantic)
+endif()
+
+# Add optimization flags for MSVC
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/O2 /W4)
+endif()
+
+if (TR_ENABLE_ASSERTS)
+    target_compile_definitions(${ENGINE_NAME} PUBLIC TR_ENABLE_ASSERTS)
+endif()
+
+if (TR_ENABLE_DEBUG_LOGGING)
+    target_compile_definitions(${ENGINE_NAME} PUBLIC TR_ENABLE_DEBUG_LOGGING)
+endif()
+

@@ -1,12 +1,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "terrapch.h"
 
 static GLFWwindow* window = nullptr;
 
 namespace terra {
 
 void init() {
+    TR_CORE_INFO("Initializing Terra Engine...");
     if (!glfwInit()) {
         std::cerr << "Failed to init GLFW\n";
         std::exit(EXIT_FAILURE);

@@ -3,7 +3,6 @@ import subprocess
 import sys
 import shutil
 
-# 🔧 Load config
 import tools.config as config
 
 REQUIRED_DEPS = [
@@ -17,6 +16,22 @@ REQUIRED_DEPS = [
 # Use config
 BUILD_DIR = config.BUILD_DIR
 EXECUTABLE_NAME = config.GAME_NAME
+
+def generate_cmake_args():
+    defines = {
+        "ENGINE_NAME": config.ENGINE_NAME,
+        "GAME_NAME": config.GAME_NAME,
+        "CMAKE_CXX_STANDARD": config.CXX_STANDARD,
+        "TR_ENABLE_ASSERTS": "ON" if config.ENABLE_ASSERTS else "OFF",
+        "TR_ENABLE_DEBUG_LOGGING": "ON" if config.ENABLE_DEBUG_LOGGING else "OFF",
+        "TR_PLATFORM_MACOS": "ON" if config.TR_PLATFORM_MACOS else "OFF",
+        "TR_PLATFORM_WINDOWS": "ON" if config.TR_PLATFORM_WINDOWS else "OFF",
+        "TR_PLATFORM_LINUX": "ON" if config.TR_PLATFORM_LINUX else "OFF"
+    }
+
+    cmake_args = ["cmake", "-S", ".", "-B", config.BUILD_DIR]
+    cmake_args += [f"-D{k}={v}" for k, v in defines.items()]
+    return cmake_args
 
 def run_cmd(cmd, cwd=None, fail_msg=None):
     try:
@@ -50,14 +65,7 @@ def check_dependencies():
 def configure_cmake():
     print("🔧 Configuring CMake...")
     os.makedirs(BUILD_DIR, exist_ok=True)
-
-    cmake_args = [
-        "cmake",
-        "-S", ".", "-B", BUILD_DIR,
-        f"-DENGINE_NAME={config.ENGINE_NAME}",
-        f"-DGAME_NAME={config.GAME_NAME}",
-        f"-DCMAKE_CXX_STANDARD={config.CXX_STANDARD}",
-    ]
+    cmake_args = generate_cmake_args()
     run_cmd(cmake_args)
 
 def build():
