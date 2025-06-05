@@ -3,6 +3,9 @@
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
 #include <string>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 
 int main(int argc, char** argv);
 
@@ -32,8 +35,16 @@ public:
     virtual void on_shutdown() {}
 
     CommandLineArgs get_command_line_args() const { return m_command_line_args; }
+    const std::string& get_app_name() const { return m_app_name; }
+    float get_last_frame_time() const { return m_last_frame_time; }
+    void set_last_frame_time(float time) { m_last_frame_time = time; }
+    inline GLFWwindow* get_window() const {
+        TR_CORE_ASSERT(s_instance, "Application instance is null!");
+        return s_window;
+    }
 
     static Application* get() { return s_instance; }
+    static GLFWwindow* s_window;
 
 protected:
     bool m_running = true;

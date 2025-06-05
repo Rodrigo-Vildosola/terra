@@ -1,19 +1,23 @@
 #include "terra/core/application.h"
 #include "terra/core/assert.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+// #include <GLFW/glfw3.h>
 
 namespace terra {
 
-static GLFWwindow* s_window = nullptr;
 Application* Application::s_instance = nullptr;
+GLFWwindow* Application::s_window = nullptr;
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    TR_CORE_WARN("Framebuffer size changed: {}x{}", width, height);
+    glViewport(0, 0, width, height);
+}
+
 
 Application::Application(const std::string& name, CommandLineArgs args)
     : m_command_line_args(args), m_app_name(name)
 {
     TR_CORE_ASSERT(!s_instance, "Application already exists!");
     s_instance = this;
-    
 }
 
 Application::~Application() {
@@ -55,6 +59,11 @@ void Application::init() {
     }
 
     TR_CORE_INFO("OpenGL Initialized: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+
+    glViewport(0, 0, 800, 600);
+
+    glfwSetFramebufferSizeCallback(s_window, framebuffer_size_callback);  
+
 }
 
 void Application::run() {

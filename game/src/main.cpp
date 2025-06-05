@@ -1,5 +1,12 @@
 #include <terra/core/application.h>
 #include <terra/core/entry_point.h>
+#include <GLFW/glfw3.h>
+
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
 
 
 class ExampleGame : public terra::Application {
@@ -13,6 +20,7 @@ public:
 
     void on_update() override {
         // update logic
+        processInput(this->get_window());
     }
 
     void on_render() override {
