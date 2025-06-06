@@ -1,7 +1,8 @@
-import os
 import subprocess
-import sys
+import argparse
 import shutil
+import sys
+import os
 
 import tools.config as config
 
@@ -17,16 +18,14 @@ REQUIRED_DEPS = [
 BUILD_DIR = config.BUILD_DIR
 EXECUTABLE_NAME = config.GAME_NAME
 
-def generate_cmake_args():
+def generate_cmake_args(build_type="Debug"):
     defines = {
         "ENGINE_NAME": config.ENGINE_NAME,
         "GAME_NAME": config.GAME_NAME,
         "CMAKE_CXX_STANDARD": config.CXX_STANDARD,
+        "CMAKE_BUILD_TYPE": build_type,
         "TR_ENABLE_ASSERTS": "ON" if config.ENABLE_ASSERTS else "OFF",
         "TR_ENABLE_DEBUG_LOGGING": "ON" if config.ENABLE_DEBUG_LOGGING else "OFF",
-        "TR_PLATFORM_MACOS": "ON" if config.TR_PLATFORM_MACOS else "OFF",
-        "TR_PLATFORM_WINDOWS": "ON" if config.TR_PLATFORM_WINDOWS else "OFF",
-        "TR_PLATFORM_LINUX": "ON" if config.TR_PLATFORM_LINUX else "OFF"
     }
 
     cmake_args = ["cmake", "-S", ".", "-B", config.BUILD_DIR]
@@ -37,8 +36,10 @@ def run_cmd(cmd, cwd=None, fail_msg=None):
     try:
         print(f"📣 Running: {' '.join(cmd)}")
         subprocess.run(cmd, cwd=cwd, check=True)
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         print(f"❌ {fail_msg or 'Command failed.'}")
+        print("🔍 Error details:")
+        print(e)
         sys.exit(1)
 
 def init_submodules():
@@ -68,9 +69,14 @@ def configure_cmake():
     cmake_args = generate_cmake_args()
     run_cmd(cmake_args)
 
-def build():
+def build(parallel=True, verbose=False):
     print("🛠️ Building project...")
-    run_cmd(["cmake", "--build", BUILD_DIR])
+    build_cmd = ["cmake", "--build", BUILD_DIR]
+    if parallel:
+        build_cmd += ["--parallel", str(os.cpu_count())]
+    if verbose:
+        build_cmd += ["--verbose"]
+    run_cmd(build_cmd)
 
 def clean():
     print("🧹 Cleaning build directory...")

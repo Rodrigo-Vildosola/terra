@@ -17,8 +17,7 @@ public:
     }
 
     void on_update() override {
-        // update logic
-        processInput(this->get_window());
+        processInput(get_window());
     }
 
     void on_render() override {
