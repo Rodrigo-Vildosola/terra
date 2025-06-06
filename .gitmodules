@@ -7,3 +7,6 @@
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = https://github.com/Rodrigo-Vildosola/spdlog
+[submodule "external/imgui"]
+	path = external/imgui
+	url = https://github.com/Rodrigo-Vildosola/imgui

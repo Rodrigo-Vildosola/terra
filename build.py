@@ -1,8 +1,9 @@
-import subprocess
 import argparse
+import subprocess
 import shutil
 import sys
 import os
+import logging
 
 import tools.config as config
 
@@ -11,12 +12,31 @@ REQUIRED_DEPS = [
     "external/stb",
     "external/nlohmann",
     "external/glfw",
-    "external/glm"
+    "external/glm",
+    "external/imgui",
+    "external/spdlog"
 ]
 
-# Use config
+# Config
 BUILD_DIR = config.BUILD_DIR
 EXECUTABLE_NAME = config.GAME_NAME
+
+# Logging setup
+class LogColor:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+
+logging.basicConfig(
+    format='[%(levelname)s] %(message)s',
+    level=logging.INFO
+)
+
+def colored(msg, color):
+    return f"{color}{msg}{LogColor.ENDC}"
 
 def generate_cmake_args(build_type="Debug"):
     defines = {
@@ -34,43 +54,41 @@ def generate_cmake_args(build_type="Debug"):
 
 def run_cmd(cmd, cwd=None, fail_msg=None):
     try:
-        print(f"📣 Running: {' '.join(cmd)}")
+        logging.info(colored(f"Running: {' '.join(cmd)}", LogColor.OKBLUE))
         subprocess.run(cmd, cwd=cwd, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"❌ {fail_msg or 'Command failed.'}")
-        print("🔍 Error details:")
-        print(e)
+        logging.error(colored(fail_msg or 'Command failed.', LogColor.FAIL))
+        print(colored(str(e), LogColor.FAIL))
         sys.exit(1)
 
 def init_submodules():
-    print("🔄 Initializing git submodules...")
+    logging.info("Initializing git submodules...")
     run_cmd(["git", "submodule", "update", "--init", "--recursive"])
 
 def check_dependencies():
-    print("🔍 Checking for required dependencies...")
+    logging.info("Checking for required dependencies...")
     missing = [dep for dep in REQUIRED_DEPS if not os.path.exists(dep)]
     if missing:
-        print("❌ Missing dependencies:")
+        logging.error("Missing dependencies:")
         for m in missing:
-            print(f"  - {m}")
-        print("\n💡 Attempting to auto-init submodules...")
+            print(colored(f"  - {m}", LogColor.FAIL))
+        logging.info("Attempting to auto-init submodules...")
         init_submodules()
-        # Re-check
         missing = [dep for dep in REQUIRED_DEPS if not os.path.exists(dep)]
         if missing:
-            print("❌ Still missing after init. Check manually.")
+            logging.error("Still missing after init. Please check manually.")
             sys.exit(1)
     else:
-        print("✅ All dependencies are present.")
+        logging.info(colored("All dependencies are present.", LogColor.OKGREEN))
 
-def configure_cmake():
-    print("🔧 Configuring CMake...")
+def configure_cmake(build_type):
+    logging.info(f"Configuring CMake ({build_type})...")
     os.makedirs(BUILD_DIR, exist_ok=True)
-    cmake_args = generate_cmake_args()
+    cmake_args = generate_cmake_args(build_type)
     run_cmd(cmake_args)
 
 def build(parallel=True, verbose=False):
-    print("🛠️ Building project...")
+    logging.info("Building project...")
     build_cmd = ["cmake", "--build", BUILD_DIR]
     if parallel:
         build_cmd += ["--parallel", str(os.cpu_count())]
@@ -79,51 +97,62 @@ def build(parallel=True, verbose=False):
     run_cmd(build_cmd)
 
 def clean():
-    print("🧹 Cleaning build directory...")
+    logging.info("Cleaning build directory...")
     if os.path.exists(BUILD_DIR):
         shutil.rmtree(BUILD_DIR)
-        print(f"🗑️ Removed {BUILD_DIR}/")
+        logging.info(f"Removed {BUILD_DIR}/")
     else:
-        print(f"⚠️ {BUILD_DIR}/ does not exist. Nothing to clean.")
+        logging.warning(f"{BUILD_DIR}/ does not exist. Nothing to clean.")
 
 def run_executable():
     exe_path = os.path.join(BUILD_DIR, EXECUTABLE_NAME)
     if os.name == 'nt':
         exe_path += ".exe"
     if not os.path.isfile(exe_path):
-        print(f"❌ Executable not found: {exe_path}")
-        print("💡 Try running: python build.py build")
+        logging.error(f"Executable not found: {exe_path}")
+        logging.info("Try running: python build.py build")
         sys.exit(1)
-    print(f"🚀 Running {exe_path}...")
+    logging.info(f"Running {exe_path}...")
     run_cmd([exe_path])
 
 def main():
-    if len(sys.argv) < 2:
-        print("📋 Usage: python build.py [init | check | build | clean | run | all]")
-        sys.exit(0)
+    parser = argparse.ArgumentParser(description="CMake-based build system for your game engine.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    command = sys.argv[1].lower()
+    subparsers.add_parser("init", help="Initialize git submodules")
+    subparsers.add_parser("check", help="Check for required dependencies")
+    subparsers.add_parser("clean", help="Remove build directory")
+    subparsers.add_parser("run", help="Run the built executable")
 
-    if command == "init":
+    build_parser = subparsers.add_parser("build", help="Configure and build the project")
+    build_parser.add_argument("--no-parallel", action="store_true", help="Disable parallel build")
+    build_parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    build_parser.add_argument("--config", default="Debug", help="Build configuration (Debug/Release)")
+
+    all_parser = subparsers.add_parser("all", help="Check, configure, build and run")
+    all_parser.add_argument("--no-parallel", action="store_true")
+    all_parser.add_argument("--verbose", action="store_true")
+    all_parser.add_argument("--config", default="Debug")
+
+    args = parser.parse_args()
+
+    if args.command == "init":
         init_submodules()
-    elif command == "check":
+    elif args.command == "check":
         check_dependencies()
-    elif command == "build":
-        check_dependencies()
-        configure_cmake()
-        build()
-    elif command == "clean":
+    elif args.command == "clean":
         clean()
-    elif command == "run":
+    elif args.command == "run":
         run_executable()
-    elif command == "all":
+    elif args.command == "build":
         check_dependencies()
-        configure_cmake()
-        build()
+        configure_cmake(args.config)
+        build(parallel=not args.no_parallel, verbose=args.verbose)
+    elif args.command == "all":
+        check_dependencies()
+        configure_cmake(args.config)
+        build(parallel=not args.no_parallel, verbose=args.verbose)
         run_executable()
-    else:
-        print(f"❓ Unknown command: {command}")
-        print("📋 Usage: python build.py [init | check | build | clean | run | all]")
 
 if __name__ == "__main__":
     main()

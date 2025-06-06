@@ -20,6 +20,15 @@ add_subdirectory(external/nlohmann)
 add_subdirectory(external/glm)
 add_subdirectory(external/spdlog)
 
+file(GLOB IMGUI_SRC
+    external/imgui/*.cpp
+    external/imgui/*.h
+)
+
+add_library(imgui STATIC ${IMGUI_SRC})
+
+target_include_directories(imgui PUBLIC external/imgui)
+
 # Targets
 add_subdirectory(engine)
 add_subdirectory(game)

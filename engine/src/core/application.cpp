@@ -1,13 +1,15 @@
 #include "terra/core/application.h"
 #include "terra/core/assert.h"
+#include "terra/core/timestep.h"
+
 #include "terra/renderer/renderer.h"
+#include "terra/core/window.h"
 
 // #include <GLFW/glfw3.h>
 
 namespace terra {
 
 Application* Application::s_instance = nullptr;
-GLFWwindow* Application::s_window = nullptr;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     TR_CORE_WARN("Framebuffer size changed: {}x{}", width, height);
@@ -16,90 +18,115 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 
 Application::Application(const std::string& name, CommandLineArgs args)
-    : m_command_line_args(args), m_app_name(name)
+    : m_command_line_args(args)
 {
     TR_CORE_ASSERT(!s_instance, "Application already exists!");
     s_instance = this;
+
+    TR_CORE_INFO("Creating window");
+    m_window = Window::create(WindowProps(name));
+	m_window->set_event_cb(TR_BIND_EVENT_FN(Application::on_event));
+		
+    TR_CORE_TRACE("Renderer initialized");
+
+    #if !defined(TR_RELEASE)
+        TR_CORE_INFO("Creating ImGui layer");
+        m_ui_layer = new UILayer();
+        push_overlay(m_ui_layer);
+    #endif
 }
 
 Application::~Application() {
     TR_CORE_INFO("Shutting down Terra Engine...");
 
-    if (s_window) {
-        glfwDestroyWindow(s_window);
-        glfwTerminate();
-        s_window = nullptr;
-    }
+    // if (m_window) {
+    //     glfwDestroyWindow(m_window);
+    //     glfwTerminate();
+    //     m_window = nullptr;
+    // }
 
-    s_instance = nullptr;
+    Renderer::shutdown();
 }
 
-void Application::init() {
-    TR_CORE_INFO("Initializing Terra Engine...");
-
-    if (!glfwInit()) {
-        TR_CORE_CRITICAL("Failed to initialize GLFW");
-        std::exit(EXIT_FAILURE);
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef TR_PLATFORM_MACOS
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    s_window = glfwCreateWindow(800, 600, m_app_name.c_str(), nullptr, nullptr);
-    if (!s_window) {
-        TR_CORE_CRITICAL("Failed to create GLFW window");
-        glfwTerminate();
-        std::exit(EXIT_FAILURE);
-    }
-
-    glfwMakeContextCurrent(s_window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        TR_CORE_CRITICAL("Failed to initialize GLAD");
-        std::exit(EXIT_FAILURE);
-    }
-
-    
-    int fbWidth, fbHeight;
-    glfwGetFramebufferSize(s_window, &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
-    
-    TR_CORE_INFO("OpenGL Initialized: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-
-    glfwSetFramebufferSizeCallback(s_window, framebuffer_size_callback);  
-
+void Application::push_layer(Layer* layer) {
+    m_layer_stack.push_layer(layer);
+    layer->on_attach();
 }
+
+void Application::push_overlay(Layer* layer) {
+
+    m_layer_stack.push_overlay(layer);
+    layer->on_attach();
+}
+
+void Application::on_event(Event& e)
+{
+    EventDispatcher dispatcher(e);
+    dispatcher.dispatch<WindowCloseEvent>(TR_BIND_EVENT_FN(Application::on_window_close));
+    dispatcher.dispatch<WindowResizeEvent>(TR_BIND_EVENT_FN(Application::on_window_resize));
+
+    for (auto it = m_layer_stack.rbegin(); it != m_layer_stack.rend(); ++it)
+    {
+        if (e.handled) 
+            break;
+        (*it)->on_event(e);
+    }
+}
+
 
 void Application::run() {
     Renderer::init();
 
-    on_init();
-
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(s_window)) {
-        on_update();
+    while (m_running) {
+
+        float time = (float)glfwGetTime();
+        Timestep timestep = time - m_last_frame_time;
+        m_last_frame_time = time;
+
+
+        if (!m_minimized) {
+            for (Layer* layer : m_layer_stack)
+                layer->on_update(timestep);
+        }
+
+        #if !defined(TR_RELEASE)
+            m_ui_layer->begin(); {
+                for (Layer* layer : m_layer_stack)
+                    layer->on_ui_render();
+            }
+            m_ui_layer->end();
+		#endif
 
 
         Renderer::begin_frame();
-
-        on_render();
 
         Renderer::draw();
         Renderer::end_frame();
 
 
-        glfwSwapBuffers(s_window);
-        glfwPollEvents();
+        m_window->on_update();
     }
-
-    on_shutdown();
     Renderer::shutdown();
 }
 
+
+bool Application::on_window_resize(WindowResizeEvent& e) {
+    if (e.get_width() == 0 || e.get_height() == 0)
+    {
+        m_minimized = true;
+        return false;
+    }
+
+    m_minimized = false;
+    // Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+    return false;
+}
+
+bool Application::on_window_close(WindowCloseEvent& e) {
+    m_running = false;
+    return true;
+}
 }

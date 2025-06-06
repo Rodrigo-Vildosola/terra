@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "terra/core/platform_detection.h"
 #include "terra/core/assert.h"
@@ -36,5 +37,23 @@ using u64 = std::uint64_t; // unsigned long long
 
 using f32 = float;
 using f64 = double;
+
+template<typename T>
+using scope = std::unique_ptr<T>;
+
+template<typename T, typename ... Args>
+constexpr scope<T> create_scope(Args&& ... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+template<typename T>
+using ref = std::shared_ptr<T>;
+
+template<typename T, typename ... Args>
+constexpr ref<T> create_ref(Args&& ... args)
+{
+	return std::make_shared<T>(std::forward<Args>(args)...);
+}
 
 }

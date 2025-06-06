@@ -5,6 +5,8 @@
 
 namespace terra {
 
+RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
+
 u32 Renderer::s_shader_program = 0;
 u32 Renderer::s_VAO = 0, Renderer::s_VBO = 0, Renderer::s_EBO = 0;
 
@@ -45,7 +47,7 @@ void Renderer::init() {
     glDeleteShader(fragmentShader);
 
     // Geometry
-    float vertices[] = {
+    f32 vertices[] = {
          0.5f,  0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,

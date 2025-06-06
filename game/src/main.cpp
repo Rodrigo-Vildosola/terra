@@ -1,32 +1,17 @@
 #include <terra/terra.h>
-
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
+#include <terra/core/entry_point.h>
+#include "layer.h"
 
 class ExampleGame : public terra::Application {
 public:
     ExampleGame(terra::CommandLineArgs args)
-        : terra::Application("My Example Game", args) {}
-
-    void on_init() override {
-        TR_INFO("Game init");
+        : terra::Application("My Example Game", args) 
+    {
+        push_layer(new ExampleLayer());
     }
 
-    void on_update() override {
-        processInput(get_window());
-    }
+    ~ExampleGame() {}
 
-    void on_render() override {
-        // OpenGL test code here
-    }
-
-    void on_shutdown() override {
-        TR_INFO("Game shutting down.");
-    }
 };
 
 terra::Application* terra::create_application(terra::CommandLineArgs args) {

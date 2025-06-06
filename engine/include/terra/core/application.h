@@ -2,6 +2,17 @@
 
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
+
+#include "terra/core/window.h"
+
+#include "terra/core/layer.h"
+#include "terra/core/layer_stack.h"
+
+#include "terra/events/event.h"
+#include "terra/events/application_event.h"
+
+#include "terra/ui/imgui_layer.h"
+
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -12,7 +23,7 @@ int main(int argc, char** argv);
 namespace terra {
 
 struct CommandLineArgs {
-    int count = 0;
+    i32 count = 0;
     char** args = nullptr;
 
     const char* operator[](int index) const {
@@ -26,35 +37,42 @@ public:
     Application(const std::string& name = "Terra Application", CommandLineArgs args = {});
     virtual ~Application();
 
-    void init();
-    void run();
+    void on_event(Event& e);
 
-    virtual void on_init() {}
-    virtual void on_update() {}
-    virtual void on_render() {}
-    virtual void on_shutdown() {}
+    void push_layer(Layer* layer);
+	void push_overlay(Layer* layer);
 
     CommandLineArgs get_command_line_args() const { return m_command_line_args; }
-    const std::string& get_app_name() const { return m_app_name; }
-    float get_last_frame_time() const { return m_last_frame_time; }
-    void set_last_frame_time(float time) { m_last_frame_time = time; }
-    inline GLFWwindow* get_window() const {
-        TR_CORE_ASSERT(s_instance, "Application instance is null!");
-        return s_window;
-    }
 
-    static Application* get() { return s_instance; }
-    static GLFWwindow* s_window;
+    inline Window& get_window() const { return *m_window; }
+    void close();
 
-protected:
-    bool m_running = true;
+    UILayer* get_ui_layer() { return m_ui_layer; }
+
+    static Application& get() { return *s_instance; }
+
 
 private:
+    void run();
+
+    bool on_window_close(WindowCloseEvent& e);
+    bool on_window_resize(WindowResizeEvent& e);
+
+    UILayer* m_ui_layer;
+    LayerStack m_layer_stack;
     CommandLineArgs m_command_line_args;
-    std::string m_app_name;
+
+    scope<Window> m_window;
+    bool m_running = true;
+	bool m_minimized = false;
+
+
+    f32 m_last_frame_time = 0.0f;
+
     static Application* s_instance;
 
-    float m_last_frame_time = 0.0f;
+
+    friend int ::main(int argc, char** argv);
 };
 
 Application* create_application(CommandLineArgs args);  // implemented by the game
