@@ -23,7 +23,7 @@ void ExampleLayer::on_update(terra::Timestep ts) {
 }
 
 void ExampleLayer::on_ui_render() {
-    TR_INFO("ImGui render triggered"); // Add this temporarily
+    // TR_INFO("ImGui render triggered"); // Add this temporarily
 
     // Optional: ImGui or other UI rendering
     ImGui::Begin("Example UI");
@@ -51,6 +51,6 @@ void ExampleLayer::on_event(terra::Event& event) {
 
     // Handle mouse events (optional)
     if (event.is_in_category(EventCategoryMouse)) {
-        TR_TRACE("ExampleLayer received mouse event: {}", event.to_string());
+        // TR_TRACE("ExampleLayer received mouse event: {}", event.to_string());
     }
 }

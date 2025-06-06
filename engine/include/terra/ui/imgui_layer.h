@@ -27,5 +27,4 @@ private:
     float m_time = 0.0f;
 };
 
-
 }

@@ -11,12 +11,6 @@ namespace terra {
 
 Application* Application::s_instance = nullptr;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    TR_CORE_WARN("Framebuffer size changed: {}x{}", width, height);
-    glViewport(0, 0, width, height);
-}
-
-
 Application::Application(const std::string& name, CommandLineArgs args)
     : m_command_line_args(args)
 {
@@ -26,7 +20,7 @@ Application::Application(const std::string& name, CommandLineArgs args)
     TR_CORE_INFO("Creating window");
     m_window = Window::create(WindowProps(name));
 	m_window->set_event_cb(TR_BIND_EVENT_FN(Application::on_event));
-		
+
     TR_CORE_TRACE("Renderer initialized");
 
     #if !defined(TR_RELEASE)
@@ -38,14 +32,8 @@ Application::Application(const std::string& name, CommandLineArgs args)
 
 Application::~Application() {
     TR_CORE_INFO("Shutting down Terra Engine...");
-
-    // if (m_window) {
-    //     glfwDestroyWindow(m_window);
-    //     glfwTerminate();
-    //     m_window = nullptr;
-    // }
-
     Renderer::shutdown();
+    m_window.reset();
 }
 
 void Application::push_layer(Layer* layer) {
@@ -108,8 +96,13 @@ void Application::run() {
 
         m_window->on_update();
     }
-    Renderer::shutdown();
+
 }
+
+void Application::close() {
+    m_running = false;
+}
+
 
 
 bool Application::on_window_resize(WindowResizeEvent& e) {

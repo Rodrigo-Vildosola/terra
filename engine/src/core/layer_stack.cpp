@@ -5,10 +5,8 @@ namespace terra {
 LayerStack::LayerStack() {}
 
 LayerStack::~LayerStack() {
-    for (Layer* layer : m_layers)
-    {
+    for (Layer* layer : m_layers) {
         layer->on_detach();
-
         delete layer;
     }
 }
@@ -24,8 +22,7 @@ void LayerStack::push_overlay(Layer* overlay) {
 
 void LayerStack::pop_layer(Layer* layer) {
     auto it = std::find(m_layers.begin(), m_layers.end(), layer);
-    if (it != m_layers.end())
-    {
+    if (it != m_layers.end()) {
         m_layers.erase(it);
         m_layer_insert_index--;
         layer->on_detach();

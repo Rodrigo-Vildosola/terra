@@ -43,6 +43,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/O2 /W4)
 endif()
 
+
+
 if (TR_ENABLE_ASSERTS)
     target_compile_definitions(${ENGINE_NAME} PUBLIC TR_ENABLE_ASSERTS)
 endif()
@@ -51,3 +53,12 @@ if (TR_ENABLE_DEBUG_LOGGING)
     target_compile_definitions(${ENGINE_NAME} PUBLIC TR_ENABLE_DEBUG_LOGGING)
 endif()
 
+
+
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+
+if (BUILD_TYPE_UPPER STREQUAL "RELEASE" OR BUILD_TYPE_UPPER STREQUAL "RELWITHDEBINFO")
+    target_compile_definitions(${ENGINE_NAME} PUBLIC TR_RELEASE=1)
+elseif (BUILD_TYPE_UPPER STREQUAL "TESTING")
+    target_compile_definitions(${ENGINE_NAME} PUBLIC TR_TESTING=1)
+endif()

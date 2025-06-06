@@ -66,12 +66,9 @@ private:
     bool m_running = true;
 	bool m_minimized = false;
 
-
     f32 m_last_frame_time = 0.0f;
 
     static Application* s_instance;
-
-
     friend int ::main(int argc, char** argv);
 };
 

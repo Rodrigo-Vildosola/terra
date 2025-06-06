@@ -22,7 +22,7 @@ namespace terra {
 
 	MacOSWindow::~MacOSWindow()
 	{
-		shutdown();
+		// shutdown();
 	}
 
 	void MacOSWindow::init(const WindowProps& props)
