@@ -23,5 +23,9 @@ target_link_libraries(${ENGINE_NAME}
 target_include_directories(${ENGINE_NAME} PUBLIC external/glm)
 target_include_directories(${ENGINE_NAME} PUBLIC external/spdlog/include)
 
+target_compile_definitions(${ENGINE_NAME} PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
+
+target_compile_definitions(${ENGINE_NAME} PUBLIC EDITOR_ASSETS_DIR="${EDITOR_ASSETS_DIR}")
+target_compile_definitions(${ENGINE_NAME} PUBLIC GAME_ASSETS_DIR="${GAME_ASSETS_DIR}")
 
 # target_compile_definitions(${ENGINE_NAME} PUBLIC TR_RELEASE)

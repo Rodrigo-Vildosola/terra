@@ -14,9 +14,6 @@
 #include "terra/ui/imgui_layer.h"
 
 #include <string>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 
 int main(int argc, char** argv);
 

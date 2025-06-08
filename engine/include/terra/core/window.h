@@ -14,11 +14,9 @@ namespace terra {
 		uint32_t height;
 
 		WindowProps(const std::string& title = "Terra Engine",
-			        uint32_t width = 1600,
+			        uint32_t width = 900,
 			        uint32_t height = 900)
-			: title(title), width(width), height(height)
-		{
-		}
+			: title(title), width(width), height(height) {}
 	};
 
 	// Interface representing a desktop system based Window

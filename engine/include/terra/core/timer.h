@@ -4,31 +4,19 @@
 
 namespace terra {
 
-	class Timer
-	{
+	class Timer {
 	public:
-		Timer()
-		{
-			reset();
-		}
+		// Initialize the timer
+		static void init();
 
-		void reset()
-		{
-			m_start = std::chrono::high_resolution_clock::now();
-		}
+		// Time since init() in seconds
+		static float elapsed();
 
-		float elapsed()
-		{
-			return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_start).count() * 0.001f * 0.001f * 0.001f;
-		}
-
-		float elapsed_millis()
-		{
-			return elapsed() * 1000.0f;
-		}
+		// Time since init() in milliseconds
+		static float elapsed_millis();
 
 	private:
-		std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+		static std::chrono::time_point<std::chrono::high_resolution_clock> s_start_time;
 	};
 
 }

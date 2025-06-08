@@ -5,8 +5,6 @@
 #include "terra/renderer/renderer.h"
 #include "terra/core/window.h"
 
-// #include <GLFW/glfw3.h>
-
 namespace terra {
 
 Application* Application::s_instance = nullptr;
@@ -64,15 +62,15 @@ void Application::on_event(Event& e)
 
 void Application::run() {
     Renderer::init();
+    Timer::init();
 
     // render loop
     // -----------
     while (m_running) {
 
-        float time = (float)glfwGetTime();
+        float time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
-
 
         if (!m_minimized) {
             for (Layer* layer : m_layer_stack)
@@ -80,10 +78,9 @@ void Application::run() {
         }
 
         #if !defined(TR_RELEASE)
-            m_ui_layer->begin(); {
-                for (Layer* layer : m_layer_stack)
-                    layer->on_ui_render();
-            }
+            m_ui_layer->begin();
+            for (Layer* layer : m_layer_stack)
+                layer->on_ui_render();
             m_ui_layer->end();
 		#endif
 

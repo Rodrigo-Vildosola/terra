@@ -1,5 +1,6 @@
 #include "terra/renderer/renderer.h"
 #include "terra/core/logger.h"
+#include "terra/core/timer.h"
 
 #include <glad/glad.h>
 
@@ -13,17 +14,34 @@ u32 Renderer::s_VAO = 0, Renderer::s_VBO = 0, Renderer::s_EBO = 0;
 static constexpr const char* vertexShaderSource = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
+
+uniform float u_Time;
+
 void main() {
-    gl_Position = vec4(aPos, 1.0);
+    float pulse = 0.05 * sin(u_Time * 5.0 + aPos.x * 10.0 + aPos.y * 10.0);
+    vec3 pos = aPos + normalize(vec3(aPos.xy, 0.0)) * pulse;
+
+    float angle = u_Time;
+    mat2 rotation = mat2(cos(angle), -sin(angle),
+                         sin(angle),  cos(angle));
+    vec2 rotated = rotation * pos.xy;
+    gl_Position = vec4(rotated, 0.0, 1.0);
 }
 )";
 
 static constexpr const char* fragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
+
+uniform float u_Time;
+
 void main() {
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+    float r = 0.5 + 0.5 * sin(u_Time);
+    float g = 0.5 + 0.5 * sin(u_Time + 2.0);
+    float b = 0.5 + 0.5 * sin(u_Time + 4.0);
+    FragColor = vec4(r, g, b, 1.0);
 }
+
 )";
 
 void Renderer::init() {
@@ -82,6 +100,12 @@ void Renderer::begin_frame() {
 
 void Renderer::draw() {
     glUseProgram(s_shader_program);
+
+    // Pass time as a uniform
+    float time = Timer::elapsed();
+    int timeLocation = glGetUniformLocation(s_shader_program, "u_Time");
+    glUniform1f(timeLocation, time);
+
     glBindVertexArray(s_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

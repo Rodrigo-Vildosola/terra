@@ -20,6 +20,7 @@ REQUIRED_DEPS = [
 # Config
 BUILD_DIR = config.BUILD_DIR
 EXECUTABLE_NAME = config.GAME_NAME
+EDITOR_NAME = config.EDITOR_NAME
 
 # Logging setup
 class LogColor:
@@ -42,6 +43,7 @@ def generate_cmake_args(build_type="Debug"):
     defines = {
         "ENGINE_NAME": config.ENGINE_NAME,
         "GAME_NAME": config.GAME_NAME,
+        "EDITOR_NAME": config.EDITOR_NAME,
         "CMAKE_CXX_STANDARD": config.CXX_STANDARD,
         "CMAKE_BUILD_TYPE": build_type,
         "TR_ENABLE_ASSERTS": "ON" if config.ENABLE_ASSERTS else "OFF",
@@ -105,7 +107,7 @@ def clean():
         logging.warning(f"{BUILD_DIR}/ does not exist. Nothing to clean.")
 
 def run_executable():
-    exe_path = os.path.join(BUILD_DIR, EXECUTABLE_NAME)
+    exe_path = os.path.join(BUILD_DIR, "bin", EXECUTABLE_NAME)
     if os.name == 'nt':
         exe_path += ".exe"
     if not os.path.isfile(exe_path):

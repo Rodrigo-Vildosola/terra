@@ -10,8 +10,10 @@ target_include_directories(${GAME_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game/src
 )
 
-target_link_libraries(${ENGINE_NAME}
+target_link_libraries(${GAME_NAME}
     imgui
     # nlohmann_json::nlohmann_json
     # stb
 )
+
+target_compile_definitions(${GAME_NAME} PUBLIC GAME_ASSETS_DIR="${GAME_ASSETS_DIR}")
