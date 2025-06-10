@@ -151,5 +151,71 @@ static const char* adapter_type_to_string(WGPUAdapterType f) {
     }
 }
 
+/**
+ * Helper to zero-initialize and populate a WGPUDeviceDescriptor
+ * with sensible defaults, plus optional callbacks.
+ */
+struct DeviceDescriptorBuilder {
+    WGPUDeviceDescriptor desc = {};
+
+    DeviceDescriptorBuilder() {
+        desc.nextInChain                = nullptr;
+        desc.label.data                 = nullptr;
+        desc.label.length               = 0;
+        desc.requiredFeatureCount       = 0;
+        desc.requiredFeatures           = nullptr;
+        desc.requiredLimits             = nullptr;
+        // defaultQueue must at least zero its own chained struct:
+        desc.defaultQueue.nextInChain   = nullptr;
+        desc.defaultQueue.label.data    = nullptr;
+        desc.defaultQueue.label.length  = 0;
+        // callbacks default to “no callback”
+        desc.deviceLostCallbackInfo     = {nullptr, WGPUCallbackMode_AllowSpontaneous, nullptr, nullptr, nullptr};
+        desc.uncapturedErrorCallbackInfo= {nullptr, nullptr, nullptr, nullptr};
+    }
+
+    DeviceDescriptorBuilder& label(std::string_view txt) {
+        desc.label.data   = txt.data();
+        desc.label.length = txt.size();
+        return *this;
+    }
+
+    DeviceDescriptorBuilder& default_queue_label(std::string_view txt) {
+        desc.defaultQueue.label.data   = txt.data();
+        desc.defaultQueue.label.length = txt.size();
+        return *this;
+    }
+
+    DeviceDescriptorBuilder& require_features(std::vector<WGPUFeatureName> const& feats) {
+        desc.requiredFeatureCount = feats.size();
+        desc.requiredFeatures     = feats.data();
+        return *this;
+    }
+
+    // Install your “device lost” callback:
+    DeviceDescriptorBuilder& on_device_lost(
+        WGPUDeviceLostCallback cb, void* userdata = nullptr)
+    {
+        desc.deviceLostCallbackInfo.callback  = cb;
+        desc.deviceLostCallbackInfo.userdata1 = userdata;
+        return *this;
+    }
+
+    // Install your “uncaptured error” callback:
+    DeviceDescriptorBuilder& on_uncaptured_error(
+        WGPUUncapturedErrorCallback cb, void* userdata = nullptr)
+    {
+        desc.uncapturedErrorCallbackInfo.callback  = cb;
+        desc.uncapturedErrorCallbackInfo.userdata1 = userdata;
+        return *this;
+    }
+
+    // Finally, build the descriptor for passing in:
+    WGPUDeviceDescriptor build() {
+        return desc;
+    }
+};
+
+
 
 }

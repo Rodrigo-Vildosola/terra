@@ -31,6 +31,8 @@ private:
     
     WGPUInstance m_instance = nullptr;
     WGPUAdapter m_adapter = nullptr;
+    WGPUDevice  m_device = nullptr;
+
 
     void create_swap_chain();
 
@@ -41,6 +43,45 @@ private:
      *     const adapter = await navigator.gpu.requestAdapter(options);
      */
     WGPUAdapter request_adapter_sync(WGPURequestAdapterOptions const* options);
+
+    /**
+     * @brief Utility function to get a WebGPU device, so that
+     *     WGPUDevice device = requestDeviceSync(adapter, options);
+     * is roughly equivalent to
+     *     const device = await adapter.requestDevice(descriptor);
+     * It is very similar to requestAdapter
+     */
+    WGPUDevice request_device_sync(WGPUDeviceDescriptor const* descriptor);
+
+    // **Callbacks** moved out here:
+    static void OnAdapterRequestEnded(
+        WGPURequestAdapterStatus status,
+        WGPUAdapter             adapter,
+        WGPUStringView          message,
+        void*                   userdata1,
+        void*                   userdata2);
+
+    static void OnDeviceRequestEnded(
+        WGPURequestDeviceStatus status,
+        WGPUDevice              device,
+        WGPUStringView          message,
+        void*                   userdata1,
+        void*                   userdata2);
+
+    static void OnDeviceLost(
+        const WGPUDevice*     device,
+        WGPUDeviceLostReason  reason,
+        WGPUStringView        message,
+        void*                 userdata1,
+        void*                 userdata2);
+
+    static void OnUncapturedError(
+        const WGPUDevice*   device,
+        WGPUErrorType       type,
+        WGPUStringView      message,
+        void*               userdata1,
+        void*               userdata2);
+
 
 };
 
