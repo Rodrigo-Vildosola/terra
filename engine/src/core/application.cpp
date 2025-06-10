@@ -24,9 +24,6 @@ Application::Application(const std::string& name, CommandLineArgs args)
     m_context = WebGPUContext::create();
     m_context->init(m_window.get());
 
-
-    TR_CORE_TRACE("Renderer initialized");
-
     #if !defined(TR_RELEASE)
         TR_CORE_INFO("Creating ImGui layer");
         m_ui_layer = new UILayer();
@@ -86,7 +83,7 @@ void Application::run() {
         // Renderer::begin_frame();
 
 
-        #if defined(TR_RELEASE)
+        #if !defined(TR_RELEASE)
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();

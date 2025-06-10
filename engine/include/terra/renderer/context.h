@@ -21,13 +21,22 @@ public:
     void init(Window* window_handle);
     void swap_buffers();
 
+    /**
+     * @brief Utility function to get a WebGPU adapter, so that
+     *     WGPUAdapter adapter = requestAdapterSync(options);
+     * is roughly equivalent to
+     *     const adapter = await navigator.gpu.requestAdapter(options);
+     */
+    WGPUAdapter requestAdapterSync(WGPURequestAdapterOptions const* options);
+
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
     Window* m_window_handle = nullptr;
     ContextProps m_props;
-
+    
     WGPUInstance m_instance = nullptr;
+    WGPUAdapter m_adapter = nullptr;
 
     void create_swap_chain();
 };

@@ -4,8 +4,8 @@
 #include "terra/core/base.h"
 
 #include <imgui.h>
-// #include <backends/imgui_impl_glfw.h>
-// #include <backends/imgui_impl_wgpu.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_wgpu.h>
 #include <webgpu/webgpu.hpp>
 #include <GLFW/glfw3.h>
 
@@ -50,13 +50,12 @@ void UILayer::on_attach() {
     // GLFWwindow* window = static_cast<GLFWwindow*>(app.get_window().get_native_window());
 
     // // Setup Platform/Renderer bindings
-    // ImGui_ImplGlfw_InitForOpenGL(window, true);
-    // // ImGui_ImplWGPU_Init("#version 410");
+    // ImGui_ImplGlfw_InitForOther(window, true);
+    // ImGui_ImplWGPU_Init("#version 410");
 }
 
 void UILayer::on_detach() {
     // ImGui_ImplWGPU_Shutdown();
-    // // ImGui_ImplOpenGL3_Shutdown();
     // ImGui_ImplGlfw_Shutdown();
     // ImGui::DestroyContext();
 }
@@ -71,11 +70,11 @@ void UILayer::on_event(Event& e) {
 }
 
 void UILayer::begin() {
-    // // TR_CORE_WARN("HELLOOOOOOO; UI LAYER HERE");
+    // TR_CORE_WARN("HELLOOOOOOO; UI LAYER HERE");
     // ImGui_ImplWGPU_NewFrame();
     // ImGui_ImplGlfw_NewFrame();
     // ImGui::NewFrame();
-    // // ImGuizmo::BeginFrame();
+    // ImGuizmo::BeginFrame();
 }
 
 void UILayer::end() {
@@ -86,7 +85,7 @@ void UILayer::end() {
 
     // // Rendering
     // ImGui::Render();
-    // // ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData());
+    // ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData());
 
     // if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     // {
