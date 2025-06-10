@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 // Order matters here
 #include "terra/core/base.h"
 #include "terra/core/application.h"

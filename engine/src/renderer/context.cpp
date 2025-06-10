@@ -6,46 +6,60 @@
 
 #include "terra/renderer/renderer.h"
 
-#include <glad/glad.h>
+// #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
 
 namespace terra {
 
-	scope<GraphicsContext> GraphicsContext::create(void* window)
+scope<GraphicsContext> GraphicsContext::create(void* window)
+{
+	switch (Renderer::get_API())
 	{
-		switch (Renderer::get_API())
-		{
-			case RendererAPI::API::None:    TR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL:  return create_scope<OpenGLContext>(static_cast<GLFWwindow*>(window));
-			case RendererAPI::API::Vulkan:  TR_CORE_ASSERT(false, "RendererAPI::Vulkan is currently not supported!"); return nullptr;
-		}
-
-		TR_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
+		case RendererAPI::API::None:    TR_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::OpenGL:  TR_CORE_ASSERT(false, "RendererAPI::OpenGL is currently not supported!"); return nullptr;
+		case RendererAPI::API::Vulkan:  TR_CORE_ASSERT(false, "RendererAPI::Vulkan is currently not supported!"); return nullptr;
+		case RendererAPI::API::WebGPU:  return create_scope<WebGPUContext>(static_cast<GLFWwindow*>(window));
 	}
 
+	TR_CORE_ASSERT(false, "Unknown RendererAPI!");
+	return nullptr;
+}
 
-	OpenGLContext::OpenGLContext(GLFWwindow* window_handle)
-		: m_window_handle(window_handle)
-	{
-		TR_CORE_ASSERT(window_handle, "Window handle is null!");
-	}
+WebGPUContext::WebGPUContext(GLFWwindow* window_handle)
+	: m_window_handle(window_handle) 
+{
+	TR_CORE_ASSERT(window_handle, "Window handle is null!");
+}
 
-    void OpenGLContext::init()
-    {
-        glfwMakeContextCurrent(m_window_handle);
-        int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-        TR_CORE_ASSERT(status, "Failed to initialize Glad!");
+void WebGPUContext::init()
+{
+	glfwGetFramebufferSize(m_window_handle, &m_width, &m_height);
 
-        TR_CORE_INFO("OpenGL Info:");
-        TR_CORE_INFO("  Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-        TR_CORE_INFO("  Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-        TR_CORE_INFO("  Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-    }
+	WGPUInstanceDescriptor desc = {};
+	desc.nextInChain = nullptr;
 
-	void OpenGLContext::swap_buffers()
-	{
-		glfwSwapBuffers(m_window_handle);
-	}
+	// Create instance
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN
+	WGPUInstance m_instance = wgpuCreateInstance(nullptr);
+#else //  WEBGPU_BACKEND_EMSCRIPTEN
+	WGPUInstance m_instance = wgpuCreateInstance(&desc);
+#endif //  WEBGPU_BACKEND_EMSCRIPTEN
+
+
+	TR_CORE_INFO("WebGPU initialized with format: BGRA8Unorm");
+}
+
+void WebGPUContext::create_swap_chain()
+{
+	
+}
+
+void WebGPUContext::swap_buffers()
+{
+	// Present logic would go here
+	// In a real app, you'd acquire the next texture and render to it
+}
 
 }

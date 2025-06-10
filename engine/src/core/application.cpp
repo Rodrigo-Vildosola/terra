@@ -9,6 +9,9 @@ namespace terra {
 
 Application* Application::s_instance = nullptr;
 
+scope<GraphicsContext> Application::s_context;
+
+
 Application::Application(const std::string& name, CommandLineArgs args)
     : m_command_line_args(args)
 {
@@ -18,6 +21,10 @@ Application::Application(const std::string& name, CommandLineArgs args)
     TR_CORE_INFO("Creating window");
     m_window = Window::create(WindowProps(name));
 	m_window->set_event_cb(TR_BIND_EVENT_FN(Application::on_event));
+
+    s_context = GraphicsContext::create(m_window->get_native_window());
+    s_context->init();
+
 
     TR_CORE_TRACE("Renderer initialized");
 
@@ -30,7 +37,7 @@ Application::Application(const std::string& name, CommandLineArgs args)
 
 Application::~Application() {
     TR_CORE_INFO("Shutting down Terra Engine...");
-    Renderer::shutdown();
+    // Renderer::shutdown();
     m_window.reset();
 }
 
@@ -61,7 +68,7 @@ void Application::on_event(Event& e)
 
 
 void Application::run() {
-    Renderer::init();
+    Renderer::init(m_window->get_native_window());
     Timer::init();
 
     // render loop
@@ -77,7 +84,10 @@ void Application::run() {
                 layer->on_update(timestep);
         }
 
-        #if !defined(TR_RELEASE)
+        // Renderer::begin_frame();
+
+
+        #if defined(TR_RELEASE)
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();
@@ -85,10 +95,8 @@ void Application::run() {
 		#endif
 
 
-        Renderer::begin_frame();
-
-        Renderer::draw();
-        Renderer::end_frame();
+        // Renderer::draw();
+        // Renderer::end_frame();
 
 
         m_window->on_update();

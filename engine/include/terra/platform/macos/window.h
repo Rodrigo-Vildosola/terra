@@ -30,7 +30,6 @@ namespace terra {
 		virtual void shutdown();
 
         GLFWwindow* m_window;
-		scope<GraphicsContext> m_context;
 
 		struct WindowData {
 			std::string title;

@@ -12,12 +12,11 @@ target_include_directories(${ENGINE_NAME} PUBLIC
 
 target_link_libraries(${ENGINE_NAME}
     glfw
-    glad
     spdlog::spdlog
     glm
     imgui
-    # nlohmann_json::nlohmann_json
-    # stb
+    webgpu
+    glfw3webgpu
 )
 
 target_include_directories(${ENGINE_NAME} PUBLIC external/glm)

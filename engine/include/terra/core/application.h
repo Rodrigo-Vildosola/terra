@@ -66,6 +66,9 @@ private:
     f32 m_last_frame_time = 0.0f;
 
     static Application* s_instance;
+
+    static scope<GraphicsContext> s_context;
+
     friend int ::main(int argc, char** argv);
 };
 

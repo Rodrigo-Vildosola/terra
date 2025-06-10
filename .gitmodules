@@ -10,3 +10,6 @@
 [submodule "external/imgui"]
 	path = external/imgui
 	url = https://github.com/Rodrigo-Vildosola/imgui
+[submodule "external/glfw3webgpu"]
+	path = external/glfw3webgpu
+	url = https://github.com/Rodrigo-Vildosola/glfw3webgpu

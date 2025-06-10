@@ -22,11 +22,13 @@ set(GAME_NAME ${GAME_NAME})
 
 # Dependencies
 add_subdirectory(external/glfw)
-add_subdirectory(external/glad)
 add_subdirectory(external/stb)
 add_subdirectory(external/nlohmann)
 add_subdirectory(external/glm)
 add_subdirectory(external/spdlog)
+add_subdirectory(external/webgpu)
+add_subdirectory(external/glfw3webgpu)
+
 
 file(GLOB IMGUI_SRC
     external/imgui/*.cpp

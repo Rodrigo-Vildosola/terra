@@ -42,11 +42,7 @@ namespace terra {
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on MacOS
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		{
 			// #if defined(TR_DEBUG)
 			// if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
@@ -56,9 +52,6 @@ namespace terra {
 			TR_CORE_ASSERT(m_window, "Failed to create GLFW window");
 			++s_GLFWWindowCount;
 		}
-
-		m_context = GraphicsContext::create(m_window);
-		m_context->init();
 
 		glfwSetWindowUserPointer(m_window, &m_data);
 		set_vsync(true);
@@ -168,15 +161,13 @@ namespace terra {
 	void MacOSWindow::on_update()
 	{
         glfwPollEvents();
-        m_context->swap_buffers();
+        // m_context->swap_buffers();
 	}
 
 	void MacOSWindow::set_vsync(bool enabled)
 	{
-		if (enabled)
-			glfwSwapInterval(1);
-		else
-			glfwSwapInterval(0);
+		if (Renderer::get_API() == RendererAPI::API::OpenGL)
+			glfwSwapInterval(enabled ? 1 : 0);
 
 		m_data.vsync = enabled;
 	}
