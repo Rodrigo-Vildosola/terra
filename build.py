@@ -8,13 +8,13 @@ import logging
 import tools.config as config
 
 REQUIRED_DEPS = [
-    "external/glad",
     "external/stb",
     "external/nlohmann",
     "external/glfw",
     "external/glm",
     "external/imgui",
-    "external/spdlog"
+    "external/spdlog",
+    "external/webgpu"
 ]
 
 # Config

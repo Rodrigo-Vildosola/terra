@@ -13,7 +13,8 @@
 
 #include "terra/ui/imgui_layer.h"
 
-#include <string>
+#include "terra/renderer/context.h"
+
 
 int main(int argc, char** argv);
 
@@ -41,13 +42,13 @@ public:
 
     CommandLineArgs get_command_line_args() const { return m_command_line_args; }
 
-    inline Window& get_window() const { return *m_window; }
     void close();
-
+    
     UILayer* get_ui_layer() { return m_ui_layer; }
-
+    
     static Application& get() { return *s_instance; }
-
+    inline Window& get_window() const { return *m_window; }
+    scope<WebGPUContext>& get_context() { return m_context; }
 
 private:
     void run();
@@ -60,6 +61,8 @@ private:
     CommandLineArgs m_command_line_args;
 
     scope<Window> m_window;
+    scope<WebGPUContext> m_context;
+
     bool m_running = true;
 	bool m_minimized = false;
 
@@ -67,7 +70,6 @@ private:
 
     static Application* s_instance;
 
-    static scope<GraphicsContext> s_context;
 
     friend int ::main(int argc, char** argv);
 };

@@ -4,8 +4,6 @@
 
 namespace terra {
 
-// Set the current API (can be made configurable)
-RendererAPI::API RendererAPI::s_API = RendererAPI::API::WebGPU;
 
 // Allocate static context
 void Renderer::init(void* native_window)

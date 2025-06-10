@@ -3,58 +3,33 @@
 #include "terrapch.h"
 #include <webgpu/webgpu.hpp>
 
-
-struct GLFWwindow;
-
 namespace terra {
 
-class GraphicsContext
-{
-public:
-	virtual ~GraphicsContext() = default;
+class Window; // Forward declaration to avoid circular includes
 
-	virtual void init() = 0;
-	virtual void swap_buffers() = 0;
-
-	static scope<GraphicsContext> create(void* window);
-
+struct ContextProps {
+    // Placeholder for future context settings like:
+    // bool enableValidation = true;
+    // std::string preferredAdapterName;
 };
 
-class WebGPUContext : public GraphicsContext 
-{
+class WebGPUContext {
 public:
-	WebGPUContext(GLFWwindow* window_handle);
-	~WebGPUContext();
+    explicit WebGPUContext(const ContextProps& props = ContextProps());
+    ~WebGPUContext();
 
-	virtual void init() override;
-	virtual void swap_buffers() override;
+    void init(Window* window_handle);
+    void swap_buffers();
+
+    static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
-	GLFWwindow* m_window_handle;
+    Window* m_window_handle = nullptr;
+    ContextProps m_props;
 
-	WGPUInstance m_instance;
-	WGPUSurface m_surface;
-	WGPUAdapter m_adapter;
-	WGPUDevice m_device;
-	WGPUSwapChain m_swap_chain;
-	WGPUQueue m_queue;
-	WGPUTextureFormat m_swap_chain_format;
+    WGPUInstance m_instance = nullptr;
 
-	int m_width;
-	int m_height;
-
-	void create_swap_chain();
+    void create_swap_chain();
 };
 
-// class OpenGLContext : public GraphicsContext
-// {
-// public:
-// 	OpenGLContext(GLFWwindow* window_handle);
-
-// 	virtual void init() override;
-// 	virtual void swap_buffers() override;
-// private:
-// 	GLFWwindow* m_window_handle;
-// };
-
-}
+} // namespace terra

@@ -24,7 +24,6 @@ public:
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:
-    static scope<GraphicsContext> s_context;
 };
 
 }

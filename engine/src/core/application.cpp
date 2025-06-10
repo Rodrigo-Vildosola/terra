@@ -7,10 +7,9 @@
 
 namespace terra {
 
+RendererAPI::API RendererAPI::s_API = RendererAPI::API::WebGPU;
+
 Application* Application::s_instance = nullptr;
-
-scope<GraphicsContext> Application::s_context;
-
 
 Application::Application(const std::string& name, CommandLineArgs args)
     : m_command_line_args(args)
@@ -22,8 +21,8 @@ Application::Application(const std::string& name, CommandLineArgs args)
     m_window = Window::create(WindowProps(name));
 	m_window->set_event_cb(TR_BIND_EVENT_FN(Application::on_event));
 
-    s_context = GraphicsContext::create(m_window->get_native_window());
-    s_context->init();
+    m_context = WebGPUContext::create();
+    m_context->init(m_window.get());
 
 
     TR_CORE_TRACE("Renderer initialized");
