@@ -8,6 +8,8 @@ namespace terra {
 
     std::shared_ptr<spdlog::logger> logger::core_logger;
     std::shared_ptr<spdlog::logger> logger::client_logger;
+    std::shared_ptr<spdlog::logger> logger::only_file_logger;
+
 
     void logger::init()
     {
@@ -27,5 +29,9 @@ namespace terra {
         spdlog::register_logger(client_logger);
         client_logger->set_level(spdlog::level::trace);
         client_logger->flush_on(spdlog::level::trace);
+
+        only_file_logger = std::make_shared<spdlog::logger>("TERRA_F", logSinks[1]);
+        spdlog::register_logger(only_file_logger);
+        only_file_logger->set_level(spdlog::level::trace);
     }
 }

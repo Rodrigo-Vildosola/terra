@@ -4,6 +4,7 @@
 #include "terra/core/context.h"
 
 #include "terra/renderer/renderer.h"
+#include "terra/core/utils/webgpu_utils.h"
 
 // #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -46,9 +47,9 @@ void WebGPUContext::init(Window* window_handle) {
 
 	WGPURequestAdapterOptions adapter_opts = {};
 	adapter_opts.nextInChain = nullptr;
-	m_adapter = requestAdapterSync(&adapter_opts);
+	m_adapter = request_adapter_sync(&adapter_opts);
 
-	wgpu::Adapter opt = (wgpu::Adapter) m_adapter;
+	inspect_adapter(m_adapter);
 }
 
 void WebGPUContext::create_swap_chain() {
@@ -60,11 +61,7 @@ void WebGPUContext::swap_buffers() {
 	// In a real app, you'd acquire the next texture and render to it
 }
 
-scope<WebGPUContext> WebGPUContext::create(const ContextProps& props) {
-    return create_scope<WebGPUContext>(props);
-}
-
-WGPUAdapter WebGPUContext::requestAdapterSync(WGPURequestAdapterOptions const* options) {
+WGPUAdapter WebGPUContext::request_adapter_sync(WGPURequestAdapterOptions const* options) {
 	// A simple structure holding the local information shared with the
 	// onAdapterRequestEnded callback.
 	struct UserData {
@@ -124,6 +121,76 @@ WGPUAdapter WebGPUContext::requestAdapterSync(WGPURequestAdapterOptions const* o
 	TR_CORE_ASSERT(userData.requestEnded, "Request for adapter has not ended");
 
     return userData.adapter;
+
+}
+
+
+scope<WebGPUContext> WebGPUContext::create(const ContextProps& props) {
+    return create_scope<WebGPUContext>(props);
+}
+
+void WebGPUContext::inspect_adapter(WGPUAdapter adapter) {
+#ifndef __EMSCRIPTEN__
+	WGPULimits supportedLimits = {};
+	supportedLimits.nextInChain = nullptr;
+
+#ifdef WEBGPU_BACKEND_DAWN
+	bool success = wgpuAdapterGetLimits(adapter, &supportedLimits) == WGPUStatus_Success;
+#else
+	bool success = wgpuAdapterGetLimits(adapter, &supportedLimits);
+#endif
+	if (success) {
+		TR_FILE_INFO("Adapter limits:");
+		TR_FILE_TRACE("  maxTextureDimension1D   = {}", supportedLimits.maxTextureDimension1D);
+		TR_FILE_TRACE("  maxTextureDimension2D   = {}", supportedLimits.maxTextureDimension2D);
+		TR_FILE_TRACE("  maxTextureDimension3D   = {}", supportedLimits.maxTextureDimension3D);
+		TR_FILE_TRACE("  maxTextureArrayLayers   = {}", supportedLimits.maxTextureArrayLayers);
+	} else {
+		TR_CORE_WARN("Could not query adapter limits");
+	}
+#endif // NOT __EMSCRIPTEN__
+
+    // 2) Features
+    {
+        WGPUSupportedFeatures feats = {};
+        feats.features = nullptr;
+        wgpuAdapterGetFeatures(adapter, &feats);
+
+        TR_CORE_INFO("Adapter features (count={}):", feats.featureCount);
+        for (uint32_t i = 0; i < feats.featureCount; ++i) {
+            auto f = feats.features[i];
+            TR_FILE_TRACE("  - {} (0x{:X})", feature_name_to_string(f), (u32)f);
+        }
+
+        wgpuSupportedFeaturesFreeMembers(feats);
+    }
+
+	// 3) Properties
+    {
+        WGPUAdapterInfo info = {};
+        info.nextInChain = nullptr;
+        wgpuAdapterGetInfo(adapter, &info);
+
+        TR_CORE_INFO("Adapter properties:");
+        TR_CORE_TRACE("  vendorID           = {}", info.vendorID);
+        if (info.vendor.data)
+            TR_CORE_TRACE("  vendor             = {}", 
+                std::string(info.vendor.data, info.vendor.length));
+        if (info.architecture.data)
+            TR_CORE_TRACE("  architecture       = {}", 
+                std::string(info.architecture.data, info.architecture.length));
+        TR_FILE_TRACE("  deviceID           = {}", info.deviceID);
+        if (info.device.data)
+            TR_CORE_TRACE("  device             = {}", 
+                std::string(info.device.data, info.device.length));
+        if (info.description.data)
+            TR_CORE_TRACE("  description        = {}", 
+                std::string(info.description.data, info.description.length));
+        TR_FILE_TRACE("  subgroup sizes     = {} .. {}", 
+            info.subgroupMinSize, info.subgroupMaxSize);
+        TR_CORE_TRACE("  adapterType        = {} (0x{:X})", adapter_type_to_string(info.adapterType), (u32)info.adapterType);
+        TR_CORE_TRACE("  backendType        = {} (0x{:X})", backend_type_to_string(info.backendType), (u32)info.backendType);
+    }
 
 }
 

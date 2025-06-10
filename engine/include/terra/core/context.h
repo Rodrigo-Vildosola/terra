@@ -21,6 +21,8 @@ public:
     void init(Window* window_handle);
     void swap_buffers();
 
+    static void inspect_adapter(WGPUAdapter adapter);
+
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
@@ -38,7 +40,7 @@ private:
      * is roughly equivalent to
      *     const adapter = await navigator.gpu.requestAdapter(options);
      */
-    WGPUAdapter requestAdapterSync(WGPURequestAdapterOptions const* options);
+    WGPUAdapter request_adapter_sync(WGPURequestAdapterOptions const* options);
 
 };
 
