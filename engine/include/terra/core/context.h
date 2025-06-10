@@ -21,14 +21,6 @@ public:
     void init(Window* window_handle);
     void swap_buffers();
 
-    /**
-     * @brief Utility function to get a WebGPU adapter, so that
-     *     WGPUAdapter adapter = requestAdapterSync(options);
-     * is roughly equivalent to
-     *     const adapter = await navigator.gpu.requestAdapter(options);
-     */
-    WGPUAdapter requestAdapterSync(WGPURequestAdapterOptions const* options);
-
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
@@ -39,6 +31,15 @@ private:
     WGPUAdapter m_adapter = nullptr;
 
     void create_swap_chain();
+
+    /**
+     * @brief Utility function to get a WebGPU adapter, so that
+     *     WGPUAdapter adapter = requestAdapterSync(options);
+     * is roughly equivalent to
+     *     const adapter = await navigator.gpu.requestAdapter(options);
+     */
+    WGPUAdapter requestAdapterSync(WGPURequestAdapterOptions const* options);
+
 };
 
 } // namespace terra

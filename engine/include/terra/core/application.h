@@ -2,6 +2,7 @@
 
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
+#include "terra/core/context.h"
 
 #include "terra/core/window.h"
 
@@ -12,8 +13,6 @@
 #include "terra/events/application_event.h"
 
 #include "terra/ui/imgui_layer.h"
-
-#include "terra/renderer/context.h"
 
 
 int main(int argc, char** argv);

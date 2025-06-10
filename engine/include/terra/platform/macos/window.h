@@ -1,7 +1,7 @@
 #pragma once
 
 #include "terra/core/window.h"
-#include "terra/renderer/context.h"
+#include "terra/core/context.h"
 #include "terra/input/input.h"
 
 #include <GLFW/glfw3.h>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "terra/core/base.h"
-#include "terra/renderer/context.h"
+#include "terra/core/context.h"
 
 namespace terra {
 

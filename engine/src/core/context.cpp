@@ -1,8 +1,7 @@
 
 
 #include "terrapch.h"
-
-#include "terra/renderer/context.h"
+#include "terra/core/context.h"
 
 #include "terra/renderer/renderer.h"
 
