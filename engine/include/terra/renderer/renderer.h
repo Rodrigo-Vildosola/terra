@@ -3,7 +3,7 @@
 #include "terra/core/base.h"
 #include "terra/core/context/context.h"
 
-#include "terra/renderer/render_queue.h"
+#include "terra/core/context/command_queue.h"
 
 namespace terra {
 
@@ -26,7 +26,7 @@ public:
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:
-    scope<RenderQueue> m_queue;
+    // scope<CommandQueue> m_queue;
 
 };
 

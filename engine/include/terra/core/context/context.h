@@ -5,7 +5,8 @@
 
 namespace terra {
 
-class Window; // Forward declaration to avoid circular includes
+class Window;
+class CommandQueue;
 
 struct ContextProps {
     // Placeholder for future context settings like:
@@ -33,6 +34,8 @@ private:
     // WGPUAdapter m_adapter = nullptr;
     WGPUDevice  m_device = nullptr;
     WGPUSurface m_surface = nullptr;
+
+    scope<CommandQueue> m_queue;
 
 
     void create_swap_chain();

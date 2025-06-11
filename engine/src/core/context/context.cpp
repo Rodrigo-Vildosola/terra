@@ -1,9 +1,9 @@
 
 
 #include "terrapch.h"
-#include "terra/core/context/context.h"
-
 #include "terra/renderer/renderer.h"
+
+#include "terra/core/context/context.h"
 #include "terra/core/context/context_utils.h"
 #include "terra/core/context/macros.h"
 
@@ -64,6 +64,10 @@ void WebGPUContext::init(Window* window_handle) {
     inspect_device(m_device);
 
     wgpuAdapterRelease(adapter);
+
+    m_queue = CommandQueue::create();
+    m_queue->init(m_device);
+
 }
 
 void WebGPUContext::create_swap_chain() {
