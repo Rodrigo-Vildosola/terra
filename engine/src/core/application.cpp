@@ -68,9 +68,13 @@ void Application::run() {
     renderer.init(m_window->get_native_window());
     Timer::init();
 
+    auto* queue = m_context->get_queue();  // 🔥 Get the command queue
+
     // render loop
     // -----------
     while (m_running) {
+        queue->begin_frame("Main Frame");  // 🟢 Start command recording
+        queue->add_marker("Start Update");
 
         float time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
@@ -81,6 +85,8 @@ void Application::run() {
                 layer->on_update(timestep);
         }
 
+        queue->add_marker("End Update");
+
         // Renderer::begin_frame();
 
         #if !defined(TR_RELEASE)
@@ -90,12 +96,14 @@ void Application::run() {
             m_ui_layer->end();
 		#endif
 
+        queue->end_frame();  // 🟢 Submit command buffer
 
         // Renderer::draw();
         // Renderer::end_frame();
 
 
         m_window->on_update();
+        queue->poll();
     }
 
 }

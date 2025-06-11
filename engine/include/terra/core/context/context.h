@@ -23,6 +23,7 @@ public:
     void swap_buffers();
 
     WGPUDevice get_native_device() { return m_device; }
+    CommandQueue* get_queue() { return m_queue.get(); }
 
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
