@@ -1,7 +1,9 @@
 #pragma once
 
 #include "terra/core/base.h"
-#include "terra/core/context.h"
+#include "terra/core/context/context.h"
+
+#include "terra/renderer/render_queue.h"
 
 namespace terra {
 
@@ -20,10 +22,12 @@ private:
 
 class Renderer {
 public:
-    static void init(void* native_window);
+    void init(void* native_window);
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:
+    scope<RenderQueue> m_queue;
+
 };
 
 }

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "terra/core/window.h"
-#include "terra/core/context.h"
+#include "terra/core/context/context.h"
 #include "terra/input/input.h"
 
 #include <GLFW/glfw3.h>
+#include <glfw3webgpu.h>
 
 namespace terra {
 
@@ -25,6 +26,8 @@ namespace terra {
 		bool is_vsync() const override;
 
 		inline virtual void* get_native_window() const override { return m_window; }
+		inline virtual WGPUSurface get_surface(WGPUInstance wgpu_instance) const override;
+
 	private:
 		virtual void init(const WindowProps& props);
 		virtual void shutdown();

@@ -64,7 +64,8 @@ void Application::on_event(Event& e)
 
 
 void Application::run() {
-    Renderer::init(m_window->get_native_window());
+    Renderer renderer;
+    renderer.init(m_window->get_native_window());
     Timer::init();
 
     // render loop
@@ -81,7 +82,6 @@ void Application::run() {
         }
 
         // Renderer::begin_frame();
-
 
         #if !defined(TR_RELEASE)
             m_ui_layer->begin();

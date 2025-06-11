@@ -25,6 +25,10 @@ namespace terra {
 		// shutdown();
 	}
 
+	WGPUSurface MacOSWindow::get_surface(WGPUInstance wgpu_instance) const {
+		return glfwCreateWindowWGPUSurface(wgpu_instance, m_window);
+	}
+
 	void MacOSWindow::init(const WindowProps& props)
 	{
 		m_data.title = props.title;

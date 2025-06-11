@@ -2,7 +2,7 @@
 
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
-#include "terra/core/context.h"
+#include "terra/core/context/context.h"
 
 #include "terra/core/window.h"
 
@@ -48,6 +48,8 @@ public:
     static Application& get() { return *s_instance; }
     inline Window& get_window() const { return *m_window; }
     scope<WebGPUContext>& get_context() { return m_context; }
+
+    WGPUDevice get_device() { return m_context->get_native_device(); }
 
 private:
     void run();

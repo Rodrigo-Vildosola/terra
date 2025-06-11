@@ -1,12 +1,58 @@
 #pragma once
 
-#include "terrapch.h"
-
-#include "webgpu/webgpu.h"
-
+#include "terra/helpers/user_data.h"
 
 namespace terra {
 
+#define FOREACH_SYNC_REQUEST(cb_name, StatusType, HandleType, SuccessEnum)  \
+    cb_name##_callback,                                                     \
+    void cb_name##_callback(StatusType status, HandleType handle,           \
+                            WGPUStringView message,                         \
+                            void* userdata1, void* userdata2)
+
+#define DEFINE_SYNC_REQUEST_CALLBACK(fn, StatusType, HandleType, SuccessEnum)           \
+static void fn##_callback(                                                              \
+    StatusType       status,                                                            \
+    HandleType       handle,                                                            \
+    WGPUStringView   message,                                                           \
+    void*            userdata1,                                                         \
+    void*            /*userdata2*/)                                                     \
+{                                                                                       \
+    using UD = request_userdata<HandleType>;                                            \
+    auto* ud = reinterpret_cast<UD*>(userdata1);                                        \
+    if (status == SuccessEnum) {                                                        \
+        ud->result = handle;                                                            \
+    } else {                                                                            \
+        std::string_view msg{message.data, message.length};                             \
+        TR_CORE_ERROR("{} failed: {}", #fn, msg);                                       \
+    }                                                                                   \
+    ud->request_ended = true;                                                           \
+}
+
+#define DEFINE_ERROR_CALLBACK(fn, ReasonType, EnumSuffix)                        \
+static void fn(                                                                  \
+    const WGPUDevice* device,                                                    \
+    ReasonType        reason,                                                    \
+    WGPUStringView    message,                                                   \
+    void*             /*userdata1*/,                                             \
+    void*             /*userdata2*/)                                             \
+{                                                                                \
+    std::string msg{message.data, message.length};                               \
+    if (msg.empty()) {                                                           \
+        TR_CORE_ERROR("{}: 0x{:X}", #fn, (u32)reason);                           \
+    } else {                                                                     \
+        TR_CORE_ERROR("{}: 0x{:X}: {}", #fn, (u32)reason, msg);                  \
+    }                                                                            \
+}
+
+DEFINE_SYNC_REQUEST_CALLBACK(request_adapter, WGPURequestAdapterStatus, WGPUAdapter, WGPURequestAdapterStatus_Success)
+DEFINE_SYNC_REQUEST_CALLBACK(request_device,  WGPURequestDeviceStatus,  WGPUDevice,  WGPURequestDeviceStatus_Success)
+
+// Define them:
+DEFINE_ERROR_CALLBACK(on_device_lost,       WGPUDeviceLostReason,       _Success)
+DEFINE_ERROR_CALLBACK(on_uncaptured_error,  WGPUErrorType,              _Success)
+
+#undef DEFINE_ERROR_CALLBACK
 
 #define FOREACH_WGPU_FEATURE_NAME(X)                            \
     X(DepthClipControl)                                         \
@@ -150,72 +196,6 @@ static const char* adapter_type_to_string(WGPUAdapterType f) {
         }
     }
 }
-
-/**
- * Helper to zero-initialize and populate a WGPUDeviceDescriptor
- * with sensible defaults, plus optional callbacks.
- */
-struct DeviceDescriptorBuilder {
-    WGPUDeviceDescriptor desc = {};
-
-    DeviceDescriptorBuilder() {
-        desc.nextInChain                = nullptr;
-        desc.label.data                 = nullptr;
-        desc.label.length               = 0;
-        desc.requiredFeatureCount       = 0;
-        desc.requiredFeatures           = nullptr;
-        desc.requiredLimits             = nullptr;
-        // defaultQueue must at least zero its own chained struct:
-        desc.defaultQueue.nextInChain   = nullptr;
-        desc.defaultQueue.label.data    = nullptr;
-        desc.defaultQueue.label.length  = 0;
-        // callbacks default to “no callback”
-        desc.deviceLostCallbackInfo     = {nullptr, WGPUCallbackMode_AllowSpontaneous, nullptr, nullptr, nullptr};
-        desc.uncapturedErrorCallbackInfo= {nullptr, nullptr, nullptr, nullptr};
-    }
-
-    DeviceDescriptorBuilder& label(std::string_view txt) {
-        desc.label.data   = txt.data();
-        desc.label.length = txt.size();
-        return *this;
-    }
-
-    DeviceDescriptorBuilder& default_queue_label(std::string_view txt) {
-        desc.defaultQueue.label.data   = txt.data();
-        desc.defaultQueue.label.length = txt.size();
-        return *this;
-    }
-
-    DeviceDescriptorBuilder& require_features(std::vector<WGPUFeatureName> const& feats) {
-        desc.requiredFeatureCount = feats.size();
-        desc.requiredFeatures     = feats.data();
-        return *this;
-    }
-
-    // Install your “device lost” callback:
-    DeviceDescriptorBuilder& on_device_lost(
-        WGPUDeviceLostCallback cb, void* userdata = nullptr)
-    {
-        desc.deviceLostCallbackInfo.callback  = cb;
-        desc.deviceLostCallbackInfo.userdata1 = userdata;
-        return *this;
-    }
-
-    // Install your “uncaptured error” callback:
-    DeviceDescriptorBuilder& on_uncaptured_error(
-        WGPUUncapturedErrorCallback cb, void* userdata = nullptr)
-    {
-        desc.uncapturedErrorCallbackInfo.callback  = cb;
-        desc.uncapturedErrorCallbackInfo.userdata1 = userdata;
-        return *this;
-    }
-
-    // Finally, build the descriptor for passing in:
-    WGPUDeviceDescriptor build() {
-        return desc;
-    }
-};
-
 
 
 }
