@@ -39,7 +39,7 @@ private:
     scope<CommandQueue> m_queue;
 
 
-    void create_swap_chain();
+    void configure_surface();
 
     std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
 };

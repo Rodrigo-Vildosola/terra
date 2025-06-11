@@ -7,6 +7,8 @@
 #include "terra/core/context/context_utils.h"
 #include "terra/core/context/macros.h"
 
+#include "terra/helpers/string.h"
+
 
 // #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -69,13 +71,13 @@ void WebGPUContext::init(Window* window_handle) {
     m_queue->init(m_device);
 
 	inspect_surface_capabilities(m_surface, adapter);
-	create_swap_chain();
+	configure_surface();
 
     wgpuAdapterRelease(adapter);
 
 }
 
-void WebGPUContext::create_swap_chain() {
+void WebGPUContext::configure_surface() {
 	TR_CORE_INFO("Configuring swap chain...");
 
 	i32 width = m_window_handle->get_width();
@@ -97,6 +99,40 @@ void WebGPUContext::create_swap_chain() {
 	wgpuSurfaceConfigure(m_surface, &config);
 
 	TR_CORE_INFO("Swap chain configured with format {}, size {}x{}", (i32)format, width, height);
+
+}
+
+std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_view() {
+    WGPUSurfaceTexture surface_texture = {};
+    wgpuSurfaceGetCurrentTexture(m_surface, &surface_texture);
+
+	if (surface_texture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+		surface_texture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal) {
+		TR_CORE_ERROR("Failed to acquire surface texture! Status = {}", (int)surface_texture.status);
+		return { surface_texture, nullptr };
+	}
+	if (surface_texture.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal) {
+		TR_CORE_WARN("Acquired surface texture is suboptimal. You should reconfigure the surface.");
+	}
+
+	WGPUTextureViewDescriptor view_desc = {};
+    view_desc.nextInChain = nullptr;
+    view_desc.label = "SurfaceView"_wgpu;
+    view_desc.format = wgpuTextureGetFormat(surface_texture.texture);
+    view_desc.dimension = WGPUTextureViewDimension_2D;
+    view_desc.baseMipLevel = 0;
+    view_desc.mipLevelCount = 1;
+    view_desc.baseArrayLayer = 0;
+    view_desc.arrayLayerCount = 1;
+    view_desc.aspect = WGPUTextureAspect_All;
+
+    WGPUTextureView texture_view = wgpuTextureCreateView(surface_texture.texture, &view_desc);
+
+#ifndef WEBGPU_BACKEND_WGPU
+    wgpuTextureRelease(surface_texture.texture); // Texture view keeps ref
+#endif
+
+    return { surface_texture, texture_view };
 
 }
 
