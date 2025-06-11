@@ -41,6 +41,7 @@ private:
 
     void create_swap_chain();
 
+    std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
 };
 
 } // namespace terra

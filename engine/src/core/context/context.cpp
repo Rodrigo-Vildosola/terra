@@ -18,6 +18,8 @@ WebGPUContext::WebGPUContext(const ContextProps& props)
 {}
 
 WebGPUContext::~WebGPUContext() {
+	wgpuSurfaceUnconfigure(m_surface);
+
     if (m_device) wgpuDeviceRelease(m_device);
     if (m_surface) wgpuSurfaceRelease(m_surface);
 }
@@ -63,15 +65,39 @@ void WebGPUContext::init(Window* window_handle) {
 
     inspect_device(m_device);
 
-    wgpuAdapterRelease(adapter);
-
-    m_queue = CommandQueue::create();
+	m_queue = CommandQueue::create();
     m_queue->init(m_device);
+
+	inspect_surface_capabilities(m_surface, adapter);
+	create_swap_chain();
+
+    wgpuAdapterRelease(adapter);
 
 }
 
 void WebGPUContext::create_swap_chain() {
-	
+	TR_CORE_INFO("Configuring swap chain...");
+
+	i32 width = m_window_handle->get_width();
+    i32 height = m_window_handle->get_height();
+
+	WGPUTextureFormat format = WGPUTextureFormat_BGRA8Unorm;
+
+	WGPUSurfaceConfiguration config = {};
+    config.device       = m_device;
+    config.format       = format;
+    config.usage        = WGPUTextureUsage_RenderAttachment;
+    config.width        = (u32)width;
+    config.height       = (u32)height;
+    config.presentMode  = WGPUPresentMode_Fifo;
+    config.alphaMode    = WGPUCompositeAlphaMode_Auto;
+    config.viewFormatCount = 0;
+    config.viewFormats     = nullptr;
+
+	wgpuSurfaceConfigure(m_surface, &config);
+
+	TR_CORE_INFO("Swap chain configured with format {}, size {}x{}", (i32)format, width, height);
+
 }
 
 void WebGPUContext::swap_buffers() {

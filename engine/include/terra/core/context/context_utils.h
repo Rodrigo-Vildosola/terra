@@ -27,7 +27,7 @@ WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* 
 
 void inspect_adapter(WGPUAdapter adapter);
 void inspect_device(WGPUDevice device);
-
+void inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter);
 /**
  * Helper to zero-initialize and populate a WGPUDeviceDescriptor
  * with sensible defaults, plus optional callbacks.

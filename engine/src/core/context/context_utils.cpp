@@ -184,4 +184,41 @@ void inspect_device(WGPUDevice device) {
 #endif
 }
 
+void inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
+    TR_CORE_INFO("Inspecting surface capabilities...");
+
+    WGPUSurfaceCapabilities capabilities = {};
+    capabilities.nextInChain = nullptr;
+
+    WGPUStatus status = wgpuSurfaceGetCapabilities(surface, adapter, &capabilities);
+    if (status != WGPUStatus_Success) {
+        TR_CORE_ERROR("Failed to get surface capabilities (status = {})", static_cast<int>(status));
+        return;
+    }
+
+    TR_CORE_INFO("Surface Capabilities:");
+    TR_CORE_TRACE("  Texture usage bitmask: 0x{:X}", capabilities.usages);
+
+    // 1. Formats
+    TR_CORE_TRACE("  Supported formats ({}):", capabilities.formatCount);
+    for (size_t i = 0; i < capabilities.formatCount; ++i) {
+        TR_CORE_TRACE("    - {}", texture_format_to_string(capabilities.formats[i]));
+    }
+
+    // 2. Present Modes
+    TR_CORE_TRACE("  Supported present modes ({}):", capabilities.presentModeCount);
+    for (size_t i = 0; i < capabilities.presentModeCount; ++i) {
+        TR_CORE_TRACE("    - {}", present_mode_to_string(capabilities.presentModes[i]));
+    }
+
+    // 3. Alpha Modes
+    TR_CORE_TRACE("  Supported alpha modes ({}):", capabilities.alphaModeCount);
+    for (size_t i = 0; i < capabilities.alphaModeCount; ++i) {
+        TR_CORE_TRACE("    - {}", alpha_mode_to_string(capabilities.alphaModes[i]));
+    }
+
+    wgpuSurfaceCapabilitiesFreeMembers(capabilities);
+}
+
+
 }
