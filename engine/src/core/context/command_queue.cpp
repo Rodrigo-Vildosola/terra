@@ -74,16 +74,19 @@ WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, W
 
 }
 
-
-
-void CommandQueue::end_frame() {
-    TR_CORE_ASSERT(m_frame_active, "No active command encoder!");
-
+void CommandQueue::end_render_pass() {
     if (m_render_pass_encoder) {
         wgpuRenderPassEncoderEnd(m_render_pass_encoder);
         wgpuRenderPassEncoderRelease(m_render_pass_encoder);
         m_render_pass_encoder = nullptr;
     }
+}
+
+
+
+
+void CommandQueue::end_frame() {
+    TR_CORE_ASSERT(m_frame_active, "No active command encoder!");
 
     WGPUCommandBufferDescriptor desc = {};
     desc.label = "Command Buffer"_wgpu;

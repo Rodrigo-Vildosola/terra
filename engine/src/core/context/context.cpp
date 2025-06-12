@@ -80,8 +80,7 @@ void WebGPUContext::init(Window* window_handle) {
 void WebGPUContext::configure_surface() {
 	TR_CORE_INFO("Configuring swap chain...");
 
-	i32 width = m_window_handle->get_width();
-    i32 height = m_window_handle->get_height();
+    auto [fb_width, fb_height] = m_window_handle->get_framebuffer_size();
 
 	WGPUTextureFormat format = WGPUTextureFormat_BGRA8Unorm;
 
@@ -89,8 +88,8 @@ void WebGPUContext::configure_surface() {
     config.device       = m_device;
     config.format       = format;
     config.usage        = WGPUTextureUsage_RenderAttachment;
-    config.width        = (u32)width;
-    config.height       = (u32)height;
+    config.width        = fb_width;
+    config.height       = fb_height;
     config.presentMode  = WGPUPresentMode_Fifo;
     config.alphaMode    = WGPUCompositeAlphaMode_Auto;
     config.viewFormatCount = 0;
@@ -98,8 +97,7 @@ void WebGPUContext::configure_surface() {
 
 	wgpuSurfaceConfigure(m_surface, &config);
 
-	TR_CORE_INFO("Swap chain configured with format {}, size {}x{}", (i32)format, width, height);
-
+    TR_CORE_INFO("Surface configured: {}x{} @ format {}", fb_width, fb_height, (i32)format);
 }
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_view() {

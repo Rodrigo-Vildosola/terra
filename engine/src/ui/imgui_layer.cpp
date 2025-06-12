@@ -83,9 +83,18 @@ void UILayer::begin() {
 
 void UILayer::end(WGPURenderPassEncoder pass_encoder) {
     ImGuiIO& io = ImGui::GetIO();
-    Application& app = Application::get();
+    auto& window = Application::get().get_window();
     // auto window = app.get_window();
-    io.DisplaySize = ImVec2(app.get_window().get_width(), app.get_window().get_height());
+    auto [fb_width, fb_height] = window.get_framebuffer_size();
+    i32 win_w = window.get_width();
+    i32 win_h = window.get_height();
+
+    float scale_x = (float)fb_width / (float)win_w;
+    float scale_y = (float)fb_height / (float)win_h;
+
+
+    io.DisplaySize = ImVec2((float)fb_width, (float)fb_height);
+    io.DisplayFramebufferScale = ImVec2(scale_x, scale_y);
 
     // Rendering
     ImGui::Render();

@@ -17,11 +17,11 @@ void Renderer::init() {
     // compile pipelines, create bind-groups, etc.
 }
 
-void Renderer::begin_frame() {
+WGPURenderPassEncoder Renderer::begin_frame() {
     auto [surface_texture, target_view] = m_context.get_next_surface_view();
-    if (!target_view) return;
+    if (!target_view) return nullptr;
 
-    RendererCommand::begin_render_pass(m_queue, target_view);
+    return RendererCommand::begin_render_pass(m_queue, target_view);
 }
 
 WGPURenderPassEncoder Renderer::get_render_pass_encoder() {

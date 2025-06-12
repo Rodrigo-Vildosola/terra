@@ -77,7 +77,7 @@ void Application::run() {
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
 
-        m_renderer->begin_frame();
+        WGPURenderPassEncoder encoder = m_renderer->begin_frame();
         m_renderer->clear_color(0.5f, 0.1f, 0.3f, 1.0f);
 
         if (!m_minimized) {
@@ -91,7 +91,6 @@ void Application::run() {
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();
-            auto encoder = m_renderer->get_render_pass_encoder();
             m_ui_layer->end(encoder);
 		#endif
 
@@ -118,6 +117,8 @@ bool Application::on_window_resize(WindowResizeEvent& e) {
 
     m_minimized = false;
     // Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+    m_context->configure_surface();
 
     return false;
 }

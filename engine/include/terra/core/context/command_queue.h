@@ -27,6 +27,7 @@ public:
     void submit_now();
     WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color);
 
+    void end_render_pass();
     void poll(); // Poll/tick device for async processing
 
     WGPURenderPassEncoder get_render_pass_encoder() const { return m_render_pass_encoder; }

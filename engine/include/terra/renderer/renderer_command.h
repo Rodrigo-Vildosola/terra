@@ -6,7 +6,7 @@ namespace terra {
 
 struct RendererCommand {
     // these wrap CommandQueue calls and low-level WebGPU API
-    static void begin_render_pass(CommandQueue& q, WGPUTextureView targetView);
+    static WGPURenderPassEncoder begin_render_pass(CommandQueue& q, WGPUTextureView targetView);
     static void set_clear_color(float r, float g, float b, float a);
     static void end_render_pass(CommandQueue& q);
 

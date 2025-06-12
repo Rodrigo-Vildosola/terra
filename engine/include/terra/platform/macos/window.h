@@ -20,6 +20,9 @@ namespace terra {
 		inline u32 get_width() const override { return m_data.width; }
 		inline u32 get_height() const override { return m_data.height; }
 
+		std::pair<u32, u32> get_framebuffer_size() const override;
+
+
 		// Window attributes
 		inline void set_event_cb(const EventCallbackFn& callback) override { m_data.event_cb = callback; }
 		void set_vsync(bool enabled) override;

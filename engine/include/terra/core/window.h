@@ -29,8 +29,11 @@ namespace terra {
 
 		virtual void on_update() = 0;
 
-		virtual uint32_t get_width() const = 0;
-		virtual uint32_t get_height() const = 0;
+		virtual u32 get_width() const = 0;
+		virtual u32 get_height() const = 0;
+
+		virtual std::pair<u32, u32> get_framebuffer_size() const = 0;
+
 
 		// Window attributes
 		virtual void set_event_cb(const EventCallbackFn& callback) = 0;

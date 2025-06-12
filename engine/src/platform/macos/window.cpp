@@ -164,9 +164,23 @@ namespace terra {
 
 	void MacOSWindow::on_update()
 	{
+		// int win_w, win_h;
+		// int fb_w, fb_h;
+		// glfwGetWindowSize(m_window, &win_w, &win_h);
+		// glfwGetFramebufferSize(m_window, &fb_w, &fb_h);
+
+		// TR_CORE_INFO("Window size = {}x{}, Framebuffer size = {}x{}", win_w, win_h, fb_w, fb_h);
+
         glfwPollEvents();
         // m_context->swap_buffers();
 	}
+
+	std::pair<u32, u32> MacOSWindow::get_framebuffer_size() const {
+		int width, height;
+		glfwGetFramebufferSize(m_window, &width, &height);
+		return { (u32)width, (u32)height };
+	}
+
 
 	void MacOSWindow::set_vsync(bool enabled)
 	{

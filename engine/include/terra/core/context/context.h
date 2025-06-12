@@ -27,6 +27,9 @@ public:
 
     std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
 
+    void configure_surface();
+
+
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
@@ -41,7 +44,6 @@ private:
     scope<CommandQueue> m_queue;
 
 
-    void configure_surface();
 };
 
 } // namespace terra

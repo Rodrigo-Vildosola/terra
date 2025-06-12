@@ -26,7 +26,7 @@ public:
     ~Renderer();
 
     void init();                 // allocate pipelines, resources, etc.
-    void begin_frame();          // acquire surface, start pass
+    WGPURenderPassEncoder begin_frame();          // acquire surface, start pass
     void end_frame();            // end pass, submit, present
 
     // high‐level draws
