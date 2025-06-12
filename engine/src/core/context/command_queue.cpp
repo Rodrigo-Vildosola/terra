@@ -43,6 +43,38 @@ void CommandQueue::begin_frame(std::string_view label) {
     m_frame_active = true;
 }
 
+// command_queue.cpp (inside CommandQueue)
+void CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color) {
+    TR_CORE_ASSERT(m_frame_active, "Cannot create render pass without an active encoder");
+
+    // Color attachment setup
+    WGPURenderPassColorAttachment color_attachment = {};
+    color_attachment.view = target;
+    color_attachment.resolveTarget = nullptr;
+    color_attachment.loadOp = WGPULoadOp_Clear;
+    color_attachment.storeOp = WGPUStoreOp_Store;
+    color_attachment.clearValue = clear_color;
+
+#ifndef WEBGPU_BACKEND_WGPU
+    // Optional: Needed by Dawn backend, not supported on wgpu-native yet
+    color_attachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+#endif
+
+    // Render pass descriptor
+    WGPURenderPassDescriptor render_pass_desc = {};
+    render_pass_desc.nextInChain = nullptr;
+    render_pass_desc.colorAttachmentCount = 1;
+    render_pass_desc.colorAttachments = &color_attachment;
+    render_pass_desc.depthStencilAttachment = nullptr;
+    render_pass_desc.timestampWrites = nullptr;
+
+    // Begin → end immediately (just clears screen for now)
+    WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
+    wgpuRenderPassEncoderEnd(pass);
+    wgpuRenderPassEncoderRelease(pass);
+}
+
+
 
 void CommandQueue::end_frame() {
     TR_CORE_ASSERT(m_frame_active, "No active command encoder!");

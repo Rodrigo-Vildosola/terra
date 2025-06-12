@@ -64,8 +64,8 @@ void Application::on_event(Event& e)
 
 
 void Application::run() {
-    Renderer renderer;
-    renderer.init(m_window->get_native_window());
+    m_renderer = create_scope<Renderer>(*m_context);
+    m_renderer->init();
     Timer::init();
 
     auto* queue = m_context->get_queue();  // 🔥 Get the command queue
@@ -73,9 +73,6 @@ void Application::run() {
     // render loop
     // -----------
     while (m_running) {
-        queue->begin_frame("Main Frame");  // 🟢 Start command recording
-        queue->add_marker("Start Update");
-
         float time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
@@ -85,7 +82,10 @@ void Application::run() {
                 layer->on_update(timestep);
         }
 
-        queue->add_marker("End Update");
+        m_renderer->begin_frame();
+        m_renderer->clear_color(0.1f,0.2f,0.3f,1.0f);
+        // draw your scene here...
+        m_renderer->end_frame();
 
         // Renderer::begin_frame();
 
@@ -96,14 +96,12 @@ void Application::run() {
             m_ui_layer->end();
 		#endif
 
-        queue->end_frame();  // 🟢 Submit command buffer
-
         // Renderer::draw();
         // Renderer::end_frame();
 
 
         m_window->on_update();
-        queue->poll();
+        // queue->poll();
     }
 
 }

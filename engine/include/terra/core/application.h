@@ -3,14 +3,14 @@
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
 #include "terra/core/context/context.h"
-
 #include "terra/core/window.h"
-
 #include "terra/core/layer.h"
 #include "terra/core/layer_stack.h"
 
 #include "terra/events/event.h"
 #include "terra/events/application_event.h"
+
+#include "terra/renderer/renderer.h"
 
 #include "terra/ui/imgui_layer.h"
 
@@ -23,7 +23,7 @@ struct CommandLineArgs {
     i32 count = 0;
     char** args = nullptr;
 
-    const char* operator[](int index) const {
+    const char* operator[](i32 index) const {
         TR_CORE_ASSERT(index < count, "Index out of bounds for CommandLineArgs");
         return args[index];
     }
@@ -61,8 +61,9 @@ private:
     LayerStack m_layer_stack;
     CommandLineArgs m_command_line_args;
 
-    scope<Window> m_window;
-    scope<WebGPUContext> m_context;
+    scope<Window>           m_window;
+    scope<WebGPUContext>    m_context;
+    scope<Renderer>         m_renderer;
 
     bool m_running = true;
 	bool m_minimized = false;

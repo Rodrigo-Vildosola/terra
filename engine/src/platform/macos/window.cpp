@@ -170,9 +170,6 @@ namespace terra {
 
 	void MacOSWindow::set_vsync(bool enabled)
 	{
-		if (Renderer::get_API() == RendererAPI::API::OpenGL)
-			glfwSwapInterval(enabled ? 1 : 0);
-
 		m_data.vsync = enabled;
 	}
 

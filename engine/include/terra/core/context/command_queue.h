@@ -25,6 +25,7 @@ public:
 
     void add_marker(std::string_view label);
     void submit_now();
+    void create_render_pass(WGPUTextureView view, WGPUColor color);
 
     void poll(); // Poll/tick device for async processing
 

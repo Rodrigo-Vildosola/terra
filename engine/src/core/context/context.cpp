@@ -139,6 +139,7 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_v
 void WebGPUContext::swap_buffers() {
 	// Present logic would go here
 	// In a real app, you'd acquire the next texture and render to it
+	wgpuSurfacePresent(m_surface); // 🔥 Add this here
 }
 
 scope<WebGPUContext> WebGPUContext::create(const ContextProps& props) {

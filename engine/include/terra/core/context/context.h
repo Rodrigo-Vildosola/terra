@@ -25,6 +25,8 @@ public:
     WGPUDevice get_native_device() { return m_device; }
     CommandQueue* get_queue() { return m_queue.get(); }
 
+    std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
+
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 
 private:
@@ -40,8 +42,6 @@ private:
 
 
     void configure_surface();
-
-    std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
 };
 
 } // namespace terra

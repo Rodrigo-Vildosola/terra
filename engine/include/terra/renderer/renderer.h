@@ -10,7 +10,7 @@ namespace terra {
 class RendererAPI {
 public:
     enum class API {
-        None = 0, OpenGL = 1, Vulkan = 2, WebGPU = 3
+        None = 0, WebGPU = 1
     };
 
     inline static API get_API() { return s_API; }
@@ -22,12 +22,21 @@ private:
 
 class Renderer {
 public:
-    void init(void* native_window);
+    explicit Renderer(WebGPUContext& context);
+    ~Renderer();
+
+    void init();                 // allocate pipelines, resources, etc.
+    void begin_frame();          // acquire surface, start pass
+    void end_frame();            // end pass, submit, present
+
+    // high‐level draws
+    void clear_color(float r, float g, float b, float a);
+
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:
-    // scope<CommandQueue> m_queue;
-
+    WebGPUContext&   m_context;
+    CommandQueue&    m_queue;    // grab from context
 };
 
 }
