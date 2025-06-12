@@ -8,7 +8,7 @@ WGPUColor RendererCommand::s_clearColor = {0, 0, 0, 1};
 void RendererCommand::begin_render_pass(CommandQueue& q, WGPUTextureView view) {
     q.begin_frame("Main Frame");
 
-    s_clearColor = {0.1f,0.2f,0.3f,1.0f}; // default or set via clear_color()
+    // s_clearColor = {0.1f,0.2f,0.3f,1.0f}; // default or set via clear_color()
     q.add_marker("Begin Render Pass");
     q.create_render_pass(view, s_clearColor);
 }

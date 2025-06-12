@@ -32,6 +32,8 @@ public:
     // high‐level draws
     void clear_color(float r, float g, float b, float a);
 
+    WGPURenderPassEncoder get_render_pass_encoder();
+
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:

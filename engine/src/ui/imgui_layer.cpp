@@ -81,7 +81,7 @@ void UILayer::begin() {
     // ImGuizmo::BeginFrame();
 }
 
-void UILayer::end() {
+void UILayer::end(WGPURenderPassEncoder pass_encoder) {
     ImGuiIO& io = ImGui::GetIO();
     Application& app = Application::get();
     // auto window = app.get_window();
@@ -89,8 +89,9 @@ void UILayer::end() {
 
     // Rendering
     ImGui::Render();
-    WGPURenderPassEncoder encoder = {};
-    ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder);
+    if (pass_encoder) {
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass_encoder);
+    }
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {

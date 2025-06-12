@@ -24,6 +24,10 @@ void Renderer::begin_frame() {
     RendererCommand::begin_render_pass(m_queue, target_view);
 }
 
+WGPURenderPassEncoder Renderer::get_render_pass_encoder() {
+    return m_queue.get_render_pass_encoder();
+}
+
 void Renderer::clear_color(float r, float g, float b, float a) {
     RendererCommand::set_clear_color(r,g,b,a);
 }

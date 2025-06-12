@@ -19,7 +19,7 @@ public:
     virtual void on_event(Event& e) override;
 
     void begin();
-    void end();
+    void end(WGPURenderPassEncoder pass_encoder);
     void block_events(bool block) { m_block_events = block; }
     void set_dark_theme_colors();
 private:

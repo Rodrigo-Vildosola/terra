@@ -25,9 +25,11 @@ public:
 
     void add_marker(std::string_view label);
     void submit_now();
-    void create_render_pass(WGPUTextureView view, WGPUColor color);
+    WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color);
 
     void poll(); // Poll/tick device for async processing
+
+    WGPURenderPassEncoder get_render_pass_encoder() const { return m_render_pass_encoder; }
 
     static scope<CommandQueue> create(const CommandQueueProps& props = CommandQueueProps());
 
@@ -36,6 +38,8 @@ private:
     WGPUDevice m_device = nullptr;
     WGPUQueue m_queue = nullptr;
     WGPUCommandEncoder m_encoder = nullptr;
+    WGPURenderPassEncoder m_render_pass_encoder = nullptr; // ADD THIS
+
 
     bool m_frame_active = false;
 };

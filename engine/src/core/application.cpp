@@ -77,31 +77,28 @@ void Application::run() {
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
 
+        m_renderer->begin_frame();
+        m_renderer->clear_color(0.5f, 0.1f, 0.3f, 1.0f);
+
         if (!m_minimized) {
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
         }
 
-        m_renderer->begin_frame();
-        m_renderer->clear_color(0.1f,0.2f,0.3f,1.0f);
         // draw your scene here...
-        m_renderer->end_frame();
-
-        // Renderer::begin_frame();
 
         #if !defined(TR_RELEASE)
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();
-            m_ui_layer->end();
+            auto encoder = m_renderer->get_render_pass_encoder();
+            m_ui_layer->end(encoder);
 		#endif
 
-        // Renderer::draw();
-        // Renderer::end_frame();
+        m_renderer->end_frame();
 
 
         m_window->on_update();
-        // queue->poll();
     }
 
 }

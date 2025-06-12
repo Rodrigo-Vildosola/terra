@@ -44,7 +44,7 @@ void CommandQueue::begin_frame(std::string_view label) {
 }
 
 // command_queue.cpp (inside CommandQueue)
-void CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color) {
+WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color) {
     TR_CORE_ASSERT(m_frame_active, "Cannot create render pass without an active encoder");
 
     // Color attachment setup
@@ -69,15 +69,21 @@ void CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_co
     render_pass_desc.timestampWrites = nullptr;
 
     // Begin → end immediately (just clears screen for now)
-    WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
-    wgpuRenderPassEncoderEnd(pass);
-    wgpuRenderPassEncoderRelease(pass);
+    m_render_pass_encoder = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
+    return m_render_pass_encoder;
+
 }
 
 
 
 void CommandQueue::end_frame() {
     TR_CORE_ASSERT(m_frame_active, "No active command encoder!");
+
+    if (m_render_pass_encoder) {
+        wgpuRenderPassEncoderEnd(m_render_pass_encoder);
+        wgpuRenderPassEncoderRelease(m_render_pass_encoder);
+        m_render_pass_encoder = nullptr;
+    }
 
     WGPUCommandBufferDescriptor desc = {};
     desc.label = "Command Buffer"_wgpu;
