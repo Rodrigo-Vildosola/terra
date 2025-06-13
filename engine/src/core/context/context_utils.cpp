@@ -4,6 +4,14 @@
 
 namespace terra {
 
+void sleep_for_ms(unsigned int milliseconds) {
+    #ifdef __EMSCRIPTEN__
+        emscripten_sleep(milliseconds);
+    #else
+        std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    #endif
+}
+
 WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOptions const* options) {
 	// A simple structure holding the local information shared with the
 	// onAdapterrequest_ended callback.
@@ -20,7 +28,7 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 
 	WGPURequestAdapterCallbackInfo callbackInfo = {};
     callbackInfo.nextInChain = nullptr;
-    callbackInfo.mode        = WGPUCallbackMode_AllowSpontaneous;
+    callbackInfo.mode        = WGPUCallbackMode_AllowProcessEvents;
     callbackInfo.callback    = request_adapter_callback;
     callbackInfo.userdata1   = &userData;
     callbackInfo.userdata2   = nullptr;
@@ -33,11 +41,18 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 		callbackInfo
 	);
 
-#ifdef __EMSCRIPTEN__
-		while (!userData.request_ended) {
-			emscripten_sleep(100);
-		}
-#endif // __EMSCRIPTEN__
+	// Hand the execution to the WebGPU instance so that it can check for
+	// pending async operations, in which case it invokes our callbacks.
+	// NB: We test once before the loop not to wait for 200ms in case it is
+	// already ready
+	wgpuInstanceProcessEvents(instance);
+
+	while (!userData.request_ended) {
+		// Waiting for 200 ms to avoid asking too often to process events
+		sleep_for_ms(200);
+
+		wgpuInstanceProcessEvents(instance);
+	}
 
 	TR_CORE_ASSERT(userData.request_ended, "Request for adapter has not ended");
 
@@ -45,12 +60,12 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 
 }
 
-WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor) {
+WGPUDevice request_device_sync(WGPUInstance instance, WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor) {
     request_userdata<WGPUDevice> userData;
 
 	WGPURequestDeviceCallbackInfo callbackInfo = {};
 	callbackInfo.nextInChain = nullptr;
-	callbackInfo.mode        = WGPUCallbackMode_AllowSpontaneous;
+	callbackInfo.mode        = WGPUCallbackMode_AllowProcessEvents;
 	callbackInfo.callback    = request_device_callback;
 	callbackInfo.userdata1   = &userData;
 	callbackInfo.userdata2   = nullptr;
@@ -61,11 +76,14 @@ WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* 
         callbackInfo
     );
 
-#ifdef __EMSCRIPTEN__
-    while (!userData.request_ended) {
-        emscripten_sleep(100);
-    }
-#endif // __EMSCRIPTEN__
+	wgpuInstanceProcessEvents(instance);
+
+	while (!userData.request_ended) {
+		// Waiting for 200 ms to avoid asking too often to process events
+		sleep_for_ms(200);
+
+		wgpuInstanceProcessEvents(instance);
+	}
 
 	TR_CORE_ASSERT(userData.request_ended, "Request for device has not ended");
 

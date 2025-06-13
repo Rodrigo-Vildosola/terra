@@ -36,7 +36,7 @@ private:
     Window* m_window_handle = nullptr;
     ContextProps m_props;
     
-    // WGPUInstance m_instance = nullptr;
+    WGPUInstance m_instance = nullptr;
     // WGPUAdapter m_adapter = nullptr;
     WGPUDevice  m_device = nullptr;
     WGPUSurface m_surface = nullptr;

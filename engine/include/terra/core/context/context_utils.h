@@ -22,7 +22,7 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
  *     const device = await adapter.requestDevice(descriptor);
  * It is very similar to requestAdapter
  */
-WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor);
+WGPUDevice request_device_sync(WGPUInstance instance, WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor);
 
 
 void inspect_adapter(WGPUAdapter adapter);

@@ -116,7 +116,6 @@ bool Application::on_window_resize(WindowResizeEvent& e) {
     }
 
     m_minimized = false;
-    // Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
     m_context->configure_surface();
 

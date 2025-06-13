@@ -24,6 +24,8 @@ WebGPUContext::~WebGPUContext() {
 
     if (m_device) wgpuDeviceRelease(m_device);
     if (m_surface) wgpuSurfaceRelease(m_surface);
+	if (m_instance)	wgpuInstanceRelease(m_instance);
+
 }
 
 
@@ -36,23 +38,21 @@ void WebGPUContext::init(Window* window_handle) {
 
 	// Create instance
 #ifdef WEBGPU_BACKEND_EMSCRIPTEN
-	WGPUInstance instance = wgpuCreateInstance(nullptr);
+	m_instance = wgpuCreateInstance(nullptr);
 #else //  WEBGPU_BACKEND_EMSCRIPTEN
-	WGPUInstance instance = wgpuCreateInstance(&desc);
+	m_instance = wgpuCreateInstance(&desc);
 #endif //  WEBGPU_BACKEND_EMSCRIPTEN
 
-	TR_CORE_ASSERT(instance, "WebGPU instance not yet created");
+	TR_CORE_ASSERT(m_instance, "WebGPU instance not yet created");
 
-    m_surface = window_handle->get_surface(instance);
+    m_surface = window_handle->get_surface(m_instance);
 
 	WGPURequestAdapterOptions adapter_opts = {};
 	adapter_opts.nextInChain = nullptr;
     adapter_opts.compatibleSurface = m_surface;
-	WGPUAdapter adapter = request_adapter_sync(instance, &adapter_opts);
+	WGPUAdapter adapter = request_adapter_sync(m_instance, &adapter_opts);
 
 	inspect_adapter(adapter);
-
-	wgpuInstanceRelease(instance);
 
 	DeviceDescriptorBuilder builder;
     builder
@@ -63,7 +63,7 @@ void WebGPUContext::init(Window* window_handle) {
 
     auto device_desc = builder.build();
 
-	m_device = request_device_sync(adapter, &device_desc);
+	m_device = request_device_sync(m_instance, adapter, &device_desc);
 
     inspect_device(m_device);
 

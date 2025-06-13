@@ -71,6 +71,11 @@ namespace terra {
 			data.event_cb(event);
 		});
 
+		glfwSetWindowContentScaleCallback(m_window, [](GLFWwindow*, float xscale, float yscale) {
+			TR_CORE_INFO("DPI scale changed: {}, {}", xscale, yscale);
+			// Resize render targets, UI, etc.
+		});
+
 		glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
