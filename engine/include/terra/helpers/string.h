@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <webgpu/webgpu.h>
 
 namespace terra {

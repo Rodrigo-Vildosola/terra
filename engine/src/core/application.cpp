@@ -78,15 +78,13 @@ void Application::run() {
         m_last_frame_time = time;
 
         WGPURenderPassEncoder render_pass = m_renderer->begin_frame();
-        m_renderer->clear_color(0.5f, 0.1f, 0.3f, 1.0f);
+        m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
         if (!m_minimized) {
             m_renderer->draw_triangle();
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
         }
-
-        // draw your scene here...
 
         #if !defined(TR_RELEASE)
             m_ui_layer->begin();
@@ -99,6 +97,8 @@ void Application::run() {
 
 
         m_window->on_update();
+
+        // break;
     }
 
 }

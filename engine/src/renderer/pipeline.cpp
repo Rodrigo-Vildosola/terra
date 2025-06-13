@@ -1,21 +1,35 @@
 #include "terra/renderer/pipeline.h"
+#include "terra/helpers/error.h"
 #include "terra/helpers/string.h"
+#include "terra/helpers/user_data.h"
 
 const char* shader_source = R"(
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-	if (in_vertex_index == 0u) {
-		return vec4f(-0.45, 0.5, 0.0, 1.0);
-	} else if (in_vertex_index == 1u) {
-		return vec4f(0.45, 0.5, 0.0, 1.0);
-	} else {
-		return vec4f(0.0, -0.5, 0.0, 1.0);
-	}
+    var pos: vec4f;
+    if (in_vertex_index == 0u) {
+        pos = vec4f(-0.45, 0.5, 0.0, 1.0);
+    } else if (in_vertex_index == 1u) {
+        pos = vec4f(0.45, 0.5, 0.0, 1.0);
+    } else {
+        pos = vec4f(0.0, -0.5, 0.0, 1.0);
+    }
+
+    let flipY = mat4x4f(
+        vec4f(1.0,  0.0, 0.0, 0.0),
+        vec4f(0.0, -1.0, 0.0, 0.0),
+        vec4f(0.0,  0.0, 1.0, 0.0),
+        vec4f(0.0,  0.0, 0.0, 1.0),
+    );
+
+    var output: vec4f;
+    output = flipY * pos;
+    return output;
 }
-// Add this in the same shaderSource literal than the vertex entry point
+
 @fragment
 fn fs_main() -> @location(0) vec4f {
-	return vec4f(0.0, 0.4, 0.7, 1.0);
+    return vec4f(0.0, 0.4, 0.7, 1.0);
 }
 )";
 
@@ -51,7 +65,12 @@ void Pipeline::create_pipeline() {
 	shader_desc.nextInChain = &wgsl_desc.chain;
 	shader_desc.label = "Triangle Shader Module"_wgpu;
 
+	request_userdata<bool> shader_compiled;
+
+	WGPU_PUSH_ERROR_SCOPE(m_context.get_native_device());
 	WGPUShaderModule shader_module = wgpuDeviceCreateShaderModule(m_context.get_native_device(), &shader_desc);
+	WGPU_POP_ERROR_SCOPE_CAPTURE_BOOL(m_context.get_native_device(), &shader_compiled);
+
 
 	WGPURenderPipelineDescriptor pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
 
@@ -76,6 +95,7 @@ void Pipeline::create_pipeline() {
 
 	pipeline_desc.vertex = vertex_state;
 	pipeline_desc.fragment = &fragment_state;
+	pipeline_desc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
 
 	m_pipeline = wgpuDeviceCreateRenderPipeline(m_context.get_native_device(), &pipeline_desc);
 
