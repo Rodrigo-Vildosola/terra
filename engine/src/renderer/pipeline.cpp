@@ -74,6 +74,23 @@ void Pipeline::create_pipeline() {
 
 	WGPURenderPipelineDescriptor pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
 
+	// Each sequence of 3 vertices is considered as a triangle
+	pipeline_desc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
+
+	// We'll see later how to specify the order in which vertices should be
+	// connected. When not specified, vertices are considered sequentially.
+	pipeline_desc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
+
+	// The face orientation is defined by assuming that when looking
+	// from the front of the face, its corner vertices are enumerated
+	// in the counter-clockwise (CCW) order.
+	pipeline_desc.primitive.frontFace = WGPUFrontFace_CCW;
+
+	// But the face orientation does not matter much because we do not
+	// cull (i.e. "hide") the faces pointing away from us (which is often
+	// used for optimization).
+	pipeline_desc.primitive.cullMode = WGPUCullMode_None;
+
 	// Vertex state
 	WGPUVertexState vertex_state = WGPU_VERTEX_STATE_INIT;
 	vertex_state.module = shader_module;
@@ -95,7 +112,6 @@ void Pipeline::create_pipeline() {
 
 	pipeline_desc.vertex = vertex_state;
 	pipeline_desc.fragment = &fragment_state;
-	pipeline_desc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
 
 	m_pipeline = wgpuDeviceCreateRenderPipeline(m_context.get_native_device(), &pipeline_desc);
 
