@@ -27,7 +27,9 @@ public:
 
     std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
 
-    void configure_surface();
+    void configure_surface(WGPUTextureFormat preferred_format);
+
+    WGPUTextureFormat get_preferred_format() const { return m_surface_format; }
 
 
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
@@ -40,6 +42,7 @@ private:
     // WGPUAdapter m_adapter = nullptr;
     WGPUDevice  m_device = nullptr;
     WGPUSurface m_surface = nullptr;
+    WGPUTextureFormat m_surface_format = WGPUTextureFormat_Undefined;
 
     scope<CommandQueue> m_queue;
 

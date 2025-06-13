@@ -19,8 +19,8 @@ target_link_libraries(${ENGINE_NAME}
     glfw3webgpu
 )
 
-target_include_directories(${ENGINE_NAME} PUBLIC external/glm)
-target_include_directories(${ENGINE_NAME} PUBLIC external/spdlog/include)
+# target_include_directories(${ENGINE_NAME} PUBLIC external/glm)
+# target_include_directories(${ENGINE_NAME} PUBLIC external/spdlog/include)
 
 target_compile_definitions(${ENGINE_NAME} PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
 

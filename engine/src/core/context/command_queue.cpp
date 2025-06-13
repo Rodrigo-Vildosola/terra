@@ -36,7 +36,7 @@ void CommandQueue::init(const WGPUDevice device) {
 void CommandQueue::begin_frame(std::string_view label) {
     TR_CORE_ASSERT(!m_frame_active, "Command encoder already active!");
 
-    WGPUCommandEncoderDescriptor desc = {};
+    WGPUCommandEncoderDescriptor desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
     desc.label = to_wgpu_string_view(label); // use your `_wgpu` literal or helper
     m_encoder = wgpuDeviceCreateCommandEncoder(m_device, &desc);
 
@@ -48,25 +48,16 @@ WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, W
     TR_CORE_ASSERT(m_frame_active, "Cannot create render pass without an active encoder");
 
     // Color attachment setup
-    WGPURenderPassColorAttachment color_attachment = {};
+    WGPURenderPassColorAttachment color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     color_attachment.view = target;
-    color_attachment.resolveTarget = nullptr;
     color_attachment.loadOp = WGPULoadOp_Clear;
     color_attachment.storeOp = WGPUStoreOp_Store;
     color_attachment.clearValue = clear_color;
 
-#ifndef WEBGPU_BACKEND_WGPU
-    // Optional: Needed by Dawn backend, not supported on wgpu-native yet
-    color_attachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-#endif
-
     // Render pass descriptor
-    WGPURenderPassDescriptor render_pass_desc = {};
-    render_pass_desc.nextInChain = nullptr;
+    WGPURenderPassDescriptor render_pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
     render_pass_desc.colorAttachmentCount = 1;
     render_pass_desc.colorAttachments = &color_attachment;
-    render_pass_desc.depthStencilAttachment = nullptr;
-    render_pass_desc.timestampWrites = nullptr;
 
     // Begin → end immediately (just clears screen for now)
     m_render_pass_encoder = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);

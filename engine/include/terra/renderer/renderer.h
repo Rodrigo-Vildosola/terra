@@ -3,9 +3,12 @@
 #include "terra/core/base.h"
 #include "terra/core/context/context.h"
 
+#include "terra/renderer/pipeline.h"
 #include "terra/core/context/command_queue.h"
 
 namespace terra {
+
+class Pipeline;
 
 class RendererAPI {
 public:
@@ -32,6 +35,9 @@ public:
     // high‐level draws
     void clear_color(float r, float g, float b, float a);
 
+    void draw_triangle();
+
+
     WGPURenderPassEncoder get_render_pass_encoder();
 
     static RendererAPI::API get_API() { return RendererAPI::get_API(); }
@@ -39,6 +45,7 @@ public:
 private:
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;    // grab from context
+    scope<Pipeline> m_pipeline;
 };
 
 }

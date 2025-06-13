@@ -1,3 +1,4 @@
+#include "terra/core/base.h"
 #include "terrapch.h"
 #include "terra/renderer/renderer_command.h"
 #include "terra/renderer/renderer.h"
@@ -14,6 +15,15 @@ Renderer::~Renderer() {}
 
 // Allocate static context
 void Renderer::init() {
+
+    PipelineSpecification spec;
+    spec.shader_path = "assets/shaders/triangle.wgsl";
+    spec.surface_format = m_context.get_preferred_format();
+    spec.vertex_entry = "vs_main";
+    spec.fragment_entry = "fs_main";
+    spec.uniform_buffer_size = 0;
+
+    m_pipeline = create_scope<Pipeline>(m_context, spec);
     // compile pipelines, create bind-groups, etc.
 }
 
@@ -37,5 +47,16 @@ void Renderer::end_frame() {
     m_context.swap_buffers();
     m_queue.poll();
 }
+
+void Renderer::draw_triangle() {
+    WGPURenderPassEncoder encoder = get_render_pass_encoder();
+    if (!encoder) return;
+
+    // m_pipeline->bind(encoder); // this does setPipeline()
+
+    // draw 3 vertices as a triangle
+    wgpuRenderPassEncoderDraw(encoder, 3, 1, 0, 0);
+}
+
 
 }

@@ -70,23 +70,21 @@ void WebGPUContext::init(Window* window_handle) {
 	m_queue = CommandQueue::create();
     m_queue->init(m_device);
 
-	inspect_surface_capabilities(m_surface, adapter);
-	configure_surface();
+	m_surface_format = inspect_surface_capabilities(m_surface, adapter);
+	configure_surface(m_surface_format);
 
     wgpuAdapterRelease(adapter);
 
 }
 
-void WebGPUContext::configure_surface() {
+void WebGPUContext::configure_surface(WGPUTextureFormat preferred_format) {
 	TR_CORE_INFO("Configuring swap chain...");
 
     auto [fb_width, fb_height] = m_window_handle->get_framebuffer_size();
 
-	WGPUTextureFormat format = WGPUTextureFormat_BGRA8Unorm;
-
 	WGPUSurfaceConfiguration config = {};
     config.device       = m_device;
-    config.format       = format;
+    config.format       = preferred_format;
     config.usage        = WGPUTextureUsage_RenderAttachment;
     config.width        = fb_width;
     config.height       = fb_height;
@@ -97,11 +95,11 @@ void WebGPUContext::configure_surface() {
 
 	wgpuSurfaceConfigure(m_surface, &config);
 
-    TR_CORE_INFO("Surface configured: {}x{} @ format {}", fb_width, fb_height, (i32)format);
+    TR_CORE_INFO("Surface configured: {}x{} @ format {}", fb_width, fb_height, (i32)preferred_format);
 }
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_view() {
-    WGPUSurfaceTexture surface_texture = {};
+    WGPUSurfaceTexture surface_texture = WGPU_SURFACE_TEXTURE_INIT;
     wgpuSurfaceGetCurrentTexture(m_surface, &surface_texture);
 
 	if (surface_texture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
@@ -113,11 +111,11 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_v
 		TR_CORE_WARN("Acquired surface texture is suboptimal. You should reconfigure the surface.");
 	}
 
-	WGPUTextureViewDescriptor view_desc = {};
+	WGPUTextureViewDescriptor view_desc = WGPU_TEXTURE_VIEW_DESCRIPTOR_INIT;
     view_desc.nextInChain = nullptr;
-    view_desc.label = "SurfaceView"_wgpu;
-    view_desc.format = wgpuTextureGetFormat(surface_texture.texture);
+    view_desc.label = "Surface texture view"_wgpu;
     view_desc.dimension = WGPUTextureViewDimension_2D;
+    view_desc.format = wgpuTextureGetFormat(surface_texture.texture);
     view_desc.baseMipLevel = 0;
     view_desc.mipLevelCount = 1;
     view_desc.baseArrayLayer = 0;
@@ -126,9 +124,9 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_v
 
     WGPUTextureView texture_view = wgpuTextureCreateView(surface_texture.texture, &view_desc);
 
-#ifndef WEBGPU_BACKEND_WGPU
-    wgpuTextureRelease(surface_texture.texture); // Texture view keeps ref
-#endif
+    // We no longer need the texture, only its view,
+    // so we release it at the end of GetNextSurfaceViewData
+    wgpuTextureRelease(surface_texture.texture);
 
     return { surface_texture, texture_view };
 

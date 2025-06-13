@@ -202,7 +202,7 @@ void inspect_device(WGPUDevice device) {
 #endif
 }
 
-void inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
+WGPUTextureFormat inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
     TR_CORE_INFO("Inspecting surface capabilities...");
 
     WGPUSurfaceCapabilities capabilities = {};
@@ -211,7 +211,7 @@ void inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
     WGPUStatus status = wgpuSurfaceGetCapabilities(surface, adapter, &capabilities);
     if (status != WGPUStatus_Success) {
         TR_CORE_ERROR("Failed to get surface capabilities (status = {})", static_cast<int>(status));
-        return;
+        return WGPUTextureFormat_Undefined;
     }
 
     TR_CORE_INFO("Surface Capabilities:");
@@ -236,6 +236,9 @@ void inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
     }
 
     wgpuSurfaceCapabilitiesFreeMembers(capabilities);
+
+    // The first one is always the preferred format!
+    return capabilities.formats[0];
 }
 
 
