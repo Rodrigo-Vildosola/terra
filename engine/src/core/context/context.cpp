@@ -9,10 +9,6 @@
 
 #include "terra/helpers/string.h"
 
-
-// #include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 namespace terra {
 
 WebGPUContext::WebGPUContext(const ContextProps& props)
