@@ -23,7 +23,7 @@ void CommandQueue::init(const WGPUDevice device) {
 		TR_CORE_INFO("Queued work finished with status: 0x{:X}", (u32)status);
 	};
 
-    WGPUQueueWorkDoneCallbackInfo callback_info = {};
+    WGPUQueueWorkDoneCallbackInfo callback_info = WGPU_QUEUE_WORK_DONE_CALLBACK_INFO_INIT;
     callback_info.nextInChain = nullptr;
     callback_info.mode = WGPUCallbackMode_AllowSpontaneous;
     callback_info.callback = on_queue_work_done;
@@ -79,7 +79,7 @@ void CommandQueue::end_render_pass() {
 void CommandQueue::end_frame() {
     TR_CORE_ASSERT(m_frame_active, "No active command encoder!");
 
-    WGPUCommandBufferDescriptor desc = {};
+    WGPUCommandBufferDescriptor desc = WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT;
     desc.label = "Command Buffer"_wgpu;
     WGPUCommandBuffer cmdBuffer = wgpuCommandEncoderFinish(m_encoder, &desc);
 

@@ -29,7 +29,7 @@ void WebGPUContext::init(Window* window_handle) {
 	TR_CORE_ASSERT(window_handle, "Window handle is null!");
 
 	m_window_handle = window_handle;
-	WGPUInstanceDescriptor desc = {};
+	WGPUInstanceDescriptor desc = WGPU_INSTANCE_DESCRIPTOR_INIT;
 	desc.nextInChain = nullptr;
 
 	// Create instance
@@ -43,7 +43,7 @@ void WebGPUContext::init(Window* window_handle) {
 
     m_surface = window_handle->get_surface(m_instance);
 
-	WGPURequestAdapterOptions adapter_opts = {};
+	WGPURequestAdapterOptions adapter_opts = WGPU_REQUEST_ADAPTER_OPTIONS_INIT;
 	adapter_opts.nextInChain = nullptr;
     adapter_opts.compatibleSurface = m_surface;
 	WGPUAdapter adapter = request_adapter_sync(m_instance, &adapter_opts);
@@ -78,7 +78,7 @@ void WebGPUContext::configure_surface(WGPUTextureFormat preferred_format) {
 
     auto [fb_width, fb_height] = m_window_handle->get_framebuffer_size();
 
-	WGPUSurfaceConfiguration config = {};
+	WGPUSurfaceConfiguration config = WGPU_SURFACE_CONFIGURATION_INIT;
     config.device       = m_device;
     config.format       = preferred_format;
     config.usage        = WGPUTextureUsage_RenderAttachment;

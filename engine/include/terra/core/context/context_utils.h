@@ -33,7 +33,7 @@ WGPUTextureFormat inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter 
  * with sensible defaults, plus optional callbacks.
  */
 struct DeviceDescriptorBuilder {
-    WGPUDeviceDescriptor desc = {};
+    WGPUDeviceDescriptor desc = WGPU_DEVICE_DESCRIPTOR_INIT;
 
     DeviceDescriptorBuilder() {
         desc.nextInChain                = nullptr;

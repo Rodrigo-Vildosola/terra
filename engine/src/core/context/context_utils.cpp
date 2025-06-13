@@ -26,7 +26,7 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 	// provided as the last argument of wgpuInstanceRequestAdapter and received
 	// by the callback as its last argument.
 
-	WGPURequestAdapterCallbackInfo callbackInfo = {};
+	WGPURequestAdapterCallbackInfo callbackInfo = WGPU_REQUEST_ADAPTER_CALLBACK_INFO_INIT;
     callbackInfo.nextInChain = nullptr;
     callbackInfo.mode        = WGPUCallbackMode_AllowProcessEvents;
     callbackInfo.callback    = request_adapter_callback;
@@ -63,17 +63,17 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 WGPUDevice request_device_sync(WGPUInstance instance, WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor) {
     request_userdata<WGPUDevice> userData;
 
-	WGPURequestDeviceCallbackInfo callbackInfo = {};
-	callbackInfo.nextInChain = nullptr;
-	callbackInfo.mode        = WGPUCallbackMode_AllowProcessEvents;
-	callbackInfo.callback    = request_device_callback;
-	callbackInfo.userdata1   = &userData;
-	callbackInfo.userdata2   = nullptr;
+	WGPURequestDeviceCallbackInfo callback_info = WGPU_REQUEST_DEVICE_CALLBACK_INFO_INIT;
+	callback_info.nextInChain = nullptr;
+	callback_info.mode        = WGPUCallbackMode_AllowProcessEvents;
+	callback_info.callback    = request_device_callback;
+	callback_info.userdata1   = &userData;
+	callback_info.userdata2   = nullptr;
 
     wgpuAdapterRequestDevice(
         adapter,
         descriptor,
-        callbackInfo
+        callback_info
     );
 
 	wgpuInstanceProcessEvents(instance);
@@ -93,20 +93,20 @@ WGPUDevice request_device_sync(WGPUInstance instance, WGPUAdapter adapter, WGPUD
 
 void inspect_adapter(WGPUAdapter adapter) {
 #ifndef __EMSCRIPTEN__
-	WGPULimits supportedLimits = {};
-	supportedLimits.nextInChain = nullptr;
+	WGPULimits supported_limits = WGPU_LIMITS_INIT;
+	supported_limits.nextInChain = nullptr;
 
 #ifdef WEBGPU_BACKEND_DAWN
-	bool success = wgpuAdapterGetLimits(adapter, &supportedLimits) == WGPUStatus_Success;
+	bool success = wgpuAdapterGetLimits(adapter, &supported_limits) == WGPUStatus_Success;
 #else
-	bool success = wgpuAdapterGetLimits(adapter, &supportedLimits);
+	bool success = wgpuAdapterGetLimits(adapter, &supported_limits);
 #endif
 	if (success) {
 		TR_FILE_INFO("Adapter limits:");
-		TR_FILE_TRACE("  maxTextureDimension1D   = {}", supportedLimits.maxTextureDimension1D);
-		TR_FILE_TRACE("  maxTextureDimension2D   = {}", supportedLimits.maxTextureDimension2D);
-		TR_FILE_TRACE("  maxTextureDimension3D   = {}", supportedLimits.maxTextureDimension3D);
-		TR_FILE_TRACE("  maxTextureArrayLayers   = {}", supportedLimits.maxTextureArrayLayers);
+		TR_FILE_TRACE("  maxTextureDimension1D   = {}", supported_limits.maxTextureDimension1D);
+		TR_FILE_TRACE("  maxTextureDimension2D   = {}", supported_limits.maxTextureDimension2D);
+		TR_FILE_TRACE("  maxTextureDimension3D   = {}", supported_limits.maxTextureDimension3D);
+		TR_FILE_TRACE("  maxTextureArrayLayers   = {}", supported_limits.maxTextureArrayLayers);
 	} else {
 		TR_CORE_WARN("Could not query adapter limits");
 	}
@@ -114,7 +114,7 @@ void inspect_adapter(WGPUAdapter adapter) {
 
     // 2) Features
     {
-        WGPUSupportedFeatures feats = {};
+        WGPUSupportedFeatures feats = WGPU_SUPPORTED_FEATURES_INIT;
         feats.features = nullptr;
         wgpuAdapterGetFeatures(adapter, &feats);
 
@@ -129,7 +129,7 @@ void inspect_adapter(WGPUAdapter adapter) {
 
 	// 3) Properties
     {
-        WGPUAdapterInfo info = {};
+        WGPUAdapterInfo info = WGPU_ADAPTER_INFO_INIT;
         info.nextInChain = nullptr;
         wgpuAdapterGetInfo(adapter, &info);
 
@@ -160,7 +160,7 @@ void inspect_device(WGPUDevice device) {
 #ifndef __EMSCRIPTEN__
     // 1) Features
     {
-        WGPUSupportedFeatures feats = {};
+        WGPUSupportedFeatures feats = WGPU_SUPPORTED_FEATURES_INIT;
         feats.features = nullptr;
         wgpuDeviceGetFeatures(device, &feats);
 
@@ -175,7 +175,7 @@ void inspect_device(WGPUDevice device) {
 
     // 2) Limits
     {
-        WGPULimits limits = {};
+        WGPULimits limits = WGPU_LIMITS_INIT;
         limits.nextInChain = nullptr;
 
     #ifdef WEBGPU_BACKEND_DAWN
@@ -205,7 +205,7 @@ void inspect_device(WGPUDevice device) {
 WGPUTextureFormat inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter adapter) {
     TR_CORE_INFO("Inspecting surface capabilities...");
 
-    WGPUSurfaceCapabilities capabilities = {};
+    WGPUSurfaceCapabilities capabilities = WGPU_SURFACE_CAPABILITIES_INIT;
     capabilities.nextInChain = nullptr;
 
     WGPUStatus status = wgpuSurfaceGetCapabilities(surface, adapter, &capabilities);

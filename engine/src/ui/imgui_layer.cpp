@@ -52,8 +52,8 @@ void UILayer::on_attach() {
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOther(window, true);
     ImGui_ImplWGPU_InitInfo info = {};
-    info.Device = Application::get().get_device();
-    info.RenderTargetFormat = WGPUTextureFormat_BGRA8Unorm;
+    info.Device = app.get_device();
+    info.RenderTargetFormat = app.get_context()->get_preferred_format();
 
     ImGui_ImplWGPU_Init(&info);
 }
