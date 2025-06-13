@@ -81,6 +81,7 @@ void Application::run() {
         m_renderer->clear_color(0.5f, 0.1f, 0.3f, 1.0f);
 
         if (!m_minimized) {
+            m_renderer->draw_triangle();
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
         }

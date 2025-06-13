@@ -235,10 +235,12 @@ WGPUTextureFormat inspect_surface_capabilities(WGPUSurface surface, WGPUAdapter 
         TR_CORE_TRACE("    - {}", alpha_mode_to_string(capabilities.alphaModes[i]));
     }
 
+    WGPUTextureFormat preferred_format = capabilities.formats[0];
+
     wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
     // The first one is always the preferred format!
-    return capabilities.formats[0];
+    return preferred_format;
 }
 
 

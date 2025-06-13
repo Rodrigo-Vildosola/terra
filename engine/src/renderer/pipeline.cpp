@@ -33,6 +33,16 @@ Pipeline::~Pipeline() {
 	if (m_bind_group_layout) wgpuBindGroupLayoutRelease(m_bind_group_layout);
 }
 
+void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
+    if (!m_pipeline) {
+        TR_CORE_ERROR("Tried to bind a null pipeline!");
+        return;
+    }
+
+    wgpuRenderPassEncoderSetPipeline(render_pass, m_pipeline);
+}
+
+
 void Pipeline::create_pipeline() {
     WGPUShaderSourceWGSL wgsl_desc = WGPU_SHADER_SOURCE_WGSL_INIT;
 	wgsl_desc.code = to_wgpu_string_view(shader_source);

@@ -49,13 +49,13 @@ void Renderer::end_frame() {
 }
 
 void Renderer::draw_triangle() {
-    WGPURenderPassEncoder encoder = get_render_pass_encoder();
-    if (!encoder) return;
+    WGPURenderPassEncoder render_pass = get_render_pass_encoder();
+    if (!render_pass) return;
 
-    // m_pipeline->bind(encoder); // this does setPipeline()
+    m_pipeline->bind(render_pass); // this does setPipeline()
 
     // draw 3 vertices as a triangle
-    wgpuRenderPassEncoderDraw(encoder, 3, 1, 0, 0);
+    wgpuRenderPassEncoderDraw(render_pass, 3, 1, 0, 0);
 }
 
 
