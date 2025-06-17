@@ -48,10 +48,6 @@ namespace terra {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		{
-			// #if defined(TR_DEBUG)
-			// if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
-			// 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-			// #endif
 			m_window = glfwCreateWindow((int)props.width, (int)props.height, m_data.title.c_str(), nullptr, nullptr);
 			TR_CORE_ASSERT(m_window, "Failed to create GLFW window");
 			++s_GLFWWindowCount;

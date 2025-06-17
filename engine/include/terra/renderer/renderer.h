@@ -11,19 +11,6 @@ namespace terra {
 
 class Pipeline;
 
-class RendererAPI {
-public:
-    enum class API {
-        None = 0, WebGPU = 1
-    };
-
-    inline static API get_API() { return s_API; }
-
-
-private:
-    static API s_API;
-};
-
 class Renderer {
 public:
     explicit Renderer(WebGPUContext& context);
@@ -41,7 +28,6 @@ public:
 
     WGPURenderPassEncoder get_render_pass_encoder();
 
-    static RendererAPI::API get_API() { return RendererAPI::get_API(); }
 
 private:
     WebGPUContext&   m_context;

@@ -7,8 +7,6 @@
 
 namespace terra {
 
-RendererAPI::API RendererAPI::s_API = RendererAPI::API::WebGPU;
-
 Application* Application::s_instance = nullptr;
 
 Application::Application(const std::string& name, CommandLineArgs args)
