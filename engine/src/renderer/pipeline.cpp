@@ -5,26 +5,8 @@
 
 const char* shader_source = R"(
 @vertex
-fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-    var pos: vec4f;
-    if (in_vertex_index == 0u) {
-        pos = vec4f(-0.45, 0.5, 0.0, 1.0);
-    } else if (in_vertex_index == 1u) {
-        pos = vec4f(0.45, 0.5, 0.0, 1.0);
-    } else {
-        pos = vec4f(0.0, -0.5, 0.0, 1.0);
-    }
-
-    let flipY = mat4x4f(
-        vec4f(1.0,  0.0, 0.0, 0.0),
-        vec4f(0.0, -1.0, 0.0, 0.0),
-        vec4f(0.0,  0.0, 1.0, 0.0),
-        vec4f(0.0,  0.0, 0.0, 1.0),
-    );
-
-    var output: vec4f;
-    output = flipY * pos;
-    return output;
+fn vs_main(@location(0) in_vertex_position: vec2f) -> @builtin(position) vec4f {
+    return vec4f(in_vertex_position, 0.0, 1.0);
 }
 
 @fragment
@@ -95,6 +77,20 @@ void Pipeline::create_pipeline() {
 	WGPUVertexState vertex_state = WGPU_VERTEX_STATE_INIT;
 	vertex_state.module = shader_module;
 	vertex_state.entryPoint = "vs_main"_wgpu;
+
+	WGPUVertexAttribute pos_attr = WGPU_VERTEX_ATTRIBUTE_INIT;
+	pos_attr.shaderLocation = 0;
+	pos_attr.format         = WGPUVertexFormat_Float32x2;
+	pos_attr.offset         = 0;
+
+	WGPUVertexBufferLayout vb_layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
+	vb_layout.arrayStride   = sizeof(float) * 2; // x,y
+	vb_layout.stepMode = WGPUVertexStepMode_Vertex;
+	vb_layout.attributeCount= 1;
+	vb_layout.attributes    = &pos_attr;
+
+	vertex_state.bufferCount = 1;
+	vertex_state.buffers     = &vb_layout;
 
 	// Fragment state
 	WGPUFragmentState fragment_state = WGPU_FRAGMENT_STATE_INIT;

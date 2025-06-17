@@ -1,4 +1,5 @@
 #include "terra/core/context/command_queue.h"
+#include "terra/core/context/context_utils.h"
 #include "terra/helpers/string.h"
 
 namespace terra {
@@ -81,13 +82,13 @@ void CommandQueue::end_frame() {
 
     WGPUCommandBufferDescriptor desc = WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT;
     desc.label = "Command Buffer"_wgpu;
-    WGPUCommandBuffer cmdBuffer = wgpuCommandEncoderFinish(m_encoder, &desc);
+    WGPUCommandBuffer cmd_buffer = wgpuCommandEncoderFinish(m_encoder, &desc);
 
     wgpuCommandEncoderRelease(m_encoder);
     m_encoder = nullptr;
 
-    wgpuQueueSubmit(m_queue, 1, &cmdBuffer);
-    wgpuCommandBufferRelease(cmdBuffer);
+    wgpuQueueSubmit(m_queue, 1, &cmd_buffer);
+    wgpuCommandBufferRelease(cmd_buffer);
 
     m_frame_active = false;
 }
@@ -105,12 +106,8 @@ void CommandQueue::add_marker(std::string_view label) {
 }
 
 
-void CommandQueue::poll() {
-    #if defined(WEBGPU_BACKEND_DAWN)
-        wgpuDeviceTick(m_device);
-    #elif defined(WEBGPU_BACKEND_WGPU)
-        wgpuDevicePoll(m_device, false, nullptr);
-    #endif
+void CommandQueue::poll([[maybe_unused]] bool yield_to_browser) {
+    wgpu_poll_events(m_device, false);
 }
 
 

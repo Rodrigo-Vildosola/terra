@@ -4,6 +4,20 @@
 
 namespace terra {
 
+
+void wgpu_poll_events(WGPUDevice device, bool yield_to_browser) {
+    #if defined(WEBGPU_BACKEND_DAWN)
+        wgpuDeviceTick(device);
+    #elif defined(WEBGPU_BACKEND_WGPU)
+        wgpuDevicePoll(device, false, nullptr);
+    #elif defined(WEBGPU_BACKEND_EMSCRIPTEN)
+        if (yield_to_browser) {
+            emscripten_sleep(100);
+        }
+    #endif
+}
+
+
 void sleep_for_ms(unsigned int milliseconds) {
     #ifdef __EMSCRIPTEN__
         emscripten_sleep(milliseconds);
@@ -26,19 +40,19 @@ WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOption
 	// provided as the last argument of wgpuInstanceRequestAdapter and received
 	// by the callback as its last argument.
 
-	WGPURequestAdapterCallbackInfo callbackInfo = WGPU_REQUEST_ADAPTER_CALLBACK_INFO_INIT;
-    callbackInfo.nextInChain = nullptr;
-    callbackInfo.mode        = WGPUCallbackMode_AllowProcessEvents;
-    callbackInfo.callback    = request_adapter_callback;
-    callbackInfo.userdata1   = &userData;
-    callbackInfo.userdata2   = nullptr;
+	WGPURequestAdapterCallbackInfo callback_info = WGPU_REQUEST_ADAPTER_CALLBACK_INFO_INIT;
+    callback_info.nextInChain = nullptr;
+    callback_info.mode        = WGPUCallbackMode_AllowProcessEvents;
+    callback_info.callback    = request_adapter_callback;
+    callback_info.userdata1   = &userData;
+    callback_info.userdata2   = nullptr;
 
 
 	// Call to the WebGPU request adapter procedure
 	wgpuInstanceRequestAdapter(
 		instance /* equivalent of navigator.gpu */,
 		options,
-		callbackInfo
+		callback_info
 	);
 
 	// Hand the execution to the WebGPU instance so that it can check for
@@ -81,7 +95,6 @@ WGPUDevice request_device_sync(WGPUInstance instance, WGPUAdapter adapter, WGPUD
 	while (!userData.request_ended) {
 		// Waiting for 200 ms to avoid asking too often to process events
 		sleep_for_ms(200);
-
 		wgpuInstanceProcessEvents(instance);
 	}
 

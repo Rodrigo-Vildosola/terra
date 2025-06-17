@@ -81,7 +81,7 @@ void Application::run() {
         m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
         if (!m_minimized) {
-            m_renderer->draw_triangle();
+            m_renderer->draw();
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
         }
@@ -127,4 +127,35 @@ bool Application::on_window_close(WindowCloseEvent& e) {
     m_running = false;
     return true;
 }
+
+
+// bool Application::initialize_buffers() {
+//     std::vector<f32> vertex_data = {
+//         // Triangle 1
+//         -0.45f, 0.5f,
+//         0.45f, 0.5f,
+//         0.0f, -0.5f,
+
+//         // Triangle 2
+//         0.47f, 0.47f,
+//         0.25f, 0.0f,
+//         0.69f, 0.0f
+//     };
+
+//     u32 vertex_count = (u32)(vertex_data.size() / 2);
+    
+//     WGPUBuffer vertex_buffer = Buffer::create(
+//         m_context->get_native_device(),
+//         m_context->get_queue()->get_native_queue(),
+//         vertex_data.data(),
+//         vertex_data.size() * sizeof(f32),
+//         WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst,
+//         "Vertex Buffer"
+//     );
+
+// }
+
+
 }
+
+

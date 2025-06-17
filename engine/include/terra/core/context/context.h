@@ -23,6 +23,7 @@ public:
     void swap_buffers();
 
     WGPUDevice get_native_device() { return m_device; }
+    WGPUInstance get_native_instance() { return m_instance; }
     CommandQueue* get_queue() { return m_queue.get(); }
 
     std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();

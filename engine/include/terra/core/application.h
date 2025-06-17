@@ -72,6 +72,9 @@ private:
 
     static Application* s_instance;
 
+    // TEMP
+    bool initialize_buffers();
+
 
     friend int ::main(int argc, char** argv);
 };

@@ -10,11 +10,37 @@ Renderer::Renderer(WebGPUContext& ctx)
     , m_queue(*ctx.get_queue())
 {}
 
-Renderer::~Renderer() {}
+Renderer::~Renderer() {
+    if (m_vertex_buffer) wgpuBufferRelease(m_vertex_buffer);
+
+}
 
 
 // Allocate static context
 void Renderer::init() {
+
+    std::vector<f32> vertex_data = {
+        // Triangle 1
+        -0.45f, 0.5f,
+        0.45f, 0.5f,
+        0.0f, -0.5f,
+
+        // Triangle 2
+        0.47f, 0.47f,
+        0.25f, 0.0f,
+        0.69f, 0.0f
+    };
+
+    m_vertex_count = (u32)(vertex_data.size() / 2);
+    
+    m_vertex_buffer = Buffer::create(
+        m_context.get_native_device(),
+        m_queue.get_native_queue(),
+        vertex_data.data(),
+        vertex_data.size() * sizeof(f32),
+        WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst,
+        "Vertex Buffer"
+    );
 
     PipelineSpecification spec;
     spec.shader_path = "assets/shaders/triangle.wgsl";
@@ -45,17 +71,19 @@ void Renderer::clear_color(float r, float g, float b, float a) {
 void Renderer::end_frame() {
     RendererCommand::end_render_pass(m_queue);
     m_context.swap_buffers();
-    m_queue.poll();
+    m_queue.poll(false);
 }
 
-void Renderer::draw_triangle() {
+void Renderer::draw() {
     WGPURenderPassEncoder render_pass = get_render_pass_encoder();
     if (!render_pass) return;
 
     m_pipeline->bind(render_pass); // this does setPipeline()
 
     // draw 3 vertices as a triangle
-    wgpuRenderPassEncoderDraw(render_pass, 3, 1, 0, 0);
+    wgpuRenderPassEncoderSetVertexBuffer(render_pass, 0, m_vertex_buffer, 0, WGPU_WHOLE_SIZE);
+
+    wgpuRenderPassEncoderDraw(render_pass, m_vertex_count, 1, 0, 0);
 }
 
 

@@ -28,7 +28,9 @@ public:
     WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color);
 
     void end_render_pass();
-    void poll(); // Poll/tick device for async processing
+    void poll([[maybe_unused]] bool yield_to_browser); // Poll/tick device for async processing
+
+    WGPUQueue get_native_queue() const { return m_queue; }
 
     WGPURenderPassEncoder get_render_pass_encoder() const { return m_render_pass_encoder; }
 

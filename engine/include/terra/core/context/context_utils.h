@@ -7,6 +7,11 @@
 
 namespace terra {
 
+
+void wgpu_poll_events(WGPUDevice device, bool yield_to_browser = true);
+
+void sleep_for_ms(unsigned int milliseconds);
+
 /**
  * @brief Utility function to get a WebGPU adapter, so that
  *     WGPUAdapter adapter = requestAdapterSync(options);
