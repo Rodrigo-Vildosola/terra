@@ -40,7 +40,7 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 
 
 void Pipeline::create_pipeline() {
-	auto shader = Shader::create_from_wgsl(
+	Shader shader = Shader::create_from_wgsl(
 		m_context,
 		shader_source,
 		"Triangle Shader Module"
@@ -105,7 +105,7 @@ void Pipeline::create_pipeline() {
 
 	m_pipeline = wgpuDeviceCreateRenderPipeline(m_context.get_native_device(), &pipeline_desc);
 
-    wgpuShaderModuleRelease(shader_module);
+    // wgpuShaderModuleRelease(shader_module);
 
 }
 
