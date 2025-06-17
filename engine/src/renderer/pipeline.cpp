@@ -40,18 +40,12 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 
 
 void Pipeline::create_pipeline() {
-    WGPUShaderSourceWGSL wgsl_desc = WGPU_SHADER_SOURCE_WGSL_INIT;
-	wgsl_desc.code = to_wgpu_string_view(shader_source);
-
-	WGPUShaderModuleDescriptor shader_desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
-	shader_desc.nextInChain = &wgsl_desc.chain;
-	shader_desc.label = "Triangle Shader Module"_wgpu;
-
-	request_userdata<bool> shader_compiled;
-
-	WGPU_PUSH_ERROR_SCOPE(m_context.get_native_device());
-	WGPUShaderModule shader_module = wgpuDeviceCreateShaderModule(m_context.get_native_device(), &shader_desc);
-	WGPU_POP_ERROR_SCOPE_CAPTURE_BOOL(m_context.get_native_device(), &shader_compiled);
+	auto shader = Shader::create_from_wgsl(
+		m_context,
+		shader_source,
+		"Triangle Shader Module"
+	);
+	WGPUShaderModule shader_module = shader.module();
 
 
 	WGPURenderPipelineDescriptor pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;

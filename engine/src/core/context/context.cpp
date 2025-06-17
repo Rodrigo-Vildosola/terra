@@ -1,11 +1,12 @@
 
 
 #include "terrapch.h"
-#include "terra/renderer/renderer.h"
 
 #include "terra/core/context/context.h"
 #include "terra/core/context/context_utils.h"
+#include "terra/core/context/command_queue.h"
 #include "terra/core/context/macros.h"
+#include "terra/core/window.h"
 
 #include "terra/helpers/string.h"
 

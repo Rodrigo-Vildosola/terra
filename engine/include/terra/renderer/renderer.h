@@ -1,15 +1,14 @@
 #pragma once
 
 #include "terra/core/base.h"
-#include "terra/core/context/context.h"
-
-#include "terra/renderer/pipeline.h"
-#include "terra/core/context/command_queue.h"
 #include "terra/renderer/buffer.h"
+#include "terra/renderer/pipeline.h"
 
 namespace terra {
 
-class Pipeline;
+class WebGPUContext;  // forward
+class CommandQueue;   // forward
+
 
 class Renderer {
 public:

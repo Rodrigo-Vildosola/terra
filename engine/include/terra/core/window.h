@@ -4,6 +4,7 @@
 #include <functional>
 #include "terra/core/base.h"
 #include "terra/events/event.h"
+#include "webgpu/webgpu.hpp"
 
 namespace terra {
 

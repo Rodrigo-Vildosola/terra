@@ -1,10 +1,12 @@
 #pragma once
 
 #include "terrapch.h"
-#include "terra/core/context/context.h"
 #include "terra/renderer/pipeline_specification.h"
+#include "terra/renderer/shader.h"
 
 namespace terra {
+
+class WebGPUContext;
 
 class Pipeline {
 public:
