@@ -50,6 +50,8 @@ public:
     scope<WebGPUContext>& get_context() { return m_context; }
 
     WGPUDevice get_device() { return m_context->get_native_device(); }
+    Renderer& get_renderer() { return *m_renderer; }
+
 
 private:
     void run();

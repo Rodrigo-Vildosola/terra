@@ -75,7 +75,7 @@ void Application::run() {
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
 
-        WGPURenderPassEncoder render_pass = m_renderer->begin_frame();
+        m_renderer->begin_frame();
         m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
         if (!m_minimized) {
@@ -83,15 +83,20 @@ void Application::run() {
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
         }
+        m_renderer->end_frame();
 
         #if !defined(TR_RELEASE)
+            m_renderer->begin_frame();
+            m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
+
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();
-            m_ui_layer->end(render_pass);
+            m_ui_layer->end();
+
+            m_renderer->end_frame();
 		#endif
 
-        m_renderer->end_frame();
 
 
         m_window->on_update();

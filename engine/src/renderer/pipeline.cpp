@@ -78,10 +78,10 @@ void Pipeline::create_pipeline() {
 	pos_attr.offset         = 0;
 
 	WGPUVertexBufferLayout vb_layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
-	vb_layout.arrayStride   = sizeof(float) * 2; // x,y
-	vb_layout.stepMode = WGPUVertexStepMode_Vertex;
-	vb_layout.attributeCount= 1;
-	vb_layout.attributes    = &pos_attr;
+	vb_layout.arrayStride    = sizeof(float) * 2; // x,y
+	vb_layout.stepMode 		 = WGPUVertexStepMode_Vertex;
+	vb_layout.attributeCount = 1;
+	vb_layout.attributes     = &pos_attr;
 
 	vertex_state.bufferCount = 1;
 	vertex_state.buffers     = &vb_layout;
@@ -104,8 +104,6 @@ void Pipeline::create_pipeline() {
 	pipeline_desc.fragment = &fragment_state;
 
 	m_pipeline = wgpuDeviceCreateRenderPipeline(m_context.get_native_device(), &pipeline_desc);
-
-    // wgpuShaderModuleRelease(shader_module);
 
 }
 
