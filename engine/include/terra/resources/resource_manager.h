@@ -18,6 +18,8 @@ public:
         std::vector<u32>& index_data
     );
 
+    static std::string read_file_as_string(const std::string& relative_path);
+
 };
 
     

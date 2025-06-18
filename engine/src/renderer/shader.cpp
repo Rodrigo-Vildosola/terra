@@ -2,6 +2,7 @@
 #include "terra/helpers/error.h"
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
+#include "terra/resources/resource_manager.h"
 
 namespace terra {
 
@@ -39,17 +40,8 @@ Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std
 
 
 Shader Shader::from_file(WebGPUContext& ctx, const std::string& path, std::string label) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        TR_CORE_ERROR("Failed to open shader file: {}", path);
-        return Shader(nullptr, std::move(label));
-    }
+    std::string source = ResourceManager::read_file_as_string(path);
 
-    std::stringstream buffer;
-    buffer << file.rdbuf(); // read entire file
-    std::string source = buffer.str();
-
-    // Optionally: save path or source for hot-reload
     Shader shader = create_from_wgsl(ctx, source, label);
     shader.m_source = std::move(source);
     return shader;

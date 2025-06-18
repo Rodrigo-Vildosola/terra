@@ -78,4 +78,19 @@ bool ResourceManager::load_geometry(
     return true;
 }
 
+
+std::string ResourceManager::read_file_as_string(const std::string& relative_path) {
+    std::filesystem::path full_path = get_asset_path(relative_path);
+    std::ifstream file(full_path);
+    
+    if (!file.is_open()) {
+        TR_CORE_ERROR("Failed to open file: {}", full_path.string());
+        return {};
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
 } // namespace terra

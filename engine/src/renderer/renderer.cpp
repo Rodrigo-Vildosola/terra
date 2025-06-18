@@ -52,11 +52,8 @@ void Renderer::init() {
     std::vector<f32> vertex_data;
     std::vector<u32> index_data;
 
-    // Use ResourceManager to load geometry data
-    const std::filesystem::path path = "objects/webgpu.txt";
-    if (!ResourceManager::load_geometry(path, vertex_data, index_data)) {
+    if (!ResourceManager::load_geometry("objects/webgpu.txt", vertex_data, index_data)) {
         TR_CORE_ASSERT(false, "Failed to load geometry");
-        TR_CORE_CRITICAL("FROM {}", path.string());
         return;
     }
 
@@ -86,9 +83,10 @@ void Renderer::init() {
         "Index Buffer"
     );
 
-    Shader shader = Shader::create_from_wgsl(
+
+    Shader shader = Shader::from_file(
         m_context, 
-        shader_source, 
+        "shaders/shader.wgsl", 
         "Triangle Shader Module"
     );
     shader.vertex_entry = "vs_main";
