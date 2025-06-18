@@ -25,7 +25,7 @@ public:
 
     void add_marker(std::string_view label);
     void submit_now();
-    WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color);
+    WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color, WGPULoadOp load_op);
 
     void end_render_pass();
     void poll([[maybe_unused]] bool yield_to_browser); // Poll/tick device for async processing

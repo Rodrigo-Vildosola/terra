@@ -45,13 +45,13 @@ void CommandQueue::begin_frame(std::string_view label) {
 }
 
 // command_queue.cpp (inside CommandQueue)
-WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color) {
+WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color, WGPULoadOp load_op) {
     TR_CORE_ASSERT(m_frame_active, "Cannot create render pass without an active encoder");
 
     // Color attachment setup
     WGPURenderPassColorAttachment color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     color_attachment.view = target;
-    color_attachment.loadOp = WGPULoadOp_Clear;
+    color_attachment.loadOp = load_op;
     color_attachment.storeOp = WGPUStoreOp_Store;
     color_attachment.clearValue = clear_color;
 
@@ -63,7 +63,6 @@ WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, W
     // Begin → end immediately (just clears screen for now)
     m_render_pass_encoder = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
     return m_render_pass_encoder;
-
 }
 
 void CommandQueue::end_render_pass() {

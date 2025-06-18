@@ -100,7 +100,7 @@ void UILayer::end() {
     ImGui::Render();
     auto pass_encoder = Application::get()
                             .get_renderer()
-                            .get_render_pass_encoder();
+                            .get_current_pass_encoder();
 
     if (pass_encoder) {
         ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass_encoder);

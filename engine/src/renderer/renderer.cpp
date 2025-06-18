@@ -54,38 +54,51 @@ void Renderer::init() {
 }
 
 void Renderer::begin_frame() {
-    auto [surface_texture, target_view] = m_context.get_next_surface_view();
-    if (!target_view) return;
-
-    m_render_pass = RendererCommand::begin_render_pass(m_queue, target_view);
+    std::tie(m_surface_texture, m_target_view) = m_context.get_next_surface_view();
 }
 
-WGPURenderPassEncoder Renderer::get_render_pass_encoder() {
-    return m_queue.get_render_pass_encoder();
+void Renderer::begin_scene_pass() {
+    // clears to clearColor
+    m_current_pass =
+      RendererCommand::begin_render_pass(m_queue, m_target_view, WGPULoadOp_Clear);
 }
+
+void Renderer::end_scene_pass() {
+    RendererCommand::end_render_pass(m_queue);
+    m_current_pass = nullptr;
+}
+
+void Renderer::begin_ui_pass() {
+    // load what we just drew, draw UI on top
+    m_current_pass =
+      RendererCommand::begin_render_pass(m_queue, m_target_view, WGPULoadOp_Load);
+}
+
+void Renderer::end_ui_pass() {
+    RendererCommand::end_render_pass(m_queue);
+    m_current_pass = nullptr;
+}
+
+void Renderer::end_frame() {
+    // present once
+    m_context.swap_buffers();
+    m_queue.poll(false);
+}
+
 
 void Renderer::clear_color(float r, float g, float b, float a) {
     RendererCommand::set_clear_color(r, g, b, a);
 }
 
-void Renderer::end_frame() {
-    if (m_render_pass)
-        RendererCommand::end_render_pass(m_queue);
-    m_context.swap_buffers();
-    m_queue.poll(false);
-}
-
 void Renderer::draw() {
-    if (!m_render_pass) return;
-    WGPURenderPassEncoder render_pass = get_render_pass_encoder();
-    if (!render_pass) return;
+    if (!m_current_pass) return;
 
-    m_pipeline->bind(render_pass); // this does setPipeline()
+    m_pipeline->bind(m_current_pass); // this does setPipeline()
 
     // draw 3 vertices as a triangle
-    wgpuRenderPassEncoderSetVertexBuffer(render_pass, 0, m_vertex_buffer, 0, WGPU_WHOLE_SIZE);
+    wgpuRenderPassEncoderSetVertexBuffer(m_current_pass, 0, m_vertex_buffer, 0, WGPU_WHOLE_SIZE);
 
-    wgpuRenderPassEncoderDraw(render_pass, m_vertex_count, 1, 0, 0);
+    wgpuRenderPassEncoderDraw(m_current_pass, m_vertex_count, 1, 0, 0);
 }
 
 

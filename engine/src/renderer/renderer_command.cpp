@@ -5,10 +5,10 @@ namespace terra {
 
 WGPUColor RendererCommand::s_clearColor = {0, 0, 0, 1};
 
-WGPURenderPassEncoder RendererCommand::begin_render_pass(CommandQueue& q, WGPUTextureView view) {
+WGPURenderPassEncoder RendererCommand::begin_render_pass(CommandQueue& q, WGPUTextureView view, WGPULoadOp load_op) {
     q.begin_frame("Main Frame");
     q.add_marker("Begin Render Pass");
-    return q.create_render_pass(view, s_clearColor);
+    return q.create_render_pass(view, s_clearColor, load_op);
 }
 
 

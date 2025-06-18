@@ -79,14 +79,16 @@ void Application::run() {
         m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
         if (!m_minimized) {
+            m_renderer->begin_scene_pass();
             m_renderer->draw();
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
+
+            m_renderer->end_scene_pass();
         }
-        m_renderer->end_frame();
 
         #if !defined(TR_RELEASE)
-            m_renderer->begin_frame();
+            m_renderer->begin_ui_pass();
             m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
             m_ui_layer->begin();
@@ -94,10 +96,10 @@ void Application::run() {
                 layer->on_ui_render();
             m_ui_layer->end();
 
-            m_renderer->end_frame();
+            m_renderer->end_ui_pass();
 		#endif
 
-
+        m_renderer->end_frame();
 
         m_window->on_update();
 

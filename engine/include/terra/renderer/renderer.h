@@ -15,7 +15,7 @@ public:
     explicit Renderer(WebGPUContext& context);
     ~Renderer();
 
-    // void init();                 // allocate pipelines, resources, etc.
+    void init();                 // allocate pipelines, resources, etc.
     // void begin_frame();          // acquire surface, start pass
     // void end_frame();            // end pass, submit, present
 
