@@ -20,10 +20,10 @@ namespace terra {
 
     class KeyPressedEvent : public KeyEvent {
     public:
-		KeyPressedEvent(const KeyCode keycode, const uint16_t repeatCount)
+		KeyPressedEvent(const KeyCode keycode, const u16 repeatCount)
             : KeyEvent(keycode), m_repeat_count(repeatCount) {}
 
-        uint16_t get_repeat_count() const { return m_repeat_count; }
+        u16 get_repeat_count() const { return m_repeat_count; }
 
         std::string to_string() const override {
             std::stringstream ss;
@@ -33,7 +33,7 @@ namespace terra {
 
         EVENT_CLASS_TYPE(KeyPressed)
     private:
-        uint16_t m_repeat_count;
+        u16 m_repeat_count;
     };
 
     class KeyReleasedEvent : public KeyEvent {

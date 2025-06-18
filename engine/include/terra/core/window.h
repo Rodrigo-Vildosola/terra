@@ -11,12 +11,12 @@ namespace terra {
 	struct WindowProps
 	{
 		std::string title;
-		uint32_t width;
-		uint32_t height;
+		u32 width;
+		u32 height;
 
 		WindowProps(const std::string& title = "Terra Engine",
-			        uint32_t width = 900,
-			        uint32_t height = 900)
+			        u32 width = 900,
+			        u32 height = 900)
 			: title(title), width(width), height(height) {}
 	};
 

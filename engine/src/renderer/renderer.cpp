@@ -1,5 +1,8 @@
-#include "terra/core/base.h"
+#include "terra/core/assert.h"
+#include "terra/core/logger.h"
 #include "terrapch.h"
+
+#include "terra/resources/resource_manager.h"
 #include "terra/renderer/renderer_command.h"
 #include "terra/renderer/renderer.h"
 
@@ -46,20 +49,25 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 
 // Allocate static context
 void Renderer::init() {
+    std::vector<f32> vertex_data;
+    std::vector<u32> index_data;
 
-    std::vector<f32> vertex_data = {
-        // x,   y,     r,   g,   b
-        -0.5, -0.5,   1.0, 0.0, 0.0,
-        +0.5, -0.5,   0.0, 1.0, 0.0,
-        +0.5, +0.5,   0.0, 0.0, 1.0,
-        -0.5, +0.5,   1.0, 1.0, 0.0
-    };
+    // Use ResourceManager to load geometry data
+    const std::filesystem::path path = "objects/webgpu.txt";
+    if (!ResourceManager::load_geometry(path, vertex_data, index_data)) {
+        TR_CORE_ASSERT(false, "Failed to load geometry");
+        TR_CORE_CRITICAL("FROM {}", path.string());
+        return;
+    }
 
-    std::vector<u16> index_data = {
-        0, 1, 2, // Triangle #0 connects points #0, #1 and #2
-        0, 2, 3  // Triangle #1 connects points #0, #2 and #3
-    };
-    
+    TR_CORE_INFO("Loaded {} vertices, {} indices", vertex_data.size() / 5, index_data.size());
+
+    if (vertex_data.empty())
+        TR_CORE_ERROR("Vertex data is empty after loading!");
+
+    if (index_data.empty())
+        TR_CORE_ERROR("Index data is empty after loading!");
+
     m_vertex_buffer = Buffer::create(
         m_context.get_native_device(),
         m_queue.get_native_queue(),
@@ -73,7 +81,7 @@ void Renderer::init() {
         m_context.get_native_device(),
         m_queue.get_native_queue(),
         index_data.data(),
-        index_data.size() * sizeof(u16),
+        index_data.size() * sizeof(u32),
         WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst,
         "Index Buffer"
     );
@@ -167,7 +175,7 @@ void Renderer::draw() {
     wgpuRenderPassEncoderSetIndexBuffer(
         m_current_pass, 
         m_index_buffer, 
-        WGPUIndexFormat_Uint16, 
+        WGPUIndexFormat_Uint32, 
         0,
         wgpuBufferGetSize(m_index_buffer)
     );

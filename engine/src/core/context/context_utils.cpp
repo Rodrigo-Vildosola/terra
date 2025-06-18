@@ -132,7 +132,7 @@ void inspect_adapter(WGPUAdapter adapter) {
         wgpuAdapterGetFeatures(adapter, &feats);
 
         TR_CORE_INFO("Adapter features (count={}):", feats.featureCount);
-        for (uint32_t i = 0; i < feats.featureCount; ++i) {
+        for (u32 i = 0; i < feats.featureCount; ++i) {
             auto f = feats.features[i];
             TR_FILE_TRACE("  - {} (0x{:X})", feature_name_to_string(f), (u32)f);
         }
@@ -178,7 +178,7 @@ void inspect_device(WGPUDevice device) {
         wgpuDeviceGetFeatures(device, &feats);
 
         TR_CORE_INFO("Device features (count={}):", feats.featureCount);
-        for (uint32_t i = 0; i < feats.featureCount; ++i) {
+        for (u32 i = 0; i < feats.featureCount; ++i) {
             auto f = feats.features[i];
             TR_CORE_TRACE("  - {} (0x{:X})", feature_name_to_string(f), (u32)f);
         }
