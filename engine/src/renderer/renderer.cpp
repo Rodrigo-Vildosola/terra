@@ -50,7 +50,6 @@ void Renderer::init() {
     spec.uniform_buffer_size = 0;
 
     m_pipeline = create_scope<Pipeline>(m_context, spec);
-    // compile pipelines, create bind-groups, etc.
 }
 
 void Renderer::begin_frame() {

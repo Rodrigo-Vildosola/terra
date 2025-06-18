@@ -89,7 +89,6 @@ void Application::run() {
 
         #if !defined(TR_RELEASE)
             m_renderer->begin_ui_pass();
-            m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
 
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
