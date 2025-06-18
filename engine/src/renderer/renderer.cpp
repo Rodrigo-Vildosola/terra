@@ -48,17 +48,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 void Renderer::init() {
 
     std::vector<f32> vertex_data = {
-        // x0,  y0,  r0,  g0,  b0
-        -0.45f, 0.5f, 1.0f, 1.0f, 0.0f, // (yellow)
+        // x,   y,     r,   g,   b
+        -0.5, -0.5,   1.0, 0.0, 0.0,
+        +0.5, -0.5,   0.0, 1.0, 0.0,
+        +0.5, +0.5,   0.0, 0.0, 1.0,
+        -0.5, +0.5,   1.0, 1.0, 0.0
+    };
 
-        // x1,  y1,  r1,  g1,  b1
-        0.45f, 0.5f, 1.0f, 0.0f, 1.0f, // (magenta)
-
-        // ...
-        0.0f,  -0.5f, 0.0f, 1.0f, 1.0f, // (cyan)
-        0.47f, 0.47f, 1.0f, 0.0f, 0.0f, // (red)
-        0.25f,  0.0f, 0.0f, 1.0f, 0.0f, // (green)
-        0.69f,  0.0f, 0.0f, 0.0f, 1.0f  // (blue)
+    std::vector<u16> index_data = {
+        0, 1, 2, // Triangle #0 connects points #0, #1 and #2
+        0, 2, 3  // Triangle #1 connects points #0, #2 and #3
     };
     
     m_vertex_buffer = Buffer::create(
@@ -68,6 +67,15 @@ void Renderer::init() {
         vertex_data.size() * sizeof(f32),
         WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst,
         "Vertex Buffer"
+    );
+
+    m_index_buffer = Buffer::create(
+        m_context.get_native_device(),
+        m_queue.get_native_queue(),
+        index_data.data(),
+        index_data.size() * sizeof(u16),
+        WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst,
+        "Index Buffer"
     );
 
     Shader shader = Shader::create_from_wgsl(
@@ -95,6 +103,8 @@ void Renderer::init() {
     u32 nums_per_vertex = (u32) (spec.vertex_buffers[0].stride / sizeof(f32));
     m_vertex_count = (u32) vertex_data.size() / nums_per_vertex;
 
+    m_index_count = (u32) index_data.size();
+
     m_pipeline = create_scope<Pipeline>(m_context, std::move(spec));
 }
 
@@ -104,8 +114,11 @@ void Renderer::begin_frame() {
 
 void Renderer::begin_scene_pass() {
     // clears to clearColor
-    m_current_pass =
-      RendererCommand::begin_render_pass(m_queue, m_target_view, WGPULoadOp_Clear);
+    m_current_pass = RendererCommand::begin_render_pass(
+        m_queue, 
+        m_target_view, 
+        WGPULoadOp_Clear
+    );
 }
 
 void Renderer::end_scene_pass() {
@@ -115,8 +128,11 @@ void Renderer::end_scene_pass() {
 
 void Renderer::begin_ui_pass() {
     // load what we just drew, draw UI on top
-    m_current_pass =
-      RendererCommand::begin_render_pass(m_queue, m_target_view, WGPULoadOp_Load);
+    m_current_pass = RendererCommand::begin_render_pass(
+        m_queue, 
+        m_target_view, 
+        WGPULoadOp_Load
+    );
 }
 
 void Renderer::end_ui_pass() {
@@ -125,7 +141,6 @@ void Renderer::end_ui_pass() {
 }
 
 void Renderer::end_frame() {
-    // present once
     m_context.swap_buffers();
     m_queue.poll(false);
 }
@@ -140,24 +155,29 @@ void Renderer::draw() {
 
     m_pipeline->bind(m_current_pass); // this does setPipeline()
 
-    // auto spec = m_pipeline->get_spec();
-
-    // TR_CORE_INFO(spec.shader->source());
-
     // draw 3 vertices as a triangle
     wgpuRenderPassEncoderSetVertexBuffer(
         m_current_pass, 
         0, 
         m_vertex_buffer, 
         0, 
-        WGPU_WHOLE_SIZE
+        wgpuBufferGetSize(m_vertex_buffer)
     );
 
-    wgpuRenderPassEncoderDraw(
+    wgpuRenderPassEncoderSetIndexBuffer(
         m_current_pass, 
-        m_vertex_count, 
+        m_index_buffer, 
+        WGPUIndexFormat_Uint16, 
+        0,
+        wgpuBufferGetSize(m_index_buffer)
+    );
+
+    wgpuRenderPassEncoderDrawIndexed(
+        m_current_pass, 
+        m_index_count, 
         1, 
         0, 
+        0,
         0
     );
 }

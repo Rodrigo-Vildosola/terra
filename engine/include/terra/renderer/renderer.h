@@ -51,6 +51,9 @@ private:
     WGPUBuffer m_vertex_buffer = nullptr;
     u32 m_vertex_count = 0;
 
+    WGPUBuffer m_index_buffer = nullptr;
+    u32 m_index_count = 0;
+
     // last-open pass encoder
     WGPURenderPassEncoder m_current_pass = nullptr;
 

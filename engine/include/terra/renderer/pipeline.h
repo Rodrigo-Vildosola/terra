@@ -15,8 +15,6 @@ public:
 
     void bind(WGPURenderPassEncoder encoder) const;
 
-    const PipelineSpecification& get_spec() const { return m_spec; }
-
 private:
     void create_pipeline(); // internal
 
