@@ -3,15 +3,31 @@
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
 
-const char* shader_source = R"(
+static const char* shader_source = R"(
+struct VertexInput {
+    @location(0) position: vec2f,
+    @location(1) color:    vec3f,
+};
+
+struct VertexOutput {
+    @builtin(position) position: vec4f,
+    @location(0)        color:    vec3f,
+};
+
 @vertex
-fn vs_main(@location(0) in_vertex_position: vec2f) -> @builtin(position) vec4f {
-    return vec4f(in_vertex_position, 0.0, 1.0);
+fn vs_main(in: VertexInput) -> VertexOutput {
+    var out: VertexOutput;
+    // lift 2d → 4d position:
+    out.position = vec4f(in.position, 0.0, 1.0);
+    // just forward the color
+    out.color    = in.color;
+    return out;
 }
 
 @fragment
-fn fs_main() -> @location(0) vec4f {
-    return vec4f(0.0, 0.4, 0.7, 1.0);
+fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+    // drop back out as 4d with alpha=1
+    return vec4f(in.color, 1.0);
 }
 )";
 
@@ -48,62 +64,87 @@ void Pipeline::create_pipeline() {
 	WGPUShaderModule shader_module = shader.module();
 
 
-	WGPURenderPipelineDescriptor pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
+	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
+    layout_desc.bindGroupLayoutCount = 0;
+    layout_desc.bindGroupLayouts     = nullptr;
+    m_layout = wgpuDeviceCreatePipelineLayout(
+      m_context.get_native_device(),
+      &layout_desc
+    );
+
+	std::vector<std::vector<WGPUVertexAttribute>>  all_attribs;
+	std::vector<WGPUVertexBufferLayout>            all_layouts;
+	all_attribs.reserve(m_spec.vertex_buffers.size());
+	all_layouts.reserve(m_spec.vertex_buffers.size());
+
+	for (auto const& vb : m_spec.vertex_buffers) {
+		// collect attributes
+		all_attribs.emplace_back();
+		auto& attribs = all_attribs.back();
+		for (auto const& a : vb.attributes) {
+			WGPUVertexAttribute wa = WGPU_VERTEX_ATTRIBUTE_INIT;
+			wa.shaderLocation = a.shader_location;
+			wa.format         = a.format;
+			wa.offset         = a.offset;
+			attribs.push_back(wa);
+		}
+
+		// build the buffer layout
+		WGPUVertexBufferLayout layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
+		layout.arrayStride    = vb.stride;
+		layout.stepMode       = vb.step_mode;
+		layout.attributeCount = (u32) attribs.size();
+		layout.attributes     = attribs.data();
+		all_layouts.push_back(layout);
+	}
+
+	WGPURenderPipelineDescriptor p = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
+
+	p.layout = m_layout;
 
 	// Each sequence of 3 vertices is considered as a triangle
-	pipeline_desc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
+	p.primitive.topology = WGPUPrimitiveTopology_TriangleList;
 
 	// We'll see later how to specify the order in which vertices should be
 	// connected. When not specified, vertices are considered sequentially.
-	pipeline_desc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
+	p.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
 
 	// The face orientation is defined by assuming that when looking
 	// from the front of the face, its corner vertices are enumerated
 	// in the counter-clockwise (CCW) order.
-	pipeline_desc.primitive.frontFace = WGPUFrontFace_CCW;
+	p.primitive.frontFace = WGPUFrontFace_CCW;
 
 	// But the face orientation does not matter much because we do not
 	// cull (i.e. "hide") the faces pointing away from us (which is often
 	// used for optimization).
-	pipeline_desc.primitive.cullMode = WGPUCullMode_None;
+	p.primitive.cullMode = WGPUCullMode_None;
 
 	// Vertex state
-	WGPUVertexState vertex_state = WGPU_VERTEX_STATE_INIT;
-	vertex_state.module = shader_module;
-	vertex_state.entryPoint = "vs_main"_wgpu;
-
-	WGPUVertexAttribute pos_attr = WGPU_VERTEX_ATTRIBUTE_INIT;
-	pos_attr.shaderLocation = 0;
-	pos_attr.format         = WGPUVertexFormat_Float32x2;
-	pos_attr.offset         = 0;
-
-	WGPUVertexBufferLayout vb_layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
-	vb_layout.arrayStride    = sizeof(float) * 2; // x,y
-	vb_layout.stepMode 		 = WGPUVertexStepMode_Vertex;
-	vb_layout.attributeCount = 1;
-	vb_layout.attributes     = &pos_attr;
-
-	vertex_state.bufferCount = 1;
-	vertex_state.buffers     = &vb_layout;
-
-	// Fragment state
-	WGPUFragmentState fragment_state = WGPU_FRAGMENT_STATE_INIT;
-	fragment_state.module = shader_module;
-	fragment_state.entryPoint = "fs_main"_wgpu;
+	WGPUVertexState vs = WGPU_VERTEX_STATE_INIT;
+	vs.module = shader_module;
+	vs.entryPoint = to_wgpu_string_view(m_spec.vertex_entry);
+	vs.bufferCount = (u32) all_layouts.size();
+	vs.buffers     = all_layouts.data();
 
 	WGPUColorTargetState color_target_state = WGPU_COLOR_TARGET_STATE_INIT;
-	color_target_state.format = m_context.get_preferred_format();
-
+	color_target_state.format = m_spec.surface_format;
 	WGPUBlendState blend_state = WGPU_BLEND_STATE_INIT;
 	color_target_state.blend = &blend_state;
 
-	fragment_state.targetCount = 1;
-	fragment_state.targets = &color_target_state;
+	// Fragment state
+	WGPUFragmentState fs = WGPU_FRAGMENT_STATE_INIT;
+	fs.module = shader_module;
+	fs.entryPoint = to_wgpu_string_view(m_spec.fragment_entry);
+	fs.targetCount = 1;
+	fs.targets = &color_target_state;
 
-	pipeline_desc.vertex = vertex_state;
-	pipeline_desc.fragment = &fragment_state;
+	p.vertex = vs;
+	p.fragment = &fs;
 
-	m_pipeline = wgpuDeviceCreateRenderPipeline(m_context.get_native_device(), &pipeline_desc);
+	m_pipeline = wgpuDeviceCreateRenderPipeline(
+		m_context.get_native_device(), 
+		&p
+	);
 
 }
 

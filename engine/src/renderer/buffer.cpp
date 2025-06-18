@@ -69,7 +69,6 @@ WGPUBuffer Buffer::create(WGPUDevice device, WGPUQueue queue, const void *data, 
 
     return buffer;
 
-
 }
 
 

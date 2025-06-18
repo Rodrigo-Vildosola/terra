@@ -5,9 +5,9 @@
 namespace terra {
 
 struct VertexAttributeSpec {
-    u64 offset = 0;
-    WGPUVertexFormat format = WGPUVertexFormat_Float32x3;
     u32 shader_location = 0;
+    WGPUVertexFormat format = WGPUVertexFormat_Float32x3;
+    u64 offset = 0;
 };
 
 struct VertexBufferLayoutSpec {
@@ -17,12 +17,11 @@ struct VertexBufferLayoutSpec {
 };
 
 struct PipelineSpecification {
-    std::string_view shader_path;                // WGSL file (contains both vs/fs)
     std::string_view vertex_entry = "vs_main";   // Entry function in WGSL
     std::string_view fragment_entry = "fs_main"; // Entry function in WGSL
 
     WGPUTextureFormat surface_format = WGPUTextureFormat_BGRA8Unorm;
-    uint64_t uniform_buffer_size = sizeof(float) * 4;
+    u64 uniform_buffer_size = sizeof(f32) * 4;
 
     bool enable_depth = false;
     WGPUCompareFunction depth_compare = WGPUCompareFunction_Less;

@@ -20,18 +20,18 @@ Renderer::~Renderer() {
 void Renderer::init() {
 
     std::vector<f32> vertex_data = {
-        // Triangle 1
-        -0.45f, 0.5f,
-        0.45f, 0.5f,
-        0.0f, -0.5f,
+        // x0,  y0,  r0,  g0,  b0
+        -0.45f, 0.5f, 1.0f, 1.0f, 0.0f, // (yellow)
 
-        // Triangle 2
-        0.47f, 0.47f,
-        0.25f, 0.0f,
-        0.69f, 0.0f
+        // x1,  y1,  r1,  g1,  b1
+        0.45f, 0.5f, 1.0f, 0.0f, 1.0f, // (magenta)
+
+        // ...
+        0.0f,  -0.5f, 0.0f, 1.0f, 1.0f, // (cyan)
+        0.47f, 0.47f, 1.0f, 0.0f, 0.0f, // (red)
+        0.25f,  0.0f, 0.0f, 1.0f, 0.0f, // (green)
+        0.69f,  0.0f, 0.0f, 0.0f, 1.0f  // (blue)
     };
-
-    m_vertex_count = (u32)(vertex_data.size() / 2);
     
     m_vertex_buffer = Buffer::create(
         m_context.get_native_device(),
@@ -43,11 +43,23 @@ void Renderer::init() {
     );
 
     PipelineSpecification spec;
-    spec.shader_path = "assets/shaders/triangle.wgsl";
     spec.surface_format = m_context.get_preferred_format();
     spec.vertex_entry = "vs_main";
     spec.fragment_entry = "fs_main";
     spec.uniform_buffer_size = 0;
+
+    VertexBufferLayoutSpec vb;
+    vb.stride       = (2 + 3) * sizeof(f32);
+    vb.step_mode    = WGPUVertexStepMode_Vertex;
+    vb.attributes = {
+        { 0, WGPUVertexFormat_Float32x2, 0 },
+        { 1, WGPUVertexFormat_Float32x3, 2 * sizeof(f32) },
+    };
+
+    spec.vertex_buffers.push_back(vb);
+
+    u32 nums_per_vertex = (u32) (spec.vertex_buffers[0].stride / sizeof(f32));
+    m_vertex_count = (u32) vertex_data.size() / nums_per_vertex;
 
     m_pipeline = create_scope<Pipeline>(m_context, spec);
 }
