@@ -5,12 +5,6 @@
 
 namespace terra {
 
-Shader::Shader(WebGPUContext& ctx, WGPUShaderModule module, std::string label)
-  : m_context(ctx)
-  , m_module(module)
-  , m_label(std::move(label))
-{}
-
 Shader::~Shader() {
   if (m_module) {
     wgpuShaderModuleRelease(m_module);
@@ -19,7 +13,7 @@ Shader::~Shader() {
 }
 
 Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std::string_view label) {
-  // 1️⃣ Prepare WGSL descriptor
+  // 1 Prepare WGSL descriptor
   WGPUShaderSourceWGSL wgsl_desc = WGPU_SHADER_SOURCE_WGSL_INIT;
   wgsl_desc.code = to_wgpu_string_view(source);
 
@@ -27,7 +21,7 @@ Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std
   desc.nextInChain = &wgsl_desc.chain;
   desc.label       = to_wgpu_string_view(label);
 
-  // 2️⃣ Error‐scope around compilation
+  // 2 Error‐scope around compilation
   request_userdata<bool> compile_ok;
 
   WGPU_PUSH_ERROR_SCOPE(ctx.get_native_device());
@@ -39,8 +33,50 @@ Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std
     // You can choose to throw, or continue with a null module:
   }
 
-  // 3️⃣ Wrap and return
-  return Shader(ctx, module, std::string(label));
+  // 3 Wrap and return
+  return Shader(module, std::string(label));
+}
+
+
+Shader Shader::from_file(WebGPUContext& ctx, const std::string& path, std::string label) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        TR_CORE_ERROR("Failed to open shader file: {}", path);
+        return Shader(nullptr, std::move(label));
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // read entire file
+    std::string source = buffer.str();
+
+    // Optionally: save path or source for hot-reload
+    Shader shader = create_from_wgsl(ctx, source, label);
+    shader.m_source = std::move(source);
+    return shader;
+}
+
+Shader::Shader(Shader&& other) noexcept
+    : m_module(other.m_module),
+      m_source(std::move(other.m_source)),
+      label(std::move(other.label)),
+      vertex_entry(std::move(other.vertex_entry)),
+      fragment_entry(std::move(other.fragment_entry)) {
+    other.m_module = nullptr;
+}
+
+Shader& Shader::operator=(Shader&& other) noexcept {
+    if (this != &other) {
+        if (m_module) {
+            wgpuShaderModuleRelease(m_module);
+        }
+        m_module = other.m_module;
+        m_source = std::move(other.m_source);
+        label = std::move(other.label);
+        vertex_entry = std::move(other.vertex_entry);
+        fragment_entry = std::move(other.fragment_entry);
+        other.m_module = nullptr;
+    }
+    return *this;
 }
 
 } // namespace terra

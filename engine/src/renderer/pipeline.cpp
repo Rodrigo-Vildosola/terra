@@ -3,39 +3,11 @@
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
 
-static const char* shader_source = R"(
-struct VertexInput {
-    @location(0) position: vec2f,
-    @location(1) color:    vec3f,
-};
-
-struct VertexOutput {
-    @builtin(position) position: vec4f,
-    @location(0)        color:    vec3f,
-};
-
-@vertex
-fn vs_main(in: VertexInput) -> VertexOutput {
-    var out: VertexOutput;
-    // lift 2d → 4d position:
-    out.position = vec4f(in.position, 0.0, 1.0);
-    // just forward the color
-    out.color    = in.color;
-    return out;
-}
-
-@fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    // drop back out as 4d with alpha=1
-    return vec4f(in.color, 1.0);
-}
-)";
-
 
 namespace terra {
 
-Pipeline::Pipeline(WebGPUContext& context, const PipelineSpecification& spec)
-    : m_context(context), m_spec(spec) {
+Pipeline::Pipeline(WebGPUContext& context, PipelineSpecification&& spec)
+    : m_context(context), m_spec(std::move(spec)) {
     create_pipeline();
 }
 
@@ -56,14 +28,6 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 
 
 void Pipeline::create_pipeline() {
-	Shader shader = Shader::create_from_wgsl(
-		m_context,
-		shader_source,
-		"Triangle Shader Module"
-	);
-	WGPUShaderModule shader_module = shader.module();
-
-
 	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
     layout_desc.bindGroupLayoutCount = 0;
     layout_desc.bindGroupLayouts     = nullptr;
@@ -121,8 +85,8 @@ void Pipeline::create_pipeline() {
 
 	// Vertex state
 	WGPUVertexState vs = WGPU_VERTEX_STATE_INIT;
-	vs.module = shader_module;
-	vs.entryPoint = to_wgpu_string_view(m_spec.vertex_entry);
+	vs.module = m_spec.shader.module();
+	vs.entryPoint = to_wgpu_string_view(m_spec.shader.vertex_entry);
 	vs.bufferCount = (u32) all_layouts.size();
 	vs.buffers     = all_layouts.data();
 
@@ -133,8 +97,8 @@ void Pipeline::create_pipeline() {
 
 	// Fragment state
 	WGPUFragmentState fs = WGPU_FRAGMENT_STATE_INIT;
-	fs.module = shader_module;
-	fs.entryPoint = to_wgpu_string_view(m_spec.fragment_entry);
+	fs.module = m_spec.shader.module();
+	fs.entryPoint = to_wgpu_string_view(m_spec.shader.fragment_entry);
 	fs.targetCount = 1;
 	fs.targets = &color_target_state;
 

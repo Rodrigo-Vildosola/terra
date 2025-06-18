@@ -6,6 +6,7 @@
 #include <functional>
 #include <sstream>
 #include <memory>
+#include <fstream>
 
 // Order matters here
 #include "terra/core/base.h"

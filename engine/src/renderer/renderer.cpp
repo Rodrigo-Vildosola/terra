@@ -15,6 +15,34 @@ Renderer::~Renderer() {
 
 }
 
+static const char* shader_source = R"(
+struct VertexInput {
+    @location(0) position: vec2f,
+    @location(1) color:    vec3f,
+};
+
+struct VertexOutput {
+    @builtin(position) position: vec4f,
+    @location(0)        color:    vec3f,
+};
+
+@vertex
+fn vs_main(in: VertexInput) -> VertexOutput {
+    var out: VertexOutput;
+    // lift 2d → 4d position:
+    out.position = vec4f(in.position, 0.0, 1.0);
+    // just forward the color
+    out.color    = in.color;
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+    // drop back out as 4d with alpha=1
+    return vec4f(in.color, 1.0);
+}
+)";
+
 
 // Allocate static context
 void Renderer::init() {
@@ -42,10 +70,16 @@ void Renderer::init() {
         "Vertex Buffer"
     );
 
-    PipelineSpecification spec;
+    Shader shader = Shader::create_from_wgsl(
+        m_context, 
+        shader_source, 
+        "Triangle Shader Module"
+    );
+    shader.vertex_entry = "vs_main";
+    shader.fragment_entry = "fs_main";
+
+    PipelineSpecification spec(std::move(shader));
     spec.surface_format = m_context.get_preferred_format();
-    spec.vertex_entry = "vs_main";
-    spec.fragment_entry = "fs_main";
     spec.uniform_buffer_size = 0;
 
     VertexBufferLayoutSpec vb;
@@ -61,7 +95,7 @@ void Renderer::init() {
     u32 nums_per_vertex = (u32) (spec.vertex_buffers[0].stride / sizeof(f32));
     m_vertex_count = (u32) vertex_data.size() / nums_per_vertex;
 
-    m_pipeline = create_scope<Pipeline>(m_context, spec);
+    m_pipeline = create_scope<Pipeline>(m_context, std::move(spec));
 }
 
 void Renderer::begin_frame() {
@@ -106,10 +140,26 @@ void Renderer::draw() {
 
     m_pipeline->bind(m_current_pass); // this does setPipeline()
 
-    // draw 3 vertices as a triangle
-    wgpuRenderPassEncoderSetVertexBuffer(m_current_pass, 0, m_vertex_buffer, 0, WGPU_WHOLE_SIZE);
+    // auto spec = m_pipeline->get_spec();
 
-    wgpuRenderPassEncoderDraw(m_current_pass, m_vertex_count, 1, 0, 0);
+    // TR_CORE_INFO(spec.shader->source());
+
+    // draw 3 vertices as a triangle
+    wgpuRenderPassEncoderSetVertexBuffer(
+        m_current_pass, 
+        0, 
+        m_vertex_buffer, 
+        0, 
+        WGPU_WHOLE_SIZE
+    );
+
+    wgpuRenderPassEncoderDraw(
+        m_current_pass, 
+        m_vertex_count, 
+        1, 
+        0, 
+        0
+    );
 }
 
 

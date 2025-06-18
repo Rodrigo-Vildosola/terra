@@ -1,6 +1,7 @@
 #pragma once
 
 #include "terrapch.h"
+#include "terra/renderer/shader.h"
 
 namespace terra {
 
@@ -17,8 +18,18 @@ struct VertexBufferLayoutSpec {
 };
 
 struct PipelineSpecification {
-    std::string_view vertex_entry = "vs_main";   // Entry function in WGSL
-    std::string_view fragment_entry = "fs_main"; // Entry function in WGSL
+    PipelineSpecification() = delete;
+    PipelineSpecification(Shader&& shader)
+        : shader(std::move(shader)) {}
+
+    PipelineSpecification(PipelineSpecification&&) = default;
+    PipelineSpecification& operator=(PipelineSpecification&&) = default;
+
+    PipelineSpecification(const PipelineSpecification&) = delete;
+    PipelineSpecification& operator=(const PipelineSpecification&) = delete;
+
+
+    Shader shader;
 
     WGPUTextureFormat surface_format = WGPUTextureFormat_BGRA8Unorm;
     u64 uniform_buffer_size = sizeof(f32) * 4;
