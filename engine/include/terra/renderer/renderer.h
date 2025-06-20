@@ -1,6 +1,7 @@
 #pragma once
 
 #include "terra/core/base.h"
+#include "terra/core/timestep.h"
 #include "terra/renderer/buffer.h"
 #include "terra/renderer/pipeline.h"
 
@@ -16,8 +17,9 @@ public:
     ~Renderer();
 
     void init();                 // allocate pipelines, resources, etc.
-    // void begin_frame();          // acquire surface, start pass
-    // void end_frame();            // end pass, submit, present
+
+    void update_uniforms(f32 time);
+
 
     // call once per frame
     void begin_frame();

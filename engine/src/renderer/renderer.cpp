@@ -45,6 +45,14 @@ void Renderer::init() {
         "Index Buffer"
     );
 
+    m_uniform_buffer = Buffer::create_uniform_buffer(
+        m_context,
+        nullptr,
+        sizeof(f32),
+        0,
+        "u_time Uniform"
+    );
+
 
     Shader shader = Shader::from_file(
         m_context, 
@@ -71,27 +79,47 @@ void Renderer::init() {
 
     m_index_count = (u32) index_data.size();
 
+    UniformSpec time_uniform;
+    time_uniform.binding = 0;
+    time_uniform.size = sizeof(f32);
+    time_uniform.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
+
+    spec.uniforms.push_back(time_uniform);
+
     m_pipeline = create_scope<Pipeline>(m_context, spec);
+
+    init_bind_group();
+}
+
+void Renderer::update_uniforms(f32 time) {
+    wgpuQueueWriteBuffer(
+        m_context.get_queue()->get_native_queue(),
+        m_uniform_buffer.buffer,
+        0,
+        &time,
+        sizeof(f32)
+    );
 }
 
 void Renderer::init_bind_group() {
-    WGPUBindGroupEntry binding = WGPU_BIND_GROUP_ENTRY_INIT;
+    WGPUBindGroupEntry entry = WGPU_BIND_GROUP_ENTRY_INIT;
 
 	// The index of the binding (the entries in bindGroupDesc can be in any order)
-	binding.binding = 0;
+	entry.binding = m_uniform_buffer.binding;
 	// The buffer it is actually bound to
-	binding.buffer = m_uniform_buffer.buffer;
+	entry.buffer = m_uniform_buffer.buffer;
     // We can specify an offset within the buffer, so that a single buffer can hold
 	// multiple uniform blocks.
-	binding.offset = 0;
+	entry.offset = 0;
 	// And we specify again the size of the buffer.
-	binding.size = 4 * sizeof(f32);
+	entry.size = m_uniform_buffer.size;
 
     // A bind group contains one or multiple bindings
 	WGPUBindGroupDescriptor bind_group_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
 	// There must be as many bindings as declared in the layout!
 	bind_group_desc.entryCount = 1;
-	bind_group_desc.entries = &binding;
+    bind_group_desc.layout = m_pipeline->get_bind_group_layout();
+	bind_group_desc.entries = &entry;
 	m_bind_group = wgpuDeviceCreateBindGroup(
         m_context.get_native_device(), 
         &bind_group_desc
@@ -162,6 +190,15 @@ void Renderer::draw() {
         0,
         m_index_buffer.size
     );
+
+    wgpuRenderPassEncoderSetBindGroup(
+        m_current_pass, 
+        0, 
+        m_bind_group, 
+        0, 
+        nullptr
+    );
+
 
     wgpuRenderPassEncoderDrawIndexed(
         m_current_pass, 

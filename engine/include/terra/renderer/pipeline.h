@@ -10,13 +10,15 @@ class WebGPUContext;
 
 class Pipeline {
 public:
-    Pipeline(WebGPUContext& context, const PipelineSpecification& spec);
+    Pipeline(WebGPUContext& context, PipelineSpecification& spec);
     ~Pipeline();
 
     void bind(WGPURenderPassEncoder encoder) const;
 
+    WGPUBindGroupLayout get_bind_group_layout() const { return m_bind_group_layout; }
+
 private:
-    void create_pipeline(const PipelineSpecification& spec); // internal
+    void create_pipeline(PipelineSpecification& spec); // internal
 
     WebGPUContext& m_context;
 

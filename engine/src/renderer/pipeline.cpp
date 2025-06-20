@@ -8,7 +8,7 @@
 
 namespace terra {
 
-Pipeline::Pipeline(WebGPUContext& context, const PipelineSpecification& spec)
+Pipeline::Pipeline(WebGPUContext& context, PipelineSpecification& spec)
     : m_context(context) {
     create_pipeline(spec);
 }
@@ -29,7 +29,7 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 }
 
 
-void Pipeline::create_pipeline(const PipelineSpecification& spec) {
+void Pipeline::create_pipeline(PipelineSpecification& spec) {
 	std::vector<std::vector<WGPUVertexAttribute>>  all_attribs;
 	std::vector<WGPUVertexBufferLayout>            all_layouts;
 	all_attribs.reserve(spec.vertex_buffers.size());
@@ -56,9 +56,30 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 		all_layouts.push_back(layout);
 	}
 
+	if (!spec.uniforms.empty()) {
+		std::vector<WGPUBindGroupLayoutEntry> layout_entries;
+		for (const auto& uniform : spec.uniforms) {
+			WGPUBindGroupLayoutEntry entry = WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT;
+			entry.binding = uniform.binding;
+			entry.visibility = uniform.visibility;
+			entry.buffer.type = WGPUBufferBindingType_Uniform;
+			entry.buffer.minBindingSize = uniform.size;
+			layout_entries.push_back(entry);
+		}
+
+		WGPUBindGroupLayoutDescriptor bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
+		bgl_desc.entryCount = static_cast<u32>(layout_entries.size());
+		bgl_desc.entries = layout_entries.data();
+
+		m_bind_group_layout = wgpuDeviceCreateBindGroupLayout(m_context.get_native_device(), &bgl_desc);
+
+		// Append the layout to the final pipeline layout
+		spec.bind_group_layouts.push_back(m_bind_group_layout);
+	}
 	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
     layout_desc.bindGroupLayoutCount = (u32) spec.bind_group_layouts.size();
     layout_desc.bindGroupLayouts     = spec.bind_group_layouts.data();
+
     m_layout = wgpuDeviceCreatePipelineLayout(
     	m_context.get_native_device(),
 		&layout_desc

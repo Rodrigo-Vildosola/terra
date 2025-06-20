@@ -1,5 +1,6 @@
 #include "terra/core/application.h"
 #include "terra/core/assert.h"
+#include "terra/core/logger.h"
 #include "terra/core/timestep.h"
 
 #include "terra/renderer/renderer.h"
@@ -71,9 +72,11 @@ void Application::run() {
     // render loop
     // -----------
     while (m_running) {
-        float time = Timer::elapsed();
+        f32 time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
+
+        m_renderer->update_uniforms(time);
 
         m_renderer->begin_frame();
         m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
