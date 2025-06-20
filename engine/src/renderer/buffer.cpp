@@ -1,6 +1,9 @@
 
-#include "terra/core/context/context_utils.h"
 #include "terrapch.h"
+
+#include "terra/core/context/context_utils.h"
+#include "terra/core/context/context.h"
+#include "terra/core/context/command_queue.h"
 #include "terra/renderer/buffer.h"
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
@@ -68,7 +71,66 @@ WGPUBuffer Buffer::create(WGPUDevice device, WGPUQueue queue, const void *data, 
     }
 
     return buffer;
+}
 
+UniformBuffer Buffer::create_uniform_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 binding, const char* label) {
+    WGPUDevice device = ctx.get_native_device();
+    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+
+    UniformBuffer ub;
+    ub.size = size;
+    ub.binding = binding;
+    ub.label = label;
+    ub.buffer = Buffer::create(
+        device, 
+        queue, 
+        data, 
+        size, 
+        WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, 
+        label
+    );
+
+    return ub;
+}
+
+VertexBuffer Buffer::create_vertex_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 slot, const char* label) {
+    WGPUDevice device = ctx.get_native_device();
+    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+
+    VertexBuffer vb;
+    vb.size = size;
+    vb.slot = slot;
+    vb.label = label;
+    vb.buffer = Buffer::create(
+        device, 
+        queue, 
+        data, 
+        size, 
+        WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, 
+        label
+    );
+
+    return vb;
+}
+
+IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u64 size, WGPUIndexFormat format, const char* label) {
+    WGPUDevice device = ctx.get_native_device();
+    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+
+    IndexBuffer ib;
+    ib.size = size;
+    ib.format = format;
+    ib.label = label;
+    ib.buffer = Buffer::create(
+        device, 
+        queue, 
+        data, 
+        size, 
+        WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst, 
+        label
+    );
+
+    return ib;
 }
 
 

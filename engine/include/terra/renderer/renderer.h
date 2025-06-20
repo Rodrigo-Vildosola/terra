@@ -6,8 +6,8 @@
 
 namespace terra {
 
-class WebGPUContext;  // forward
-class CommandQueue;   // forward
+class WebGPUContext;  // forward declare
+class CommandQueue;   // forward declare
 
 
 class Renderer {
@@ -50,13 +50,12 @@ private:
     WGPUTextureView    m_target_view{};
 
     scope<Pipeline> m_pipeline;
-    WGPUBuffer m_vertex_buffer = nullptr;
-    u32 m_vertex_count = 0;
+    VertexBuffer m_vertex_buffer;
 
-    WGPUBuffer m_index_buffer = nullptr;
+    IndexBuffer m_index_buffer;
     u32 m_index_count = 0;
 
-    WGPUBuffer m_uniform_buffer = nullptr;
+    UniformBuffer m_uniform_buffer;
     WGPUBindGroup m_bind_group = nullptr;
 
     // last-open pass encoder

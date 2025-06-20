@@ -14,7 +14,8 @@ Renderer::Renderer(WebGPUContext& ctx)
 {}
 
 Renderer::~Renderer() {
-    if (m_vertex_buffer) wgpuBufferRelease(m_vertex_buffer);
+    if (m_vertex_buffer.buffer) wgpuBufferRelease(m_vertex_buffer.buffer);
+    if (m_index_buffer.buffer)  wgpuBufferRelease(m_index_buffer.buffer);
 
 }
 
@@ -28,21 +29,19 @@ void Renderer::init() {
         return;
     }
 
-    m_vertex_buffer = Buffer::create(
-        m_context.get_native_device(),
-        m_queue.get_native_queue(),
+    m_vertex_buffer = Buffer::create_vertex_buffer(
+        m_context,
         vertex_data.data(),
         vertex_data.size() * sizeof(f32),
-        WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst,
+        0,
         "Vertex Buffer"
     );
 
-    m_index_buffer = Buffer::create(
-        m_context.get_native_device(),
-        m_queue.get_native_queue(),
+    m_index_buffer = Buffer::create_index_buffer(
+        m_context,
         index_data.data(),
         index_data.size() * sizeof(u32),
-        WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst,
+        WGPUIndexFormat_Uint32,
         "Index Buffer"
     );
 
@@ -81,7 +80,7 @@ void Renderer::init_bind_group() {
 	// The index of the binding (the entries in bindGroupDesc can be in any order)
 	binding.binding = 0;
 	// The buffer it is actually bound to
-	binding.buffer = m_uniform_buffer;
+	binding.buffer = m_uniform_buffer.buffer;
     // We can specify an offset within the buffer, so that a single buffer can hold
 	// multiple uniform blocks.
 	binding.offset = 0;
@@ -151,17 +150,17 @@ void Renderer::draw() {
     wgpuRenderPassEncoderSetVertexBuffer(
         m_current_pass, 
         0, 
-        m_vertex_buffer, 
+        m_vertex_buffer.buffer, 
         0, 
-        wgpuBufferGetSize(m_vertex_buffer)
+        m_vertex_buffer.size
     );
 
     wgpuRenderPassEncoderSetIndexBuffer(
         m_current_pass,
-        m_index_buffer,
+        m_index_buffer.buffer,
         WGPUIndexFormat_Uint32,
         0,
-        wgpuBufferGetSize(m_index_buffer)
+        m_index_buffer.size
     );
 
     wgpuRenderPassEncoderDrawIndexed(
