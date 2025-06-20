@@ -31,7 +31,7 @@ public:
     void draw_ui();       // nothing here: UI is done outside
 
     // high‐level draws
-    void clear_color(float r, float g, float b, float a);
+    void clear_color(f32 r, f32 g, f32 b, f32 a);
 
     void draw();
 
@@ -40,6 +40,8 @@ public:
 
 
 private:
+    void init_bind_group();
+
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;
 
@@ -53,6 +55,9 @@ private:
 
     WGPUBuffer m_index_buffer = nullptr;
     u32 m_index_count = 0;
+
+    WGPUBuffer m_uniform_buffer = nullptr;
+    WGPUBindGroup m_bind_group = nullptr;
 
     // last-open pass encoder
     WGPURenderPassEncoder m_current_pass = nullptr;

@@ -1,10 +1,13 @@
+// @group(0) @binding(0)
+// var<uniform> u_time: f32;
+
 struct VertexInput {
     @location(0) position: vec2f,
     @location(1) color:    vec3f,
 };
 
 struct VertexOutput {
-    @builtin(position)  position: vec4f,
+    @builtin(position) position: vec4f,
     @location(0)        color:    vec3f,
 };
 
@@ -20,6 +23,5 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    // drop back out as 4d with alpha=1
     return vec4f(in.color, 1.0);
 }

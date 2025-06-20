@@ -34,7 +34,6 @@ Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std
     // You can choose to throw, or continue with a null module:
   }
 
-  // 3 Wrap and return
   return Shader(module, std::string(label));
 }
 

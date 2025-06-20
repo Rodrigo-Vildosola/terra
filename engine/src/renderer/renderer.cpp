@@ -18,35 +18,6 @@ Renderer::~Renderer() {
 
 }
 
-static const char* shader_source = R"(
-struct VertexInput {
-    @location(0) position: vec2f,
-    @location(1) color:    vec3f,
-};
-
-struct VertexOutput {
-    @builtin(position) position: vec4f,
-    @location(0)        color:    vec3f,
-};
-
-@vertex
-fn vs_main(in: VertexInput) -> VertexOutput {
-    var out: VertexOutput;
-    // lift 2d → 4d position:
-    out.position = vec4f(in.position, 0.0, 1.0);
-    // just forward the color
-    out.color    = in.color;
-    return out;
-}
-
-@fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    // drop back out as 4d with alpha=1
-    return vec4f(in.color, 1.0);
-}
-)";
-
-
 // Allocate static context
 void Renderer::init() {
     std::vector<f32> vertex_data;
@@ -56,14 +27,6 @@ void Renderer::init() {
         TR_CORE_ASSERT(false, "Failed to load geometry");
         return;
     }
-
-    TR_CORE_INFO("Loaded {} vertices, {} indices", vertex_data.size() / 5, index_data.size());
-
-    if (vertex_data.empty())
-        TR_CORE_ERROR("Vertex data is empty after loading!");
-
-    if (index_data.empty())
-        TR_CORE_ERROR("Index data is empty after loading!");
 
     m_vertex_buffer = Buffer::create(
         m_context.get_native_device(),
@@ -92,7 +55,8 @@ void Renderer::init() {
     shader.vertex_entry = "vs_main";
     shader.fragment_entry = "fs_main";
 
-    PipelineSpecification spec(std::move(shader));
+    PipelineSpecification spec;
+    spec.shader = &shader;
     spec.surface_format = m_context.get_preferred_format();
     spec.uniform_buffer_size = 0;
 
@@ -106,12 +70,34 @@ void Renderer::init() {
 
     spec.vertex_buffers.push_back(vb);
 
-    u32 nums_per_vertex = (u32) (spec.vertex_buffers[0].stride / sizeof(f32));
-    m_vertex_count = (u32) vertex_data.size() / nums_per_vertex;
-
     m_index_count = (u32) index_data.size();
 
-    m_pipeline = create_scope<Pipeline>(m_context, std::move(spec));
+    m_pipeline = create_scope<Pipeline>(m_context, spec);
+}
+
+void Renderer::init_bind_group() {
+    WGPUBindGroupEntry binding = WGPU_BIND_GROUP_ENTRY_INIT;
+
+	// The index of the binding (the entries in bindGroupDesc can be in any order)
+	binding.binding = 0;
+	// The buffer it is actually bound to
+	binding.buffer = m_uniform_buffer;
+    // We can specify an offset within the buffer, so that a single buffer can hold
+	// multiple uniform blocks.
+	binding.offset = 0;
+	// And we specify again the size of the buffer.
+	binding.size = 4 * sizeof(f32);
+
+    // A bind group contains one or multiple bindings
+	WGPUBindGroupDescriptor bind_group_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+	// There must be as many bindings as declared in the layout!
+	bind_group_desc.entryCount = 1;
+	bind_group_desc.entries = &binding;
+	m_bind_group = wgpuDeviceCreateBindGroup(
+        m_context.get_native_device(), 
+        &bind_group_desc
+    );
+	
 }
 
 void Renderer::begin_frame() {
@@ -152,7 +138,7 @@ void Renderer::end_frame() {
 }
 
 
-void Renderer::clear_color(float r, float g, float b, float a) {
+void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
     RendererCommand::set_clear_color(r, g, b, a);
 }
 
@@ -171,9 +157,9 @@ void Renderer::draw() {
     );
 
     wgpuRenderPassEncoderSetIndexBuffer(
-        m_current_pass, 
-        m_index_buffer, 
-        WGPUIndexFormat_Uint32, 
+        m_current_pass,
+        m_index_buffer,
+        WGPUIndexFormat_Uint32,
         0,
         wgpuBufferGetSize(m_index_buffer)
     );

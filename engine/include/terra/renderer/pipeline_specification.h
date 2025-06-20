@@ -17,19 +17,14 @@ struct VertexBufferLayoutSpec {
     std::vector<VertexAttributeSpec> attributes;
 };
 
+struct UniformSpec {
+    u32 binding;
+    u64 size;
+    WGPUShaderStage visibility;
+};
+
 struct PipelineSpecification {
-    PipelineSpecification() = delete;
-    PipelineSpecification(Shader&& shader)
-        : shader(std::move(shader)) {}
-
-    PipelineSpecification(PipelineSpecification&&) = default;
-    PipelineSpecification& operator=(PipelineSpecification&&) = default;
-
-    PipelineSpecification(const PipelineSpecification&) = delete;
-    PipelineSpecification& operator=(const PipelineSpecification&) = delete;
-
-
-    Shader shader;
+    Shader* shader = nullptr;
 
     WGPUTextureFormat surface_format = WGPUTextureFormat_BGRA8Unorm;
     u64 uniform_buffer_size = sizeof(f32) * 4;
@@ -39,6 +34,11 @@ struct PipelineSpecification {
     WGPUTextureFormat depth_format = WGPUTextureFormat_Depth24Plus;
 
     std::vector<VertexBufferLayoutSpec> vertex_buffers;
+
+    std::vector<WGPUBindGroupLayout> bind_group_layouts;
+
+    std::vector<UniformSpec> uniforms;
+
 };
 
 } // namespace terra

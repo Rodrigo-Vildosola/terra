@@ -1,14 +1,16 @@
 #include "terra/renderer/pipeline.h"
+#include "terra/core/logger.h"
 #include "terra/helpers/error.h"
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
+#include "terra/renderer/pipeline_specification.h"
 
 
 namespace terra {
 
-Pipeline::Pipeline(WebGPUContext& context, PipelineSpecification&& spec)
-    : m_context(context), m_spec(std::move(spec)) {
-    create_pipeline();
+Pipeline::Pipeline(WebGPUContext& context, const PipelineSpecification& spec)
+    : m_context(context) {
+    create_pipeline(spec);
 }
 
 Pipeline::~Pipeline() {
@@ -27,25 +29,17 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 }
 
 
-void Pipeline::create_pipeline() {
-	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
-    layout_desc.bindGroupLayoutCount = 0;
-    layout_desc.bindGroupLayouts     = nullptr;
-    m_layout = wgpuDeviceCreatePipelineLayout(
-      m_context.get_native_device(),
-      &layout_desc
-    );
-
+void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 	std::vector<std::vector<WGPUVertexAttribute>>  all_attribs;
 	std::vector<WGPUVertexBufferLayout>            all_layouts;
-	all_attribs.reserve(m_spec.vertex_buffers.size());
-	all_layouts.reserve(m_spec.vertex_buffers.size());
+	all_attribs.reserve(spec.vertex_buffers.size());
+	all_layouts.reserve(spec.vertex_buffers.size());
 
-	for (auto const& vb : m_spec.vertex_buffers) {
+	for (VertexBufferLayoutSpec const& vb : spec.vertex_buffers) {
 		// collect attributes
 		all_attribs.emplace_back();
 		auto& attribs = all_attribs.back();
-		for (auto const& a : vb.attributes) {
+		for (VertexAttributeSpec const& a : vb.attributes) {
 			WGPUVertexAttribute wa = WGPU_VERTEX_ATTRIBUTE_INIT;
 			wa.shaderLocation = a.shader_location;
 			wa.format         = a.format;
@@ -61,6 +55,14 @@ void Pipeline::create_pipeline() {
 		layout.attributes     = attribs.data();
 		all_layouts.push_back(layout);
 	}
+
+	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
+    layout_desc.bindGroupLayoutCount = (u32) spec.bind_group_layouts.size();
+    layout_desc.bindGroupLayouts     = spec.bind_group_layouts.data();
+    m_layout = wgpuDeviceCreatePipelineLayout(
+    	m_context.get_native_device(),
+		&layout_desc
+    );
 
 	WGPURenderPipelineDescriptor p = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
 
@@ -85,22 +87,24 @@ void Pipeline::create_pipeline() {
 
 	// Vertex state
 	WGPUVertexState vs = WGPU_VERTEX_STATE_INIT;
-	vs.module = m_spec.shader.module();
-	vs.entryPoint = to_wgpu_string_view(m_spec.shader.vertex_entry);
+	vs.module = spec.shader->module();
+	vs.entryPoint = to_wgpu_string_view(spec.shader->vertex_entry);
 	vs.bufferCount = (u32) all_layouts.size();
 	vs.buffers     = all_layouts.data();
 
 	WGPUColorTargetState color_target_state = WGPU_COLOR_TARGET_STATE_INIT;
-	color_target_state.format = m_spec.surface_format;
+	color_target_state.format = spec.surface_format;
 	WGPUBlendState blend_state = WGPU_BLEND_STATE_INIT;
 	color_target_state.blend = &blend_state;
 
 	// Fragment state
 	WGPUFragmentState fs = WGPU_FRAGMENT_STATE_INIT;
-	fs.module = m_spec.shader.module();
-	fs.entryPoint = to_wgpu_string_view(m_spec.shader.fragment_entry);
+	fs.module = spec.shader->module();
+	fs.entryPoint = to_wgpu_string_view(spec.shader->fragment_entry);
 	fs.targetCount = 1;
 	fs.targets = &color_target_state;
+
+	TR_CORE_CRITICAL("Shader source {}", spec.shader->fragment_entry);
 
 	p.vertex = vs;
 	p.fragment = &fs;
