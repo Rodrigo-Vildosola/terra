@@ -54,18 +54,20 @@ void Renderer::init() {
     );
 
 
-    Shader shader = Shader::from_file(
-        m_context, 
-        "shaders/shader.wgsl", 
-        "Triangle Shader Module"
+    ref<Shader> shader = create_ref<Shader>(
+        Shader::from_file(
+            m_context, 
+            "shaders/shader.wgsl", 
+            "Triangle Shader Module"
+        )
     );
-    shader.vertex_entry = "vs_main";
-    shader.fragment_entry = "fs_main";
+    shader->vertex_entry = "vs_main";
+    shader->fragment_entry = "fs_main";
 
     PipelineSpecification spec;
-    spec.shader = &shader;
+    spec.shader = shader;
     spec.surface_format = m_context.get_preferred_format();
-    spec.uniform_buffer_size = 0;
+    // spec.uniform_buffer_size = 0;
 
     VertexBufferLayoutSpec vb;
     vb.stride       = (2 + 3) * sizeof(f32);
@@ -198,7 +200,6 @@ void Renderer::draw() {
         0, 
         nullptr
     );
-
 
     wgpuRenderPassEncoderDrawIndexed(
         m_current_pass, 

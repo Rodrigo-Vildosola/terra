@@ -8,15 +8,15 @@
 
 namespace terra {
 
-Pipeline::Pipeline(WebGPUContext& context, PipelineSpecification& spec)
-    : m_context(context) {
+Pipeline::Pipeline(WebGPUContext& context, const PipelineSpecification& spec)
+    : m_context(context), m_spec(spec) {
     create_pipeline(spec);
 }
 
 Pipeline::~Pipeline() {
 	if (m_pipeline) wgpuRenderPipelineRelease(m_pipeline);
 	if (m_layout) wgpuPipelineLayoutRelease(m_layout);
-	if (m_bind_group_layout) wgpuBindGroupLayoutRelease(m_bind_group_layout);
+	// if (m_bind_group_layout) wgpuBindGroupLayoutRelease(m_bind_group_layout);
 }
 
 void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
@@ -29,7 +29,7 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 }
 
 
-void Pipeline::create_pipeline(PipelineSpecification& spec) {
+void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 	std::vector<std::vector<WGPUVertexAttribute>>  all_attribs;
 	std::vector<WGPUVertexBufferLayout>            all_layouts;
 	all_attribs.reserve(spec.vertex_buffers.size());
@@ -71,14 +71,14 @@ void Pipeline::create_pipeline(PipelineSpecification& spec) {
 		bgl_desc.entryCount = static_cast<u32>(layout_entries.size());
 		bgl_desc.entries = layout_entries.data();
 
-		m_bind_group_layout = wgpuDeviceCreateBindGroupLayout(m_context.get_native_device(), &bgl_desc);
+		WGPUBindGroupLayout bind_group_layout = wgpuDeviceCreateBindGroupLayout(m_context.get_native_device(), &bgl_desc);
 
 		// Append the layout to the final pipeline layout
-		spec.bind_group_layouts.push_back(m_bind_group_layout);
+		m_bind_group_layouts.push_back(bind_group_layout);
 	}
 	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
-    layout_desc.bindGroupLayoutCount = (u32) spec.bind_group_layouts.size();
-    layout_desc.bindGroupLayouts     = spec.bind_group_layouts.data();
+    layout_desc.bindGroupLayoutCount = (u32) m_bind_group_layouts.size();
+    layout_desc.bindGroupLayouts     = m_bind_group_layouts.data();
 
     m_layout = wgpuDeviceCreatePipelineLayout(
     	m_context.get_native_device(),
