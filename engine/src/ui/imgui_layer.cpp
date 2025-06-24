@@ -2,6 +2,7 @@
 #include "terra/ui/imgui_layer.h"
 #include "terra/core/application.h"
 #include "terra/core/base.h"
+#include "terra/renderer/renderer_api.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -98,9 +99,7 @@ void UILayer::end() {
 
     // Rendering
     ImGui::Render();
-    auto pass_encoder = Application::get()
-                            .get_renderer()
-                            .get_current_pass_encoder();
+    auto pass_encoder = RendererAPI::get_current_pass_encoder();
 
     if (pass_encoder) {
         ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass_encoder);

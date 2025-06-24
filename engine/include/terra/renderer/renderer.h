@@ -5,6 +5,8 @@
 #include "terra/renderer/buffer.h"
 #include "terra/renderer/pipeline.h"
 #include "terra/renderer/material_instance.h"
+#include "terra/renderer/camera.h"
+#include "terra/renderer/mesh.h"
 
 namespace terra {
 
@@ -17,21 +19,24 @@ public:
     explicit Renderer(WebGPUContext& context);
     ~Renderer();
 
-    void init();                 // allocate pipelines, resources, etc.
+    void init();
 
     void update_uniforms(f32 time);
 
 
     // call once per frame
     void begin_frame();
-    void begin_scene_pass();
-    void end_scene_pass();
+    void end_frame();
+    
+    void begin_scene(const Camera& camera);
+    void end_scene();
+    void submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform);
+
     void begin_ui_pass();
     void end_ui_pass();
-    void end_frame();
 
-    void draw_scene();    // your 3D draw calls
-    void draw_ui();       // nothing here: UI is done outside
+    void draw_scene();
+    void draw_ui();
 
     // high‐level draws
     void clear_color(f32 r, f32 g, f32 b, f32 a);
@@ -43,6 +48,11 @@ public:
 
 
 private:
+    struct SceneData {
+        const Camera* camera;
+    };
+    scope<SceneData> m_scene_data;
+
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;
 
@@ -50,16 +60,6 @@ private:
     WGPUSurfaceTexture m_surface_texture{};
     WGPUTextureView    m_target_view{};
 
-    scope<Pipeline> m_pipeline;
-    VertexBuffer m_vertex_buffer;
-
-    IndexBuffer m_index_buffer;
-    u32 m_index_count = 0;
-
-    // Material instance for managing uniforms
-    ref<MaterialInstance> m_material_instance;
-
-    // last-open pass encoder
     WGPURenderPassEncoder m_current_pass = nullptr;
 
 };

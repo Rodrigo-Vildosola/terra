@@ -8,6 +8,7 @@ add_library(${ENGINE_NAME} STATIC ${ENGINE_SRC})
 target_include_directories(${ENGINE_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/external/glm  # <-- Add this if GLM is local
 )
 
 target_link_libraries(${ENGINE_NAME}

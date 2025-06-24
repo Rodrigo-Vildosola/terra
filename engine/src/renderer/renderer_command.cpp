@@ -12,7 +12,7 @@ WGPURenderPassEncoder RendererCommand::begin_render_pass(CommandQueue& q, WGPUTe
 }
 
 
-void RendererCommand::set_clear_color(float r, float g, float b, float a) {
+void RendererCommand::set_clear_color(f32 r, f32 g, f32 b, f32 a) {
     s_clear_color = {
         .r = r,
         .g = g,

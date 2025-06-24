@@ -3,7 +3,7 @@
 #include "terra/core/logger.h"
 #include "terra/core/timestep.h"
 
-#include "terra/renderer/renderer.h"
+#include "terra/renderer/renderer_api.h"
 #include "terra/core/window.h"
 
 namespace terra {
@@ -23,6 +23,8 @@ Application::Application(const std::string& name, CommandLineArgs args)
     m_context = WebGPUContext::create();
     m_context->init(m_window.get());
 
+    RendererAPI::init(m_context.get());
+
     #if !defined(TR_RELEASE)
         TR_CORE_INFO("Creating ImGui layer");
         m_ui_layer = new UILayer();
@@ -32,7 +34,7 @@ Application::Application(const std::string& name, CommandLineArgs args)
 
 Application::~Application() {
     TR_CORE_INFO("Shutting down Terra Engine...");
-    // Renderer::shutdown();
+    RendererAPI::shutdown();
     m_window.reset();
 }
 
@@ -63,11 +65,7 @@ void Application::on_event(Event& e)
 
 
 void Application::run() {
-    m_renderer = create_scope<Renderer>(*m_context);
-    m_renderer->init();
     Timer::init();
-
-    auto* queue = m_context->get_queue();  // 🔥 Get the command queue
 
     // render loop
     // -----------
@@ -76,36 +74,25 @@ void Application::run() {
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
 
-        m_renderer->update_uniforms(time);
-
-        m_renderer->begin_frame();
-        m_renderer->clear_color(1.0f, 0.8f, 0.55f, 1.0f);
+        RendererAPI::begin_frame();
 
         if (!m_minimized) {
-            m_renderer->begin_scene_pass();
-            m_renderer->draw();
             for (Layer* layer : m_layer_stack)
                 layer->on_update(timestep);
-
-            m_renderer->end_scene_pass();
         }
 
         #if !defined(TR_RELEASE)
-            m_renderer->begin_ui_pass();
-
+            RendererAPI::begin_ui_pass();
             m_ui_layer->begin();
             for (Layer* layer : m_layer_stack)
                 layer->on_ui_render();
             m_ui_layer->end();
-
-            m_renderer->end_ui_pass();
+            RendererAPI::end_ui_pass();
 		#endif
 
-        m_renderer->end_frame();
+        RendererAPI::end_frame();
 
         m_window->on_update();
-
-        // break;
     }
 
 }

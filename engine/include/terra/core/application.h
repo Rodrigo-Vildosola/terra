@@ -10,7 +10,8 @@
 #include "terra/events/event.h"
 #include "terra/events/application_event.h"
 
-#include "terra/renderer/renderer.h"
+#include "terra/renderer/renderer_api.h"
+#include <glm/glm.hpp>
 
 #include "terra/ui/imgui_layer.h"
 
@@ -50,7 +51,6 @@ public:
     scope<WebGPUContext>& get_context() { return m_context; }
 
     WGPUDevice get_device() { return m_context->get_native_device(); }
-    Renderer& get_renderer() { return *m_renderer; }
 
 
 private:
@@ -65,7 +65,6 @@ private:
 
     scope<Window>           m_window;
     scope<WebGPUContext>    m_context;
-    scope<Renderer>         m_renderer;
 
     bool m_running = true;
 	bool m_minimized = false;
