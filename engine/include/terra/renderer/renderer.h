@@ -4,6 +4,7 @@
 #include "terra/core/timestep.h"
 #include "terra/renderer/buffer.h"
 #include "terra/renderer/pipeline.h"
+#include "terra/renderer/material_instance.h"
 
 namespace terra {
 
@@ -42,8 +43,6 @@ public:
 
 
 private:
-    void init_bind_group();
-
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;
 
@@ -57,8 +56,8 @@ private:
     IndexBuffer m_index_buffer;
     u32 m_index_count = 0;
 
-    UniformBuffer m_uniform_buffer;
-    WGPUBindGroup m_bind_group = nullptr;
+    // Material instance for managing uniforms
+    ref<MaterialInstance> m_material_instance;
 
     // last-open pass encoder
     WGPURenderPassEncoder m_current_pass = nullptr;

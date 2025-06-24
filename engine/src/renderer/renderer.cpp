@@ -5,6 +5,7 @@
 #include "terra/resources/resource_manager.h"
 #include "terra/renderer/renderer_command.h"
 #include "terra/renderer/renderer.h"
+#include "terra/renderer/material.h"
 
 namespace terra {
 
@@ -16,7 +17,6 @@ Renderer::Renderer(WebGPUContext& ctx)
 Renderer::~Renderer() {
     if (m_vertex_buffer.buffer) wgpuBufferRelease(m_vertex_buffer.buffer);
     if (m_index_buffer.buffer)  wgpuBufferRelease(m_index_buffer.buffer);
-
 }
 
 // Allocate static context
@@ -45,15 +45,6 @@ void Renderer::init() {
         "Index Buffer"
     );
 
-    m_uniform_buffer = Buffer::create_uniform_buffer(
-        m_context,
-        nullptr,
-        sizeof(f32),
-        0,
-        "u_time Uniform"
-    );
-
-
     ref<Shader> shader = create_ref<Shader>(
         Shader::from_file(
             m_context, 
@@ -64,10 +55,24 @@ void Renderer::init() {
     shader->vertex_entry = "vs_main";
     shader->fragment_entry = "fs_main";
 
+    // Create a material directly
+    auto material = create_ref<Material>(m_context, "BasicMaterial");
+    material->set_shader(shader);
+
+    // Define material parameters
+    material->define_parameter(
+        "u_time", 
+        0, 
+        MaterialParamType::Float, 
+        WGPUShaderStage_Vertex | WGPUShaderStage_Fragment
+    );
+
+    // Set default values
+    material->set_default_float("u_time", 0.0f);
+
     PipelineSpecification spec;
     spec.shader = shader;
     spec.surface_format = m_context.get_preferred_format();
-    // spec.uniform_buffer_size = 0;
 
     VertexBufferLayoutSpec vb;
     vb.stride       = (2 + 3) * sizeof(f32);
@@ -90,43 +95,13 @@ void Renderer::init() {
 
     m_pipeline = create_scope<Pipeline>(m_context, spec);
 
-    init_bind_group();
+    // Create material instance from the material template
+    m_material_instance = material->create_instance(m_pipeline.get());
 }
 
 void Renderer::update_uniforms(f32 time) {
-    wgpuQueueWriteBuffer(
-        m_context.get_queue()->get_native_queue(),
-        m_uniform_buffer.buffer,
-        0,
-        &time,
-        sizeof(f32)
-    );
-}
-
-void Renderer::init_bind_group() {
-    WGPUBindGroupEntry entry = WGPU_BIND_GROUP_ENTRY_INIT;
-
-	// The index of the binding (the entries in bindGroupDesc can be in any order)
-	entry.binding = m_uniform_buffer.binding;
-	// The buffer it is actually bound to
-	entry.buffer = m_uniform_buffer.buffer;
-    // We can specify an offset within the buffer, so that a single buffer can hold
-	// multiple uniform blocks.
-	entry.offset = 0;
-	// And we specify again the size of the buffer.
-	entry.size = m_uniform_buffer.size;
-
-    // A bind group contains one or multiple bindings
-	WGPUBindGroupDescriptor bind_group_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
-	// There must be as many bindings as declared in the layout!
-	bind_group_desc.entryCount = 1;
-    bind_group_desc.layout = m_pipeline->get_bind_group_layout();
-	bind_group_desc.entries = &entry;
-	m_bind_group = wgpuDeviceCreateBindGroup(
-        m_context.get_native_device(), 
-        &bind_group_desc
-    );
-	
+    // Use the material instance to update the time uniform
+    m_material_instance->set_parameter_float("u_time", time);
 }
 
 void Renderer::begin_frame() {
@@ -193,13 +168,8 @@ void Renderer::draw() {
         m_index_buffer.size
     );
 
-    wgpuRenderPassEncoderSetBindGroup(
-        m_current_pass, 
-        0, 
-        m_bind_group, 
-        0, 
-        nullptr
-    );
+    // Bind the material instance (which contains the uniforms)
+    m_material_instance->bind(m_current_pass);
 
     wgpuRenderPassEncoderDrawIndexed(
         m_current_pass, 

@@ -8,6 +8,7 @@
 #include <memory>
 #include <fstream>
 #include <filesystem>
+#include <unordered_map>
 
 // Order matters here
 #include "terra/core/base.h"
