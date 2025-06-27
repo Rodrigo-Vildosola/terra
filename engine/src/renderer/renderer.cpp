@@ -24,6 +24,7 @@ void Renderer::init() {
 }
 
 void Renderer::begin_frame() {
+    m_stats.reset();
     std::tie(m_surface_texture, m_target_view) = m_context.get_next_surface_view();
 }
 
@@ -43,8 +44,7 @@ void Renderer::end_scene() {
     m_current_pass = nullptr;
 }
 
-void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform)
-{
+void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform) {
     if (!m_current_pass) return;
 
     // TODO: Set view projection matrix from m_scene_data->camera
@@ -82,6 +82,11 @@ void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& materi
         0,
         0
     );
+
+    m_stats.draw_calls++;
+    m_stats.mesh_count++;
+    m_stats.vertex_count += mesh->get_vertex_count();
+    m_stats.index_count += mesh->get_index_count();
 }
 
 
@@ -107,6 +112,11 @@ void Renderer::end_frame() {
 
 void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
     RendererCommand::set_clear_color(r, g, b, a);
+}
+
+RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
+    m_render_passes.push_back(std::make_unique<RenderPass>(desc, m_queue));
+    return m_render_passes.back().get();
 }
 
 }

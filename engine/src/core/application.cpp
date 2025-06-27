@@ -93,6 +93,11 @@ void Application::run() {
         RendererAPI::end_frame();
 
         m_window->on_update();
+
+        RendererAPI::get_stats_mutable().frame_time_ms = timestep.get_milliseconds();
+        RendererAPI::get_stats_mutable().fps = 1.0f / timestep.get_seconds();
+
+        // break;
     }
 
 }

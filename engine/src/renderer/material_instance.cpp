@@ -64,7 +64,7 @@ void MaterialInstance::create_bind_group() {
     m_bind_group = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
 }
 
-void MaterialInstance::set_uniform_data(u32 binding_index, const void* data, size_t size) {
+void MaterialInstance::set_uniform_data(u32 binding_index, const void* data, u64 size) {
     TR_CORE_ASSERT(binding_index < m_uniforms.size(), "Invalid uniform binding index");
 
     auto it = m_parameters.find(binding_index);
@@ -149,7 +149,7 @@ void MaterialInstance::set_matrix4x4(u32 binding, const f32* matrix) {
 }
 
 // Named parameter setters
-void MaterialInstance::set_parameter(const std::string& name, const void* data, size_t size) {
+void MaterialInstance::set_parameter(const std::string& name, const void* data, u64 size) {
     auto it = m_parameter_bindings.find(name);
     if (it != m_parameter_bindings.end()) {
         set_uniform_data(it->second, data, size);
@@ -216,7 +216,7 @@ void MaterialInstance::update_uniform_buffer(u32 binding_index) {
     }
 }
 
-size_t MaterialInstance::get_parameter_size(MaterialParamType type) const {
+u64 MaterialInstance::get_parameter_size(MaterialParamType type) const {
     switch (type) {
         case MaterialParamType::Float: return sizeof(f32);
         case MaterialParamType::Float2: return 2 * sizeof(f32);

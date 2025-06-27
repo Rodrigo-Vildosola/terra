@@ -7,12 +7,29 @@
 #include "terra/renderer/material_instance.h"
 #include "terra/renderer/camera.h"
 #include "terra/renderer/mesh.h"
+#include "terra/renderer/render_pass.h"
 
 namespace terra {
 
 class WebGPUContext;  // forward declare
 class CommandQueue;   // forward declare
 
+struct RendererStats {
+    u32 draw_calls = 0;
+    u32 mesh_count = 0;
+    u32 vertex_count = 0;
+    u32 index_count = 0;
+
+    f32 frame_time_ms = 0.0f;
+    f32 fps = 0.0f;
+
+    void reset() {
+        draw_calls = 0;
+        mesh_count = 0;
+        vertex_count = 0;
+        index_count = 0;
+    }
+};
 
 class Renderer {
 public:
@@ -43,9 +60,14 @@ public:
 
     void draw();
 
+    // RenderPass management
+    RenderPass* create_render_pass(const RenderPassDesc& desc);
+    const std::vector<std::unique_ptr<RenderPass>>& get_render_passes() const { return m_render_passes; }
 
     WGPURenderPassEncoder get_current_pass_encoder() const { return m_current_pass; }
-
+    
+    const RendererStats& get_stats() const { return m_stats; }
+    RendererStats& get_stats_mutable() { return m_stats; }
 
 private:
     struct SceneData {
@@ -61,6 +83,10 @@ private:
     WGPUTextureView    m_target_view{};
 
     WGPURenderPassEncoder m_current_pass = nullptr;
+
+    std::vector<std::unique_ptr<RenderPass>> m_render_passes;
+
+    RendererStats m_stats;
 
 };
 

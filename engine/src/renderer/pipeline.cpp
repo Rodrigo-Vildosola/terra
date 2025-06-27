@@ -30,29 +30,28 @@ void Pipeline::bind(WGPURenderPassEncoder render_pass) const {
 
 
 void Pipeline::create_pipeline(const PipelineSpecification& spec) {
-	std::vector<std::vector<WGPUVertexAttribute>>  all_attribs;
+	std::vector<WGPUVertexAttribute> flat_attributes;
 	std::vector<WGPUVertexBufferLayout>            all_layouts;
-	all_attribs.reserve(spec.vertex_buffers.size());
+	flat_attributes.reserve(spec.vertex_buffers.size());
 	all_layouts.reserve(spec.vertex_buffers.size());
 
-	for (VertexBufferLayoutSpec const& vb : spec.vertex_buffers) {
-		// collect attributes
-		all_attribs.emplace_back();
-		auto& attribs = all_attribs.back();
-		for (VertexAttributeSpec const& a : vb.attributes) {
-			WGPUVertexAttribute wa = WGPU_VERTEX_ATTRIBUTE_INIT;
-			wa.shaderLocation = a.shader_location;
-			wa.format         = a.format;
-			wa.offset         = a.offset;
-			attribs.push_back(wa);
+	for (const VertexBufferLayoutSpec& vb : spec.vertex_buffers) {
+		WGPUVertexBufferLayout layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
+		layout.arrayStride = vb.stride;
+		layout.stepMode = vb.step_mode;
+
+		u64 attribute_offset = flat_attributes.size();
+		for (const auto& a : vb.attributes) {
+			flat_attributes.push_back({
+				.shaderLocation = a.shader_location,
+				.format = a.format,
+				.offset = a.offset,
+			});
 		}
 
-		// build the buffer layout
-		WGPUVertexBufferLayout layout = WGPU_VERTEX_BUFFER_LAYOUT_INIT;
-		layout.arrayStride    = vb.stride;
-		layout.stepMode       = vb.step_mode;
-		layout.attributeCount = (u32) attribs.size();
-		layout.attributes     = attribs.data();
+		layout.attributeCount = static_cast<u32>(vb.attributes.size());
+		layout.attributes = flat_attributes.data() + attribute_offset;
+
 		all_layouts.push_back(layout);
 	}
 
@@ -76,6 +75,7 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 		// Append the layout to the final pipeline layout
 		m_bind_group_layouts.push_back(bind_group_layout);
 	}
+
 	WGPUPipelineLayoutDescriptor layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
     layout_desc.bindGroupLayoutCount = (u32) m_bind_group_layouts.size();
     layout_desc.bindGroupLayouts     = m_bind_group_layouts.data();

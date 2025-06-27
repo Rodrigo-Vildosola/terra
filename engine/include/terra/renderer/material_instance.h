@@ -22,7 +22,8 @@ enum class MaterialParamType {
     Int2,
     Int3,
     Int4,
-    Matrix4x4
+    Matrix4x4,
+    Custom
 };
 
 // Material parameter structure
@@ -44,7 +45,13 @@ public:
     ~MaterialInstance();
 
     // Uniform data setters
-    void set_uniform_data(u32 binding_index, const void* data, size_t size);
+    void set_uniform_data(u32 binding_index, const void* data, u64 size);
+
+
+    template<typename T>
+    void set_uniform_block(const T& block) {
+        set_uniform_data(0, &block, sizeof(T));
+    }
     
     // Type-safe uniform setters
     void set_float(u32 binding, f32 value);
@@ -58,7 +65,7 @@ public:
     void set_matrix4x4(u32 binding, const f32* matrix);
     
     // Named parameter setters (for shader reflection)
-    void set_parameter(const std::string& name, const void* data, size_t size);
+    void set_parameter(const std::string& name, const void* data, u64 size);
     void set_parameter_float(const std::string& name, f32 value);
     void set_parameter_float3(const std::string& name, const f32* values);
     void set_parameter_matrix4x4(const std::string& name, const f32* matrix);
@@ -95,7 +102,7 @@ private:
     void update_uniform_buffer(u32 binding_index);
     
     // Helper to get parameter size
-    size_t get_parameter_size(MaterialParamType type) const;
+    u64 get_parameter_size(MaterialParamType type) const;
 };
 
 }

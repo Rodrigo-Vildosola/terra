@@ -72,4 +72,12 @@ WGPURenderPassEncoder RendererAPI::get_current_pass_encoder() {
     return s_renderer->get_current_pass_encoder();
 }
 
+const RendererStats& RendererAPI::get_stats() {
+    return s_renderer->get_stats();
+}
+
+RendererStats& RendererAPI::get_stats_mutable() {
+    return s_renderer->get_stats_mutable();
+}
+
 } 
