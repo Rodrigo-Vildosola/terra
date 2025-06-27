@@ -1,21 +1,23 @@
 #pragma once
 
+#include "terrapch.h"
+
 namespace terra {
 
 	class Timestep
 	{
 	public:
-		Timestep(float time = 0.0f)
+		Timestep(f32 time = 0.0f)
 			: m_time(time)
 		{
 		}
 
-		operator float() const { return m_time; }
+		operator f32() const { return m_time; }
 
-		float get_seconds() const { return m_time; }
-		float get_milliseconds() const { return m_time * 1000.0f; }
+		f32 get_seconds() const { return m_time; }
+		f32 get_milliseconds() const { return m_time * 1000.0f; }
 	private:
-		float m_time;
+		f32 m_time;
 	};
 
 }

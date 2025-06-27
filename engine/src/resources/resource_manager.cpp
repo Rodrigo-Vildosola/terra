@@ -5,7 +5,8 @@ namespace terra {
 bool ResourceManager::load_geometry(
     const std::filesystem::path& path, 
     std::vector<f32>& vertex_data, 
-    std::vector<u32>& index_data
+    std::vector<u32>& index_data,
+    bool is_3d
 ) {
     std::ifstream file(get_asset_path(path));
     if (!file.is_open()) {
@@ -41,7 +42,7 @@ bool ResourceManager::load_geometry(
             continue;
 
         // Section headers
-        if (line == "[vertex]") {
+        if (line == "[vertex]" || line == "[points]") {
             current_section = Section::Vertex;
             continue;
         } else if (line == "[indices]") {
@@ -52,12 +53,21 @@ bool ResourceManager::load_geometry(
         std::istringstream ss(line);
 
         if (current_section == Section::Vertex) {
-            float x, y, r, g, b;
-            if (!(ss >> x >> y >> r >> g >> b)) {
-                TR_CORE_ERROR("Invalid vertex data at line {} in {}", line_number, path.string());
-                return false;
+            if (is_3d) {
+                float x, y, z, r, g, b;
+                if (!(ss >> x >> y >> z >> r >> g >> b)) {
+                    TR_CORE_ERROR("Invalid 3D vertex data at line {} in {}", line_number, path.string());
+                    return false;
+                }
+                vertex_data.insert(vertex_data.end(), { x, y, z, r, g, b });
+            } else {
+                float x, y, r, g, b;
+                if (!(ss >> x >> y >> r >> g >> b)) {
+                    TR_CORE_ERROR("Invalid 2D vertex data at line {} in {}", line_number, path.string());
+                    return false;
+                }
+                vertex_data.insert(vertex_data.end(), { x, y, r, g, b });
             }
-            vertex_data.insert(vertex_data.end(), { x, y, r, g, b });
         } else if (current_section == Section::Indices) {
             u32 i0, i1, i2;
             if (!(ss >> i0 >> i1 >> i2)) {

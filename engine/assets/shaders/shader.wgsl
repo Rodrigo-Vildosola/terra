@@ -9,7 +9,7 @@ struct Uniforms {
 var<uniform> ubo: Uniforms;
 
 struct VertexInput {
-    @location(0) position: vec2f,
+    @location(0) position: vec3f,
     @location(1) color:    vec3f,
 };
 
@@ -21,7 +21,7 @@ struct VertexOutput {
 @vertex
 fn vs_main(in: VertexInput) -> VertexOutput {
     var out: VertexOutput;
-    let local_pos = vec4f(in.position, 0.0, 1.0);
+    let local_pos = vec4f(in.position, 1.0);
     let world_pos = ubo.u_model * local_pos;
     out.position = ubo.u_view_proj * world_pos;
     out.color = in.color;

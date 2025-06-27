@@ -67,12 +67,23 @@ void Application::on_event(Event& e)
 void Application::run() {
     Timer::init();
 
+    const Timestep fixed_dt(1.0f / 60.0f);
+    f32 accumulator = 0.0f;
+
     // render loop
     // -----------
     while (m_running) {
         f32 time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
+
+        accumulator += timestep;
+
+        while (accumulator >= fixed_dt) {
+            for (Layer* layer : m_layer_stack)
+                layer->on_physics_update(fixed_dt);
+            accumulator -= fixed_dt;
+        }
 
         RendererAPI::begin_frame();
 

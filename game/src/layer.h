@@ -13,8 +13,10 @@ public:
 	virtual void on_detach() override;
 
 	void on_update(terra::Timestep ts) override;
+	void on_physics_update(terra::Timestep fixed_ts) override;
 	virtual void on_ui_render() override;
 	void on_event(terra::Event& e) override;
+
 private:
 	terra::ref<terra::Shader> m_shader;
 	terra::ref<terra::Material> m_material;
@@ -24,4 +26,8 @@ private:
 	terra::scope<terra::Pipeline> m_pipeline;
 
 	terra::f32 m_cycle = 10;
+	float m_displayed_fps = 0.0f;
+	float m_displayed_frame_time = 0.0f;
+	float m_ui_stats_timer = 0.0f;
+
 };

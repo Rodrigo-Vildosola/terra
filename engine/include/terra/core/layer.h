@@ -15,6 +15,8 @@ public:
     virtual void on_attach() {}
     virtual void on_detach() {}
     virtual void on_update(Timestep ts) {}
+    virtual void on_physics_update(Timestep fixed_ts) {} // new!
+
     virtual void on_ui_render() {}
     virtual void on_event(Event& event) {}
 

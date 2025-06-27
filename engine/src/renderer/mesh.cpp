@@ -22,20 +22,28 @@ ref<Mesh> Mesh::from_file(const std::filesystem::path& path) {
     std::vector<f32> raw_vertex_data;
     std::vector<u32> index_data;
 
-    if (!ResourceManager::load_geometry(path, raw_vertex_data, index_data)) {
+    if (!ResourceManager::load_geometry(path, raw_vertex_data, index_data, true)) {
         TR_CORE_ERROR("Mesh::from_file failed: {}", path.string());
         return nullptr;
     }
 
+    if (raw_vertex_data.size() % 6 != 0) {
+        TR_CORE_ERROR("Invalid vertex format: expected 6 floats per vertex (x, y, z, r, g, b)");
+        return nullptr;
+    }
+
     std::vector<Vertex> vertices;
-    for (size_t i = 0; i + 4 < raw_vertex_data.size(); i += 5) {
+    vertices.reserve(raw_vertex_data.size() / 6);
+
+    for (size_t i = 0; i + 5 < raw_vertex_data.size(); i += 6) {
         Vertex v;
-        v.position = { raw_vertex_data[i + 0], raw_vertex_data[i + 1] };
-        v.color    = { raw_vertex_data[i + 2], raw_vertex_data[i + 3], raw_vertex_data[i + 4] };
+        v.position = { raw_vertex_data[i + 0], raw_vertex_data[i + 1], raw_vertex_data[i + 2] };
+        v.color    = { raw_vertex_data[i + 3], raw_vertex_data[i + 4], raw_vertex_data[i + 5] };
         vertices.push_back(v);
     }
 
     return create_ref<Mesh>(vertices, index_data);
 }
+
 
 } // namespace terra 

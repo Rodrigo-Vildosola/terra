@@ -15,7 +15,8 @@ public:
     static bool load_geometry(
         const std::filesystem::path& path, 
         std::vector<f32>& vertex_data, 
-        std::vector<u32>& index_data
+        std::vector<u32>& index_data,
+        bool is_3d
     );
 
     static std::string read_file_as_string(const std::string& relative_path);

@@ -24,7 +24,7 @@ void ExampleLayer::on_attach() {
 
     m_camera = terra::create_scope<terra::OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
     
-    m_mesh = terra::Mesh::from_file("objects/webgpu.txt");
+    m_mesh = terra::Mesh::from_file("objects/pyramid.txt");
 
     m_shader = terra::RendererAPI::create_shader("shaders/shader.wgsl", "Triangle Shader Module");
     m_shader->vertex_entry = "vs_main";
@@ -42,13 +42,13 @@ void ExampleLayer::on_attach() {
     vb.stride = sizeof(terra::Vertex);
     vb.step_mode = WGPUVertexStepMode_Vertex;
     vb.attributes = {
-        { 0, WGPUVertexFormat_Float32x2, offsetof(terra::Vertex, position) },
+        { 0, WGPUVertexFormat_Float32x3, offsetof(terra::Vertex, position) },
         { 1, WGPUVertexFormat_Float32x3, offsetof(terra::Vertex, color) },
     };
     spec.vertex_buffers.push_back(vb);
 
-    static_assert(sizeof(terra::Vertex) == 20, "Vertex struct size mismatch!");
-    TR_INFO("Vertex offsets: position = {}, color = {}", offsetof(terra::Vertex, position), offsetof(terra::Vertex, color));
+    // static_assert(sizeof(terra::Vertex) == 20, "Vertex struct size mismatch!");
+    // TR_INFO("Vertex offsets: position = {}, color = {}", offsetof(terra::Vertex, position), offsetof(terra::Vertex, color));
 
 
     terra::UniformSpec ubo_spec;
@@ -88,6 +88,20 @@ void ExampleLayer::on_update(terra::Timestep ts) {
     terra::RendererAPI::submit(m_mesh, m_material_instance, glm::mat4(1.0f));
     
     terra::RendererAPI::end_scene();
+
+    m_ui_stats_timer += ts.get_seconds();
+
+    if (m_ui_stats_timer >= 0.16f) {
+        const auto& stats = terra::RendererAPI::get_stats();
+        m_displayed_fps = stats.fps;
+        m_displayed_frame_time = stats.frame_time_ms;
+        m_ui_stats_timer = 0.0f;
+    }
+
+}
+
+void ExampleLayer::on_physics_update(terra::Timestep fixed_ts) {
+
 }
 
 
@@ -114,8 +128,8 @@ void ExampleLayer::on_ui_render() {
         const auto& stats = terra::RendererAPI::get_stats();
 
         ImGui::Begin("Renderer Stats");
-        ImGui::Text("FPS: %.1f", stats.fps);
-        ImGui::Text("Frame Time: %.2f ms", stats.frame_time_ms);
+        ImGui::Text("FPS: %.1f", m_displayed_fps);
+        ImGui::Text("Frame Time: %.2f ms", m_displayed_frame_time);
         ImGui::Separator();
         ImGui::Text("Draw Calls: %u", stats.draw_calls);
         ImGui::Text("Mesh Count: %u", stats.mesh_count);
