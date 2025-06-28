@@ -2,6 +2,7 @@
 
 #include <terra/terra.h>
 #include "terra/renderer/orthographic_camera.h"
+#include "terra/renderer/perspective_camera.h"
 
 class ExampleLayer : public terra::Layer
 {
@@ -22,7 +23,7 @@ private:
 	terra::ref<terra::Material> m_material;
 	terra::ref<terra::MaterialInstance> m_material_instance;
 	terra::ref<terra::Mesh> m_mesh;
-	terra::scope<terra::OrthographicCamera> m_camera;
+	terra::scope<terra::PerspectiveCamera> m_camera;
 	terra::scope<terra::Pipeline> m_pipeline;
 
 	terra::f32 m_cycle = 10;

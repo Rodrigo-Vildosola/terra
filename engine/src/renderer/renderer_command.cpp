@@ -28,10 +28,3 @@ void RendererCommand::end_render_pass(CommandQueue& q) {
 }
 
 } // namespace terra
-
-
-
-// 1. total enviados (por whatsapp)
-// 2. total recibidos (resto errores)
-// 3. total acusaron recibo (es decir conversaron por whatsapp, habla de la gestión de la ejecutiva y proactividad del paciente)
-// 4. Total agendados

@@ -2,6 +2,7 @@ struct Uniforms {
     u_view_proj: mat4x4<f32>,
     u_model: mat4x4<f32>,
     u_time: f32,
+    u_aspect_ratio: f32,
     u_color: vec4<f32>,
 };
 
@@ -21,16 +22,21 @@ struct VertexOutput {
 @vertex
 fn vs_main(in: VertexInput) -> VertexOutput {
     var out: VertexOutput;
-    let local_pos = vec4f(in.position, 1.0);
-    let world_pos = ubo.u_model * local_pos;
-    out.position = ubo.u_view_proj * world_pos;
+	let angle = ubo.u_time; // you can multiply it go rotate faster
+	let alpha = cos(angle);
+	let beta = sin(angle);
+	var position = vec3f(
+		in.position.x,
+		alpha * in.position.y + beta * in.position.z,
+		alpha * in.position.z - beta * in.position.y,
+	);
+	out.position = vec4f(position.x, position.y * ubo.u_aspect_ratio, 0.0, 1.0);
+
     out.color = in.color;
     return out;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    let pulse = 0.5 + 0.5 * sin(ubo.u_time);
-    let animated_color = in.color * ubo.u_color.rgb * pulse;
-    return vec4f(animated_color, 1.0);
+    return vec4f(in.color, 1.0) * ubo.u_color;
 }
