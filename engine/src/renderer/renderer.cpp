@@ -6,6 +6,7 @@
 #include "terra/renderer/renderer_command.h"
 #include "terra/renderer/renderer.h"
 #include "terra/renderer/material.h"
+#include "terra/helpers/string.h"
 
 namespace terra {
 
@@ -20,12 +21,47 @@ Renderer::~Renderer() {
 }
 
 void Renderer::init() {
-    // Nothing to do here for now
+
+    WGPUTextureDescriptor depth_texture_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
+	depth_texture_desc.label = "Z Buffer"_wgpu;
+	depth_texture_desc.usage = WGPUTextureUsage_RenderAttachment;
+	depth_texture_desc.size = { 640, 480, 1 };
+	depth_texture_desc.format = m_depth_texture_format;
+	WGPUTexture depth_texture = wgpuDeviceCreateTexture(m_context.get_native_device(), &depth_texture_desc);
+	// Create the view of the depth texture manipulated by the rasterizer
+	m_depth_texture_view = wgpuTextureCreateView(depth_texture, nullptr);
+	
+	// We can now release the texture and only hold to the view
+	wgpuTextureRelease(depth_texture);
+}
+
+u64 Renderer::create_pipeline(const PipelineSpecification& spec) {
+    // You could hash the spec if you want deduplication (optional)
+    u64 id = m_next_pipeline_id++;
+
+    // Fill in internal fields like surface format and depth view
+    PipelineSpecification internal_spec = spec;
+    internal_spec.surface_format = m_context.get_preferred_format();
+    internal_spec.depth_view = m_depth_texture_view;
+
+    ref<Pipeline> pipeline = create_ref<Pipeline>(m_context, internal_spec);
+    m_pipeline_cache[id] = pipeline;
+
+    return id;
+}
+
+
+ref<Pipeline> Renderer::get_pipeline(u64 id) const {
+    auto it = m_pipeline_cache.find(id);
+    if (it != m_pipeline_cache.end())
+        return it->second;
+    TR_CORE_ASSERT(false, "Pipeline ID not found!");
+    return nullptr;
 }
 
 void Renderer::begin_frame() {
     m_stats.reset();
-    std::tie(m_surface_texture, m_target_view) = m_context.get_next_surface_view();
+    std::tie(m_surface_texture, m_target_texture_view) = m_context.get_next_surface_view();
 }
 
 void Renderer::begin_scene(const Camera& camera) {
@@ -34,7 +70,7 @@ void Renderer::begin_scene(const Camera& camera) {
     // clears to clearColor
     m_current_pass = RendererCommand::begin_render_pass(
         m_queue, 
-        m_target_view, 
+        m_target_texture_view, 
         WGPULoadOp_Clear
     );
 }
@@ -94,7 +130,7 @@ void Renderer::begin_ui_pass() {
     // load what we just drew, draw UI on top
     m_current_pass = RendererCommand::begin_render_pass(
         m_queue, 
-        m_target_view, 
+        m_target_texture_view, 
         WGPULoadOp_Load
     );
 }

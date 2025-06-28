@@ -64,6 +64,10 @@ public:
     RenderPass* create_render_pass(const RenderPassDesc& desc);
     const std::vector<std::unique_ptr<RenderPass>>& get_render_passes() const { return m_render_passes; }
 
+    u64 create_pipeline(const PipelineSpecification& spec);
+    ref<Pipeline> get_pipeline(u64 id) const;
+
+
     WGPURenderPassEncoder get_current_pass_encoder() const { return m_current_pass; }
     
     const RendererStats& get_stats() const { return m_stats; }
@@ -80,13 +84,19 @@ private:
 
     // holds the surface‐texture alive until present()
     WGPUSurfaceTexture m_surface_texture{};
-    WGPUTextureView    m_target_view{};
+    WGPUTextureView    m_target_texture_view{};
+
+    WGPUTextureView    m_depth_texture_view{};
+    WGPUTextureFormat  m_depth_texture_format = WGPUTextureFormat_Depth24Plus;
 
     WGPURenderPassEncoder m_current_pass = nullptr;
 
     std::vector<std::unique_ptr<RenderPass>> m_render_passes;
 
     RendererStats m_stats;
+
+    std::unordered_map<u64, ref<Pipeline>> m_pipeline_cache;
+    u64 m_next_pipeline_id = 1;
 
 };
 

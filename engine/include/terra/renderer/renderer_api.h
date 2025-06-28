@@ -30,6 +30,9 @@ public:
     static ref<Material> create_material(const std::string& name, const ref<Shader>& shader);
     static ref<Mesh> create_mesh(const std::vector<Vertex>& vertices, const std::vector<u32>& indices);
 
+    static u64 create_pipeline(const PipelineSpecification& spec);
+    static ref<Pipeline> get_pipeline(u64 pipeline_id);
+
     static void begin_scene(const Camera& camera);
     static void end_scene();
 

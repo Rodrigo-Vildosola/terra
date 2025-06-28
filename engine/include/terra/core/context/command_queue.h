@@ -41,7 +41,7 @@ private:
     WGPUDevice m_device = nullptr;
     WGPUQueue m_queue = nullptr;
     WGPUCommandEncoder m_encoder = nullptr;
-    WGPURenderPassEncoder m_render_pass_encoder = nullptr; // ADD THIS
+    WGPURenderPassEncoder m_render_pass_encoder = nullptr;
 
 
     bool m_frame_active = false;

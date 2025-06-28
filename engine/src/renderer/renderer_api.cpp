@@ -80,4 +80,12 @@ RendererStats& RendererAPI::get_stats_mutable() {
     return s_renderer->get_stats_mutable();
 }
 
+u64 RendererAPI::create_pipeline(const PipelineSpecification& spec) {
+    return s_renderer->create_pipeline(spec);
+}
+
+ref<Pipeline> RendererAPI::get_pipeline(u64 pipeline_id) {
+    return s_renderer->get_pipeline(pipeline_id);
+}
+
 } 

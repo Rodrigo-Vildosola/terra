@@ -51,7 +51,6 @@ void ExampleLayer::on_attach() {
 
     terra::PipelineSpecification spec;
     spec.shader = m_shader;
-    spec.surface_format = terra::RendererAPI::get_context().get_preferred_format();
 
     terra::VertexBufferLayoutSpec vb;
     vb.stride = sizeof(terra::Vertex);
@@ -62,10 +61,6 @@ void ExampleLayer::on_attach() {
     };
     spec.vertex_buffers.push_back(vb);
 
-    // static_assert(sizeof(terra::Vertex) == 20, "Vertex struct size mismatch!");
-    // TR_INFO("Vertex offsets: position = {}, color = {}", offsetof(terra::Vertex, position), offsetof(terra::Vertex, color));
-
-
     terra::UniformSpec ubo_spec;
     ubo_spec.binding = 0;
     ubo_spec.size = sizeof(UniformBlock);
@@ -74,9 +69,12 @@ void ExampleLayer::on_attach() {
     spec.uniforms.clear();
     spec.uniforms.push_back(ubo_spec);
 
-    m_pipeline = terra::create_scope<terra::Pipeline>(terra::RendererAPI::get_context(), spec);
+    terra::u64 pipeline_id = terra::RendererAPI::create_pipeline(spec);
 
-    m_material_instance = m_material->create_instance(m_pipeline.get());
+    auto pipeline = terra::RendererAPI::get_pipeline(pipeline_id); // optional, mostly internal
+
+
+    m_material_instance = m_material->create_instance(pipeline.get());
 }
 
 void ExampleLayer::on_detach() {

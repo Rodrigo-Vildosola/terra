@@ -26,10 +26,12 @@ struct UniformSpec {
 struct PipelineSpecification {
     ref<Shader> shader = nullptr;
 
-    WGPUTextureFormat surface_format = WGPUTextureFormat_BGRA8Unorm;
+    WGPUTextureFormat surface_format;
     std::vector<VertexBufferLayoutSpec> vertex_buffers;
 
     std::vector<UniformSpec> uniforms;
+
+    WGPUTextureView depth_view;
 
 };
 

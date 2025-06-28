@@ -60,7 +60,6 @@ WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, W
     render_pass_desc.colorAttachmentCount = 1;
     render_pass_desc.colorAttachments = &color_attachment;
 
-    // Begin → end immediately (just clears screen for now)
     m_render_pass_encoder = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
     return m_render_pass_encoder;
 }
