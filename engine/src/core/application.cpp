@@ -5,6 +5,7 @@
 
 #include "terra/renderer/renderer_api.h"
 #include "terra/core/window.h"
+#include <cassert>
 
 namespace terra {
 
@@ -129,6 +130,10 @@ bool Application::on_window_resize(WindowResizeEvent& e) {
     m_minimized = false;
 
     m_context->configure_surface(m_context->get_preferred_format());
+
+    auto [fb_width, fb_height] = m_context->get_framebuffer_size();
+
+    RendererAPI::s_renderer->on_resize(fb_width, fb_height);
 
     return false;
 }

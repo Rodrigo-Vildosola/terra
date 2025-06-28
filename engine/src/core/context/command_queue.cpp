@@ -1,5 +1,6 @@
 #include "terra/core/context/command_queue.h"
 #include "terra/core/context/context_utils.h"
+#include "terra/renderer/render_pass.h"
 #include "terra/helpers/string.h"
 
 namespace terra {
@@ -45,24 +46,50 @@ void CommandQueue::begin_frame(std::string_view label) {
 }
 
 // command_queue.cpp (inside CommandQueue)
-WGPURenderPassEncoder CommandQueue::create_render_pass(WGPUTextureView target, WGPUColor clear_color, WGPULoadOp load_op) {
+WGPURenderPassEncoder CommandQueue::create_render_pass(const RenderPassDesc& desc) {
     TR_CORE_ASSERT(m_frame_active, "Cannot create render pass without an active encoder");
 
-    // Color attachment setup
-    WGPURenderPassColorAttachment color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
-    color_attachment.view = target;
-    color_attachment.loadOp = load_op;
-    color_attachment.storeOp = WGPUStoreOp_Store;
-    color_attachment.clearValue = clear_color;
+    // --- Convert color attachments ---
+    std::vector<WGPURenderPassColorAttachment> color_attachments(desc.color_attachments.size());
 
-    // Render pass descriptor
+    for (u64 i = 0; i < desc.color_attachments.size(); ++i) {
+        const auto& src = desc.color_attachments[i];
+
+        WGPURenderPassColorAttachment dst = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
+        dst.view = src.view;
+        dst.loadOp = src.load_op;
+        dst.storeOp = src.store_op;
+        dst.clearValue = src.clear_color;
+
+        color_attachments[i] = dst;
+    }
+
+    // --- Render pass descriptor ---
     WGPURenderPassDescriptor render_pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    render_pass_desc.colorAttachmentCount = 1;
-    render_pass_desc.colorAttachments = &color_attachment;
+    render_pass_desc.label = to_wgpu_string_view(desc.name);
+    render_pass_desc.colorAttachmentCount = (u32) color_attachments.size();
+    render_pass_desc.colorAttachments = color_attachments.data();
 
+    // --- Optional depth-stencil attachment ---
+    if (desc.depth_stencil_attachment.view) {
+        WGPURenderPassDepthStencilAttachment depth_attachment = WGPU_RENDER_PASS_DEPTH_STENCIL_ATTACHMENT_INIT;
+
+        const auto& src = desc.depth_stencil_attachment;
+    
+        depth_attachment.view = src.view;
+        depth_attachment.depthLoadOp = src.load_op;
+        depth_attachment.depthStoreOp = src.store_op;
+        depth_attachment.depthClearValue = src.clear_depth;
+        depth_attachment.depthReadOnly = src.read_only_depth;
+
+        render_pass_desc.depthStencilAttachment = &depth_attachment;
+    }
+
+    // --- Begin render pass ---
     m_render_pass_encoder = wgpuCommandEncoderBeginRenderPass(m_encoder, &render_pass_desc);
     return m_render_pass_encoder;
 }
+
 
 void CommandQueue::end_render_pass() {
     if (m_render_pass_encoder) {

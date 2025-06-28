@@ -32,6 +32,7 @@ public:
 
     WGPUTextureFormat get_preferred_format() const { return m_surface_format; }
 
+    std::pair<u32, u32> get_framebuffer_size();
 
     static scope<WebGPUContext> create(const ContextProps& props = ContextProps());
 

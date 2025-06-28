@@ -105,7 +105,6 @@ void ExampleLayer::on_update(terra::Timestep ts) {
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
 
-
     terra::RendererAPI::submit(m_mesh, m_material_instance, model);
     
     terra::RendererAPI::end_scene();

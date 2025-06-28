@@ -11,8 +11,8 @@
 
 namespace terra {
 
-class WebGPUContext;  // forward declare
-class CommandQueue;   // forward declare
+class WebGPUContext;
+class CommandQueue;
 
 struct RendererStats {
     u32 draw_calls = 0;
@@ -55,10 +55,13 @@ public:
     void draw_scene();
     void draw_ui();
 
+    void invalidate_surface_view();
+
+
     // high‐level draws
     void clear_color(f32 r, f32 g, f32 b, f32 a);
 
-    void draw();
+    void on_resize(u32 width, u32 height);
 
     // RenderPass management
     RenderPass* create_render_pass(const RenderPassDesc& desc);

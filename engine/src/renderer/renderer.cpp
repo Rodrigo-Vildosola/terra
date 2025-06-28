@@ -22,10 +22,12 @@ Renderer::~Renderer() {
 
 void Renderer::init() {
 
+    auto [fb_width, fb_height] = m_context.get_framebuffer_size();
+
     WGPUTextureDescriptor depth_texture_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
 	depth_texture_desc.label = "Z Buffer"_wgpu;
 	depth_texture_desc.usage = WGPUTextureUsage_RenderAttachment;
-	depth_texture_desc.size = { 640, 480, 1 };
+	depth_texture_desc.size = { fb_width, fb_height, 1 };
 	depth_texture_desc.format = m_depth_texture_format;
 	WGPUTexture depth_texture = wgpuDeviceCreateTexture(m_context.get_native_device(), &depth_texture_desc);
 	// Create the view of the depth texture manipulated by the rasterizer
@@ -67,12 +69,30 @@ void Renderer::begin_frame() {
 void Renderer::begin_scene(const Camera& camera) {
     m_scene_data->camera = &camera;
 
+    RenderPassDesc scene_pass;
+    scene_pass.name = "MainScene";
+
+    // Color attachment
+    RenderPassAttachment color_attachment;
+    color_attachment.view = m_target_texture_view;
+    color_attachment.load_op = WGPULoadOp_Clear;
+    color_attachment.store_op = WGPUStoreOp_Store;
+    color_attachment.clear_color = {0.1f, 0.1f, 0.1f, 1.0f};
+    scene_pass.color_attachments.push_back(color_attachment);
+
+    // Depth attachment
+    RenderPassAttachment depth_attachment;
+    depth_attachment.view = m_depth_texture_view;
+    depth_attachment.load_op = WGPULoadOp_Clear;
+    depth_attachment.store_op = WGPUStoreOp_Store;
+    depth_attachment.clear_depth = 1.0f;
+    depth_attachment.read_only_depth = false;
+    scene_pass.depth_stencil_attachment = depth_attachment;
+
+
     // clears to clearColor
-    m_current_pass = RendererCommand::begin_render_pass(
-        m_queue, 
-        m_target_texture_view, 
-        WGPULoadOp_Clear
-    );
+    m_current_pass = RendererCommand::begin_render_pass(m_queue, scene_pass);
+
 }
 
 void Renderer::end_scene() {
@@ -128,11 +148,17 @@ void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& materi
 
 void Renderer::begin_ui_pass() {
     // load what we just drew, draw UI on top
-    m_current_pass = RendererCommand::begin_render_pass(
-        m_queue, 
-        m_target_texture_view, 
-        WGPULoadOp_Load
-    );
+    RenderPassDesc ui_pass;
+    ui_pass.name = "UIPass";
+
+    // Only color, no depth
+    RenderPassAttachment color_attachment;
+    color_attachment.view = m_target_texture_view;
+    color_attachment.load_op = WGPULoadOp_Load;
+    color_attachment.store_op = WGPUStoreOp_Store;
+    ui_pass.color_attachments.push_back(color_attachment);
+
+    m_current_pass = RendererCommand::begin_render_pass(m_queue, ui_pass);
 }
 
 void Renderer::end_ui_pass() {
@@ -153,6 +179,31 @@ void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
 RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
     m_render_passes.push_back(std::make_unique<RenderPass>(desc, m_queue));
     return m_render_passes.back().get();
+}
+
+void Renderer::on_resize(u32 width, u32 height) {
+    TR_CORE_INFO("Resizing renderer to {}x{}", width, height);
+
+    // Recreate depth texture
+    if (m_depth_texture_view) {
+        wgpuTextureViewRelease(m_depth_texture_view);
+        m_depth_texture_view = nullptr;
+    }
+
+    WGPUTextureDescriptor depth_texture_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
+    depth_texture_desc.label = "Z Buffer"_wgpu;
+    depth_texture_desc.usage = WGPUTextureUsage_RenderAttachment;
+    depth_texture_desc.size = { width, height, 1 };
+    depth_texture_desc.format = m_depth_texture_format;
+    
+    WGPUTexture depth_texture = wgpuDeviceCreateTexture(m_context.get_native_device(), &depth_texture_desc);
+    m_depth_texture_view = wgpuTextureCreateView(depth_texture, nullptr);
+    wgpuTextureRelease(depth_texture);
+}
+
+void Renderer::invalidate_surface_view() {
+    m_surface_texture.texture = nullptr;
+    m_target_texture_view = nullptr;
 }
 
 }

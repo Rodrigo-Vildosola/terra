@@ -106,6 +106,7 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 	// used for optimization).
 	p.primitive.cullMode = WGPUCullMode_None;
 
+
 	// Vertex state
 	WGPUVertexState vs = WGPU_VERTEX_STATE_INIT;
 	vs.module = spec.shader->module();
@@ -125,10 +126,19 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 	fs.targetCount = 1;
 	fs.targets = &color_target_state;
 
-	TR_CORE_CRITICAL("Shader source {}", spec.shader->fragment_entry);
-
 	p.vertex = vs;
 	p.fragment = &fs;
+
+	WGPUDepthStencilState depth_stencil = WGPU_DEPTH_STENCIL_STATE_INIT;
+	if (spec.depth_view) {
+		depth_stencil.format = WGPUTextureFormat_Depth24Plus; // Match the render pass format
+		depth_stencil.depthWriteEnabled = WGPUOptionalBool_True;
+		depth_stencil.depthCompare = WGPUCompareFunction_Less;
+
+		p.depthStencil = &depth_stencil;
+	} else {
+		p.depthStencil = nullptr;
+	}
 
 	m_pipeline = wgpuDeviceCreateRenderPipeline(
 		m_context.get_native_device(), 

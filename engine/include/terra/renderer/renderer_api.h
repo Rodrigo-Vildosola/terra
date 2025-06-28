@@ -1,5 +1,6 @@
 #pragma once
 
+#include "terra/core/application.h"
 #include "terra/core/base.h"
 #include "terra/renderer/mesh.h"
 #include "terra/renderer/renderer.h"
@@ -43,6 +44,8 @@ public:
 
     static const RendererStats& get_stats();
     static RendererStats& get_stats_mutable();
+
+    friend class Application; 
 
 private:
     struct RendererAPIData {

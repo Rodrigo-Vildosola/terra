@@ -1,13 +1,14 @@
 #pragma once
 
 #include "terrapch.h"
-#include <webgpu/webgpu.hpp>
 #ifdef WEBGPU_BACKEND_WGPU
     #include <webgpu/wgpu.h>
 #endif // WEBGPU_BACKEND_WGPU
 
 
 namespace terra {
+
+class RenderPassDesc;
 
 class CommandQueueProps {
 
@@ -25,7 +26,7 @@ public:
 
     void add_marker(std::string_view label);
     void submit_now();
-    WGPURenderPassEncoder create_render_pass(WGPUTextureView view, WGPUColor color, WGPULoadOp load_op);
+    WGPURenderPassEncoder create_render_pass(const RenderPassDesc& desc);
 
     void end_render_pass();
     void poll([[maybe_unused]] bool yield_to_browser); // Poll/tick device for async processing

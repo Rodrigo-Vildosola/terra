@@ -1,23 +1,30 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <webgpu/webgpu.h>
-#include "terra/core/context/command_queue.h"
+
+#include "terrapch.h"
 
 namespace terra {
 
+class CommandQueue;
+
 struct RenderPassAttachment {
     WGPUTextureView view = nullptr;
+
     WGPULoadOp load_op = WGPULoadOp_Clear;
     WGPUStoreOp store_op = WGPUStoreOp_Store;
-    WGPUColor clear_color = {0, 0, 0, 1};
+
+    WGPUColor clear_color = {0.0f, 0.0f, 0.0f, 1.0f}; // Used for color
+    float clear_depth = 1.0f;                        // Used for depth
+    uint32_t clear_stencil = 0;                      // Optional
+
+    bool read_only_depth = false;                    // For depth-only passes
 };
 
 struct RenderPassDesc {
+    std::string_view name = "UnnamedPass";
+
     std::vector<RenderPassAttachment> color_attachments;
-    // TODO: Add depth, resolve, etc.
-    std::string name;
+    RenderPassAttachment depth_stencil_attachment;
 };
 
 class RenderPass {

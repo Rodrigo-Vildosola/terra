@@ -129,6 +129,11 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPUContext::get_next_surface_v
 
 }
 
+std::pair<u32, u32> WebGPUContext::get_framebuffer_size() { 
+    return m_window_handle->get_framebuffer_size(); 
+}
+
+
 void WebGPUContext::swap_buffers() {
 	// Present logic would go here
 	// In a real app, you'd acquire the next texture and render to it
