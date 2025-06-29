@@ -12,9 +12,6 @@ struct RendererCommand {
     static void set_clear_color(f32 r, f32 g, f32 b, f32 a);
     static void end_render_pass(CommandQueue& q);
 
-private:
-    // store clear color between begin/end
-    static WGPUColor s_clear_color;
 };
 
 } // namespace terra

@@ -94,12 +94,14 @@ private:
 
     WGPURenderPassEncoder m_current_pass = nullptr;
 
-    std::vector<std::unique_ptr<RenderPass>> m_render_passes;
+    std::vector<scope<RenderPass>> m_render_passes;
 
     RendererStats m_stats;
 
     std::unordered_map<u64, ref<Pipeline>> m_pipeline_cache;
     u64 m_next_pipeline_id = 1;
+
+    WGPUColor m_clear_color;
 
 };
 

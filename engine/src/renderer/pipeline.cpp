@@ -131,11 +131,23 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 
 	WGPUDepthStencilState depth_stencil = WGPU_DEPTH_STENCIL_STATE_INIT;
 	if (spec.depth_view) {
-		depth_stencil.format = WGPUTextureFormat_Depth24Plus; // Match the render pass format
+		depth_stencil.format = spec.depth_format;
 		depth_stencil.depthWriteEnabled = WGPUOptionalBool_True;
 		depth_stencil.depthCompare = WGPUCompareFunction_Less;
 
+		// depth_stencil.stencilFront = WGPUStencilFaceState{
+		// 	.compare = WGPUCompareFunction_Always,
+		// 	.failOp = WGPUStencilOperation_Keep,
+		// 	.depthFailOp = WGPUStencilOperation_Keep,
+		// 	.passOp = WGPUStencilOperation_Keep
+		// };
+		// depth_stencil.stencilBack = depth_stencil.stencilFront;
+		// depth_stencil.stencilReadMask = 0xFFFFFFFF;
+		// depth_stencil.stencilWriteMask = 0xFFFFFFFF;
+
 		p.depthStencil = &depth_stencil;
+
+		TR_CORE_CRITICAL("Creating the depth stencil state");
 	} else {
 		p.depthStencil = nullptr;
 	}

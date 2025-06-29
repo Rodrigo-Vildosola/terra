@@ -27,8 +27,12 @@ private:
 	terra::scope<terra::Pipeline> m_pipeline;
 
 	terra::f32 m_cycle = 10;
-	float m_displayed_fps = 0.0f;
-	float m_displayed_frame_time = 0.0f;
-	float m_ui_stats_timer = 0.0f;
 
+private:
+    float m_fps_accumulator = 0.0f;
+    int m_fps_frame_count = 0;
+    float m_fps_timer = 0.0f;
+
+    float m_displayed_fps = 0.0f;
+    float m_displayed_frame_time = 0.0f;
 };

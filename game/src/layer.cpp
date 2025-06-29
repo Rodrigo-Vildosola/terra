@@ -84,6 +84,18 @@ void ExampleLayer::on_detach() {
 float my_color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
 void ExampleLayer::on_update(terra::Timestep ts) {
+    float delta_time = ts.get_seconds();
+    m_fps_accumulator += delta_time;
+    m_fps_frame_count++;
+
+    if (m_fps_accumulator >= 1.0f) {
+        m_displayed_fps = (float)m_fps_frame_count / m_fps_accumulator;
+        m_displayed_frame_time = 1000.0f / m_displayed_fps;  // in milliseconds
+
+        m_fps_accumulator = 0.0f;
+        m_fps_frame_count = 0;
+    }
+
     float width = (float)terra::Application::get().get_window().get_width();
     float height = (float)terra::Application::get().get_window().get_height();
     float aspect_ratio = width / height;
@@ -108,15 +120,6 @@ void ExampleLayer::on_update(terra::Timestep ts) {
     terra::RendererAPI::submit(m_mesh, m_material_instance, model);
     
     terra::RendererAPI::end_scene();
-
-    m_ui_stats_timer += ts.get_seconds();
-
-    if (m_ui_stats_timer >= 0.16f) {
-        const auto& stats = terra::RendererAPI::get_stats();
-        m_displayed_fps = stats.fps;
-        m_displayed_frame_time = stats.frame_time_ms;
-        m_ui_stats_timer = 0.0f;
-    }
 
 }
 

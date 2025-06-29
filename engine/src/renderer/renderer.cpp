@@ -1,4 +1,5 @@
 #include "terra/core/assert.h"
+#include "terra/core/base.h"
 #include "terra/core/logger.h"
 #include "terrapch.h"
 
@@ -21,20 +22,11 @@ Renderer::~Renderer() {
 }
 
 void Renderer::init() {
+    m_depth_texture_format = WGPUTextureFormat_Depth24Plus;
 
     auto [fb_width, fb_height] = m_context.get_framebuffer_size();
 
-    WGPUTextureDescriptor depth_texture_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
-	depth_texture_desc.label = "Z Buffer"_wgpu;
-	depth_texture_desc.usage = WGPUTextureUsage_RenderAttachment;
-	depth_texture_desc.size = { fb_width, fb_height, 1 };
-	depth_texture_desc.format = m_depth_texture_format;
-	WGPUTexture depth_texture = wgpuDeviceCreateTexture(m_context.get_native_device(), &depth_texture_desc);
-	// Create the view of the depth texture manipulated by the rasterizer
-	m_depth_texture_view = wgpuTextureCreateView(depth_texture, nullptr);
-	
-	// We can now release the texture and only hold to the view
-	wgpuTextureRelease(depth_texture);
+    on_resize(fb_width, fb_height);
 }
 
 u64 Renderer::create_pipeline(const PipelineSpecification& spec) {
@@ -45,6 +37,7 @@ u64 Renderer::create_pipeline(const PipelineSpecification& spec) {
     PipelineSpecification internal_spec = spec;
     internal_spec.surface_format = m_context.get_preferred_format();
     internal_spec.depth_view = m_depth_texture_view;
+    internal_spec.depth_format = m_depth_texture_format;
 
     ref<Pipeline> pipeline = create_ref<Pipeline>(m_context, internal_spec);
     m_pipeline_cache[id] = pipeline;
@@ -77,7 +70,7 @@ void Renderer::begin_scene(const Camera& camera) {
     color_attachment.view = m_target_texture_view;
     color_attachment.load_op = WGPULoadOp_Clear;
     color_attachment.store_op = WGPUStoreOp_Store;
-    color_attachment.clear_color = {0.1f, 0.1f, 0.1f, 1.0f};
+    color_attachment.clear_color = m_clear_color;
     scene_pass.color_attachments.push_back(color_attachment);
 
     // Depth attachment
@@ -88,7 +81,6 @@ void Renderer::begin_scene(const Camera& camera) {
     depth_attachment.clear_depth = 1.0f;
     depth_attachment.read_only_depth = false;
     scene_pass.depth_stencil_attachment = depth_attachment;
-
 
     // clears to clearColor
     m_current_pass = RendererCommand::begin_render_pass(m_queue, scene_pass);
@@ -173,11 +165,16 @@ void Renderer::end_frame() {
 
 
 void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
-    RendererCommand::set_clear_color(r, g, b, a);
+    m_clear_color = {
+        .r = r,
+        .g = g,
+        .b = b,
+        .a = a
+    };
 }
 
 RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
-    m_render_passes.push_back(std::make_unique<RenderPass>(desc, m_queue));
+    m_render_passes.push_back(create_scope<RenderPass>(desc, m_queue));
     return m_render_passes.back().get();
 }
 

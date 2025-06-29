@@ -85,7 +85,7 @@ void WebGPUContext::configure_surface(WGPUTextureFormat preferred_format) {
     config.usage        = WGPUTextureUsage_RenderAttachment;
     config.width        = fb_width;
     config.height       = fb_height;
-    config.presentMode  = WGPUPresentMode_Immediate;
+    config.presentMode  = WGPUPresentMode_Fifo;
     config.alphaMode    = WGPUCompositeAlphaMode_Auto;
     config.viewFormatCount = 0;
     config.viewFormats     = nullptr;

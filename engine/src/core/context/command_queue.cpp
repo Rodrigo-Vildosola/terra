@@ -22,7 +22,7 @@ void CommandQueue::init(const WGPUDevice device) {
         void* /* pUserData1*/,
         void* /* pUserData2 */)
     {
-		TR_CORE_INFO("Queued work finished with status: 0x{:X}", (u32)status);
+		TR_CORE_INFO("Queued work finished with status: 0x{:X}", (u32) status);
 	};
 
     WGPUQueueWorkDoneCallbackInfo callback_info = WGPU_QUEUE_WORK_DONE_CALLBACK_INFO_INIT;
@@ -39,7 +39,7 @@ void CommandQueue::begin_frame(std::string_view label) {
     TR_CORE_ASSERT(!m_frame_active, "Command encoder already active!");
 
     WGPUCommandEncoderDescriptor desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
-    desc.label = to_wgpu_string_view(label); // use your `_wgpu` literal or helper
+    desc.label = to_wgpu_string_view(label);
     m_encoder = wgpuDeviceCreateCommandEncoder(m_device, &desc);
 
     m_frame_active = true;

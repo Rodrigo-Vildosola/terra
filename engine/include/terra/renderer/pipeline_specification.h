@@ -32,6 +32,8 @@ struct PipelineSpecification {
     std::vector<UniformSpec> uniforms;
 
     WGPUTextureView depth_view;
+    WGPUTextureFormat depth_format;
+    
 
 };
 
