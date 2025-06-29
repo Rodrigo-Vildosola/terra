@@ -58,7 +58,7 @@ void MaterialInstance::create_bind_group() {
 
     WGPUBindGroupDescriptor desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
     desc.layout = m_pipeline->get_bind_group_layout();
-    desc.entryCount = static_cast<u32>(entries.size());
+    desc.entryCount = (u32) entries.size();
     desc.entries = entries.data();
 
     m_bind_group = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
@@ -75,104 +75,73 @@ void MaterialInstance::set_uniform_data(u32 binding_index, const void* data, u64
     }
 }
 
+template<typename T>
+void MaterialInstance::set_typed(u32 binding, const T* value, MaterialParamType type) {
+    const u64 size = get_parameter_size(type);
+    set_uniform_data(binding, value, size);
+    if (auto it = m_parameters.find(binding); it != m_parameters.end()) {
+        it->second.type = type;
+    }
+}
+
 // Type-safe uniform setters
 void MaterialInstance::set_float(u32 binding, f32 value) {
-    set_uniform_data(binding, &value, sizeof(f32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Float;
-    }
+    set_typed(binding, &value, MaterialParamType::Float);
 }
 
 void MaterialInstance::set_float2(u32 binding, const f32* values) {
-    set_uniform_data(binding, values, 2 * sizeof(f32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Float2;
-    }
+    set_typed(binding, values, MaterialParamType::Float2);
 }
 
 void MaterialInstance::set_float3(u32 binding, const f32* values) {
-    set_uniform_data(binding, values, 3 * sizeof(f32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Float3;
-    }
+    set_typed(binding, values, MaterialParamType::Float3);
 }
 
 void MaterialInstance::set_float4(u32 binding, const f32* values) {
-    set_uniform_data(binding, values, 4 * sizeof(f32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Float4;
-    }
+    set_typed(binding, values, MaterialParamType::Float4);
 }
 
 void MaterialInstance::set_int(u32 binding, i32 value) {
-    set_uniform_data(binding, &value, sizeof(i32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Int;
-    }
+    set_typed(binding, &value, MaterialParamType::Int);
 }
 
 void MaterialInstance::set_int2(u32 binding, const i32* values) {
-    set_uniform_data(binding, values, 2 * sizeof(i32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Int2;
-    }
+    set_typed(binding, values, MaterialParamType::Int2);
 }
 
 void MaterialInstance::set_int3(u32 binding, const i32* values) {
-    set_uniform_data(binding, values, 3 * sizeof(i32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Int3;
-    }
+    set_typed(binding, values, MaterialParamType::Int3);
 }
 
 void MaterialInstance::set_int4(u32 binding, const i32* values) {
-    set_uniform_data(binding, values, 4 * sizeof(i32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Int4;
-    }
+    set_typed(binding, values, MaterialParamType::Int4);
 }
 
 void MaterialInstance::set_matrix4x4(u32 binding, const f32* matrix) {
-    set_uniform_data(binding, matrix, 16 * sizeof(f32));
-    auto it = m_parameters.find(binding);
-    if (it != m_parameters.end()) {
-        it->second.type = MaterialParamType::Matrix4x4;
-    }
+    set_typed(binding, matrix, MaterialParamType::Matrix4x4);
 }
 
 // Named parameter setters
 void MaterialInstance::set_parameter(const std::string& name, const void* data, u64 size) {
-    auto it = m_parameter_bindings.find(name);
-    if (it != m_parameter_bindings.end()) {
+    if (auto it = m_parameter_bindings.find(name); it != m_parameter_bindings.end()) {
         set_uniform_data(it->second, data, size);
     }
 }
 
 void MaterialInstance::set_parameter_float(const std::string& name, f32 value) {
-    auto it = m_parameter_bindings.find(name);
-    if (it != m_parameter_bindings.end()) {
+    if (auto it = m_parameter_bindings.find(name); it != m_parameter_bindings.end()) {
         set_float(it->second, value);
     }
 }
 
 void MaterialInstance::set_parameter_float3(const std::string& name, const f32* values) {
-    auto it = m_parameter_bindings.find(name);
-    if (it != m_parameter_bindings.end()) {
+    if (auto it = m_parameter_bindings.find(name); it != m_parameter_bindings.end()) {
         set_float3(it->second, values);
     }
 }
 
 void MaterialInstance::set_parameter_matrix4x4(const std::string& name, const f32* matrix) {
-    auto it = m_parameter_bindings.find(name);
-    if (it != m_parameter_bindings.end()) {
+    if (auto it = m_parameter_bindings.find(name); it != m_parameter_bindings.end()) {
         set_matrix4x4(it->second, matrix);
     }
 }
@@ -202,7 +171,7 @@ void MaterialInstance::update_uniform_buffer(u32 binding_index) {
     auto param_it = m_parameters.find(binding_index);
     if (param_it == m_parameters.end()) return;
 
-    const auto& param = param_it->second;
+    const auto& param = m_parameters[binding_index];
     const auto& ub = m_uniforms[binding_index];
 
     if (!param.data.empty()) {
@@ -216,18 +185,18 @@ void MaterialInstance::update_uniform_buffer(u32 binding_index) {
     }
 }
 
-u64 MaterialInstance::get_parameter_size(MaterialParamType type) const {
+constexpr u64 MaterialInstance::get_parameter_size(MaterialParamType type) const {
     switch (type) {
-        case MaterialParamType::Float: return sizeof(f32);
-        case MaterialParamType::Float2: return 2 * sizeof(f32);
-        case MaterialParamType::Float3: return 3 * sizeof(f32);
-        case MaterialParamType::Float4: return 4 * sizeof(f32);
-        case MaterialParamType::Int: return sizeof(i32);
-        case MaterialParamType::Int2: return 2 * sizeof(i32);
-        case MaterialParamType::Int3: return 3 * sizeof(i32);
-        case MaterialParamType::Int4: return 4 * sizeof(i32);
-        case MaterialParamType::Matrix4x4: return 16 * sizeof(f32);
-        default: return 0;
+        case MaterialParamType::Float:      return sizeof(f32);
+        case MaterialParamType::Float2:     return 2 * sizeof(f32);
+        case MaterialParamType::Float3:     return 3 * sizeof(f32);
+        case MaterialParamType::Float4:     return 4 * sizeof(f32);
+        case MaterialParamType::Int:        return sizeof(i32);
+        case MaterialParamType::Int2:       return 2 * sizeof(i32);
+        case MaterialParamType::Int3:       return 3 * sizeof(i32);
+        case MaterialParamType::Int4:       return 4 * sizeof(i32);
+        case MaterialParamType::Matrix4x4:  return 16 * sizeof(f32);
+        default:                            return 0;
     }
 }
 

@@ -82,6 +82,13 @@ private:
     };
     scope<SceneData> m_scene_data;
 
+    struct DrawBatch {
+        ref<Mesh> mesh;
+        ref<MaterialInstance> material_instance;
+        std::vector<glm::mat4> instance_transforms;
+    };
+    std::vector<DrawBatch> m_draw_batches;
+
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;
 

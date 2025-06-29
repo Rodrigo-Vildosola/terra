@@ -79,30 +79,34 @@ public:
     
     // Material properties
     void set_name(const std::string& name) { m_name = name; }
-    const std::string& get_name() const { return m_name; }
+    const std::string& get_name() const noexcept { return m_name; }
     
     // Pipeline access
-    Pipeline* get_pipeline() const { return m_pipeline; }
+    Pipeline* get_pipeline() const noexcept { return m_pipeline; }
     
     // Update all uniforms to GPU
     void update_uniforms();
 
+    constexpr u64 get_parameter_size(MaterialParamType type) const;
+
 private:
     WebGPUContext& m_context;
-    Pipeline* m_pipeline;
+    Pipeline* m_pipeline = nullptr;
+
     std::string m_name;
 
     std::vector<UniformBuffer> m_uniforms;
     std::unordered_map<u32, MaterialParam> m_parameters;
-    std::unordered_map<std::string, u32> m_parameter_bindings; // name -> binding mapping
+    std::unordered_map<std::string, u32> m_parameter_bindings;
+
     WGPUBindGroup m_bind_group = nullptr;
 
     void create_uniform_buffers();
     void create_bind_group();
     void update_uniform_buffer(u32 binding_index);
     
-    // Helper to get parameter size
-    u64 get_parameter_size(MaterialParamType type) const;
+    template<typename T>
+    void set_typed(u32 binding, const T* value, MaterialParamType type);
 };
 
 }
