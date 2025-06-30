@@ -133,6 +133,26 @@ IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u6
     return ib;
 }
 
+StorageBuffer Buffer::create_storage_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 binding, const char* label) {
+    WGPUDevice device = ctx.get_native_device();
+    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+
+    StorageBuffer sb;
+    sb.size = size;
+    sb.binding = binding;
+    sb.label = label;
+    sb.buffer = Buffer::create(
+        device,
+        queue,
+        data,
+        size,
+        WGPUBufferUsage_Storage | WGPUBufferUsage_CopyDst,
+        label
+    );
+
+    return sb;
+}
+
 
 void Buffer::example(WGPUInstance instance, WGPUDevice device, WGPUQueue queue) {
     WGPUBufferDescriptor buffer_desc = WGPU_BUFFER_DESCRIPTOR_INIT;

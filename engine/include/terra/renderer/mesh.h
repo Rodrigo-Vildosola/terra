@@ -55,7 +55,6 @@ private:
     u32 m_index_count = 0;
     u32 m_vertex_count = 0;
 
-    // 🔧 New member
     Transform m_transform;
 };
 

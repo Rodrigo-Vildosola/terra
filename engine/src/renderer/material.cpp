@@ -17,7 +17,7 @@ ref<MaterialInstance> Material::create_instance(Pipeline* pipeline) {
         bool found = std::any_of(
             pipeline_spec.uniforms.begin(), 
             pipeline_spec.uniforms.end(), 
-            [&](const UniformSpec& u) { return u.binding == param.binding && u.visibility == param.visibility; }
+            [&](const UniformBufferSpec& u) { return u.binding == param.binding && u.visibility == param.visibility; }
         );
         TR_CORE_ASSERT(found, "Pipeline is not compatible with material parameter");
     }

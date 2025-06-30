@@ -67,12 +67,33 @@ void Pipeline::create_pipeline(const PipelineSpecification& spec) {
 		}
 
 		WGPUBindGroupLayoutDescriptor bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
-		bgl_desc.entryCount = static_cast<u32>(layout_entries.size());
+		bgl_desc.entryCount = (u32) layout_entries.size();
 		bgl_desc.entries = layout_entries.data();
 
 		WGPUBindGroupLayout bind_group_layout = wgpuDeviceCreateBindGroupLayout(m_context.get_native_device(), &bgl_desc);
 
 		// Append the layout to the final pipeline layout
+		m_bind_group_layouts.push_back(bind_group_layout);
+	}
+
+	if (!spec.storages.empty()) {
+		std::vector<WGPUBindGroupLayoutEntry> entries;
+		for (auto& sb : spec.storages) {
+			WGPUBindGroupLayoutEntry e{};
+			e.binding       = sb.binding;
+			e.visibility    = sb.visibility;
+			e.buffer.type   = WGPUBufferBindingType_ReadOnlyStorage;
+			e.buffer.minBindingSize = sb.size;
+			entries.push_back(e);
+		}
+
+		WGPUBindGroupLayoutDescriptor bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
+		bgl_desc.entryCount = (u32) entries.size();
+		bgl_desc.entries = entries.data();
+
+		WGPUBindGroupLayout bind_group_layout = wgpuDeviceCreateBindGroupLayout(m_context.get_native_device(), &bgl_desc);
+
+		// create group-1 layout from entries
 		m_bind_group_layouts.push_back(bind_group_layout);
 	}
 

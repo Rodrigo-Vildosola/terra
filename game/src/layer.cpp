@@ -11,13 +11,16 @@
 #include <imgui.h> // if you're using ImGui (optional)
 #include <glm/gtc/type_ptr.hpp>
 
-struct UniformBlock {
-    glm::mat4 u_view_proj;
-    glm::mat4 u_model;
+struct alignas(16) UniformBlock {
+    glm::mat4 u_view;
+    glm::mat4 u_proj;
     float u_time;
     float u_aspect_ratio;
-    float _padding1[2]; // pad to 16-byte alignment
-    glm::vec4 u_color;
+};
+
+struct alignas(16) InstanceBlock {
+    glm::mat4 model;   // 64 bytes
+    glm::vec4 color;   // 16 bytes
 };
 
 ExampleLayer::ExampleLayer()
@@ -40,6 +43,8 @@ void ExampleLayer::on_attach() {
     );
     
     m_mesh = terra::Mesh::from_file("objects/pyramid.txt");
+    m_mesh_2 = terra::Mesh::from_file("objects/webgpu.txt");
+
 
     m_shader = terra::RendererAPI::create_shader("shaders/shader.wgsl", "Triangle Shader Module");
     m_shader->vertex_entry = "vs_main";
@@ -61,13 +66,19 @@ void ExampleLayer::on_attach() {
     };
     spec.vertex_buffers.push_back(vb);
 
-    terra::UniformSpec ubo_spec;
+    terra::UniformBufferSpec ubo_spec;
     ubo_spec.binding = 0;
     ubo_spec.size = sizeof(UniformBlock);
     ubo_spec.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
 
-    spec.uniforms.clear();
-    spec.uniforms.push_back(ubo_spec);
+    spec.uniforms = { ubo_spec };
+
+    terra::StorageBufferSpec sb_spec;
+    sb_spec.binding = 0;
+    sb_spec.size = sizeof(InstanceBlock);
+    sb_spec.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
+
+    spec.storages = { sb_spec };
 
     terra::u64 pipeline_id = terra::RendererAPI::create_pipeline(spec);
 
@@ -81,9 +92,17 @@ void ExampleLayer::on_detach() {
     TR_INFO("ExampleLayer detached");
 }
 
-float my_color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+static glm::vec3 I1_pos   = { 0.0f, 0.0f, 0.0f };
+static glm::vec4 I1_color = { 0.2f, 0.8f, 0.2f, 1.0f };
+
+static glm::vec3 I2_pos   = {  1.5f, 0.0f, -2.5f };
+static glm::vec4 I2_color = { 0.2f, 0.2f, 1.0f, 1.0f };
 
 void ExampleLayer::on_update(terra::Timestep ts) {
+
+    terra::RendererAPI::clear_color(0.1f, 0.1f, 0.1f, 1.0f);
+    terra::RendererAPI::begin_scene(*m_camera);
+
     float delta_time = ts.get_seconds();
     m_fps_accumulator += delta_time;
     m_fps_frame_count++;
@@ -103,21 +122,44 @@ void ExampleLayer::on_update(terra::Timestep ts) {
     // float time = terra::Timer::elapsed();
 
     UniformBlock block;
-    block.u_view_proj = m_camera->get_view_matrix() * m_camera->get_projection_matrix();
-    block.u_model =  m_mesh->get_model_matrix();
+    block.u_view = m_camera->get_view_matrix();
+    block.u_proj = m_camera->get_projection_matrix();
     block.u_time = m_cycle;
     block.u_aspect_ratio = aspect_ratio;
-    block.u_color = glm::vec4(my_color[0], my_color[1], my_color[2], my_color[3]);
 
     m_material_instance->set_parameter("ubo", &block, sizeof(UniformBlock));
 
+    // ─── submit instance #1 ───
+    {
+        InstanceBlock I1;
+        I1.model = glm::translate(glm::mat4(1.0f), I1_pos);
+        I1.color = I1_color;
+        terra::RendererAPI::submit(
+            m_mesh, m_material_instance, &I1,
+            sizeof(InstanceBlock), /*binding=*/0, /*group=*/1
+        );
+    }
 
-    terra::RendererAPI::clear_color(0.1f, 0.1f, 0.1f, 1.0f);
-    terra::RendererAPI::begin_scene(*m_camera);
+    // ─── submit instance #2 ───
+    {
+        InstanceBlock I2;
+        I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
+        I2.color = I2_color;
+        terra::RendererAPI::submit(
+            m_mesh, m_material_instance, &I2,
+            sizeof(InstanceBlock), 0, 1
+        );
+    }
 
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
-
-    terra::RendererAPI::submit(m_mesh, m_material_instance, model);
+    {
+        InstanceBlock I2;
+        I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
+        I2.color = I2_color;
+        terra::RendererAPI::submit(
+            m_mesh_2, m_material_instance, &I2,
+            sizeof(InstanceBlock), 0, 1
+        );
+    }
     
     terra::RendererAPI::end_scene();
 
@@ -131,19 +173,17 @@ void ExampleLayer::on_physics_update(terra::Timestep fixed_ts) {
 void ExampleLayer::on_ui_render() {
 
     {
-        ImGui::Begin("Debug");
-        glm::vec3 cam_pos = m_camera->get_position();
-        glm::vec2 cam_rot = m_camera->get_rotation(); // pitch, yaw
+        ImGui::Begin("Instance Controls");
 
-        if (ImGui::DragFloat3("Camera Position", glm::value_ptr(cam_pos), 0.1f)) {
-            m_camera->set_position(cam_pos);
-        }
-        if (ImGui::DragFloat2("Camera Rotation (Pitch/Yaw)", glm::value_ptr(cam_rot), 1.0f)) {
-            m_camera->set_rotation(cam_rot.x, cam_rot.y);
-        }
+        // Instance #1 controls
+        ImGui::DragFloat3("Inst1 Position", glm::value_ptr(I1_pos),   0.05f);
+        ImGui::ColorEdit4("Inst1 Color",    glm::value_ptr(I1_color));
+
+        // Instance #2 controls
+        ImGui::DragFloat3("Inst2 Position", glm::value_ptr(I2_pos),   0.05f);
+        ImGui::ColorEdit4("Inst2 Color",    glm::value_ptr(I2_color));
 
         ImGui::DragFloat("Time", &m_cycle, 0.01f);
-        ImGui::ColorEdit4("Color", my_color);
         ImGui::End();
     }
 

@@ -38,16 +38,21 @@ public:
 
     void init();
 
-    void update_uniforms(f32 time);
-
-
     // call once per frame
     void begin_frame();
     void end_frame();
     
     void begin_scene(const Camera& camera);
     void end_scene();
-    void submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform);
+
+    void submit(
+        const ref<Mesh>& mesh,
+        const ref<MaterialInstance>& material,
+        const void* instance,
+        u32 size,
+        u32 binding,
+        u32 group
+    );
 
     void begin_ui_pass();
     void end_ui_pass();
@@ -84,9 +89,18 @@ private:
 
     struct DrawBatch {
         ref<Mesh> mesh;
-        ref<MaterialInstance> material_instance;
-        std::vector<glm::mat4> instance_transforms;
+        ref<MaterialInstance> material;
+
+        std::vector<u8> instance_data;  // raw blob
+        u32 instance_stride = 0;
+        u32 instance_count  = 0;
+        u32 binding = 0;
+        u32 group = 1;
+
+        WGPUBuffer instance_buffer;
+        u64       buffer_capacity = 0;
     };
+
     std::vector<DrawBatch> m_draw_batches;
 
     WebGPUContext&   m_context;

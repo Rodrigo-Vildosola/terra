@@ -51,19 +51,19 @@
 //     spec.surface_format = context.get_preferred_format();
     
 //     // Add uniforms to pipeline spec
-//     UniformSpec color_uniform;
+//     UniformBufferSpec color_uniform;
 //     color_uniform.binding = 0;
 //     color_uniform.size = 3 * sizeof(f32);
 //     color_uniform.visibility = WGPUShaderStage_Fragment;
 //     spec.uniforms.push_back(color_uniform);
     
-//     UniformSpec intensity_uniform;
+//     UniformBufferSpec intensity_uniform;
 //     intensity_uniform.binding = 1;
 //     intensity_uniform.size = sizeof(f32);
 //     intensity_uniform.visibility = WGPUShaderStage_Fragment;
 //     spec.uniforms.push_back(intensity_uniform);
     
-//     UniformSpec scale_uniform;
+//     UniformBufferSpec scale_uniform;
 //     scale_uniform.binding = 2;
 //     scale_uniform.size = 2 * sizeof(f32);
 //     scale_uniform.visibility = WGPUShaderStage_Vertex;

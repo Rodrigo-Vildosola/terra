@@ -23,6 +23,8 @@ private:
 	terra::ref<terra::Material> m_material;
 	terra::ref<terra::MaterialInstance> m_material_instance;
 	terra::ref<terra::Mesh> m_mesh;
+	terra::ref<terra::Mesh> m_mesh_2;
+
 	terra::scope<terra::PerspectiveCamera> m_camera;
 	terra::scope<terra::Pipeline> m_pipeline;
 

@@ -37,7 +37,14 @@ public:
     static void begin_scene(const Camera& camera);
     static void end_scene();
 
-    static void submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform = glm::mat4(1.0f));
+    static void submit(
+        const ref<Mesh>& mesh,
+        const ref<MaterialInstance>& material,
+        const void* instance,
+        u32 size,
+        u32 binding,
+        u32 group
+    );
     
     static WebGPUContext& get_context();
     static WGPURenderPassEncoder get_current_pass_encoder();

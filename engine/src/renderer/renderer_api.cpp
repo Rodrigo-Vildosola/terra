@@ -60,8 +60,8 @@ void RendererAPI::end_scene() {
     s_renderer->end_scene();
 }
 
-void RendererAPI::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform) {
-    s_renderer->submit(mesh, material_instance, transform);
+void RendererAPI::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material, const void* instance, u32 size, u32 binding, u32 group) {
+    s_renderer->submit(mesh, material, instance, size, binding, group);
 }
 
 WebGPUContext& RendererAPI::get_context() {

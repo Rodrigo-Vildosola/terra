@@ -64,6 +64,27 @@ void MaterialInstance::create_bind_group() {
     m_bind_group = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
 }
 
+void MaterialInstance::bind_storage_buffer(u32 group, u32 binding, WGPUBuffer buffer) {
+    // 1) Prepare the single entry
+    WGPUBindGroupEntry entry{};
+    entry.binding         = binding;
+    entry.buffer = buffer;
+    entry.offset = 0;
+    entry.size   = WGPU_WHOLE_SIZE;
+
+    // 2) Descriptor pointing to the pipeline’s layout for this group
+    WGPUBindGroupDescriptor desc{};
+    desc.layout     = m_pipeline->get_bind_group_layout(group);
+    desc.entryCount = 1;
+    desc.entries    = &entry;
+
+    // 3) (Re)create and cache the bind group
+    if (auto it = m_storage_bind_groups.find(group); it != m_storage_bind_groups.end()) {
+        wgpuBindGroupRelease(it->second);
+    }
+    m_storage_bind_groups[group] = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
+}
+
 void MaterialInstance::set_uniform_data(u32 binding_index, const void* data, u64 size) {
     TR_CORE_ASSERT(binding_index < m_uniforms.size(), "Invalid uniform binding index");
 
@@ -151,7 +172,13 @@ void MaterialInstance::set_parameter_binding(const std::string& name, u32 bindin
 }
 
 void MaterialInstance::bind(WGPURenderPassEncoder pass_encoder) {
+    // bind group 0: all uniforms / textures
     wgpuRenderPassEncoderSetBindGroup(pass_encoder, 0, m_bind_group, 0, nullptr);
+
+    // bind group 1..N: any storage buffers the client added
+    for (auto& [group, bg] : m_storage_bind_groups) {
+        wgpuRenderPassEncoderSetBindGroup(pass_encoder, group, bg, 0, nullptr);
+    }
 }
 
 WGPUBindGroup MaterialInstance::get_bind_group(u32 index) const {

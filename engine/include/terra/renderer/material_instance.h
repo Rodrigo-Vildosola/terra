@@ -76,11 +76,13 @@ public:
     // Binding
     void bind(WGPURenderPassEncoder pass_encoder);
     WGPUBindGroup get_bind_group(u32 index = 0) const;
+
+    void bind_storage_buffer(u32 group, u32 binding, WGPUBuffer buffer);
     
     // Material properties
     void set_name(const std::string& name) { m_name = name; }
     const std::string& get_name() const noexcept { return m_name; }
-    
+
     // Pipeline access
     Pipeline* get_pipeline() const noexcept { return m_pipeline; }
     
@@ -100,6 +102,8 @@ private:
     std::unordered_map<std::string, u32> m_parameter_bindings;
 
     WGPUBindGroup m_bind_group = nullptr;
+
+    std::unordered_map<u32, WGPUBindGroup> m_storage_bind_groups;
 
     void create_uniform_buffers();
     void create_bind_group();

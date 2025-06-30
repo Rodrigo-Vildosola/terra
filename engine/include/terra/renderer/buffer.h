@@ -28,6 +28,13 @@ struct IndexBuffer {
     const char* label = "Index Buffer";
 };
 
+struct StorageBuffer {
+    WGPUBuffer buffer = nullptr;
+    u64 size = 0;
+    u32 binding = 0;
+    const char* label = "Storage Buffer";
+};
+
 
 class Buffer {
 public:
@@ -65,6 +72,14 @@ public:
         u64 size,
         WGPUIndexFormat format = WGPUIndexFormat_Uint32,
         const char* label = "Index Buffer"
+    );
+
+    static StorageBuffer create_storage_buffer(
+        WebGPUContext& ctx,
+        const void* data,
+        u64 size,
+        u32 binding,
+        const char* label = "Storage Buffer"
     );
 };
 

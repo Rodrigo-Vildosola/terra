@@ -11,10 +11,7 @@
 
 namespace terra {
 
-Renderer::Renderer(WebGPUContext& ctx)
-    : m_context(ctx)
-    , m_queue(*ctx.get_queue())
-{
+Renderer::Renderer(WebGPUContext& ctx) : m_context(ctx), m_queue(*ctx.get_queue()) {
     m_scene_data = create_scope<SceneData>();
 }
 
@@ -88,53 +85,111 @@ void Renderer::begin_scene(const Camera& camera) {
 }
 
 void Renderer::end_scene() {
+    // 1) For each batch, update (or allocate) its GPU buffer & draw
+    for (auto& b : m_draw_batches) {
+        if (b.instance_count == 0) continue;
+
+        u64 needed = b.instance_data.size();
+        // allocate or resize
+        if (!b.instance_buffer || needed > b.buffer_capacity) {
+            if (b.instance_buffer) wgpuBufferRelease(b.instance_buffer);
+
+            b.instance_buffer = Buffer::create_storage_buffer(
+                m_context,
+                b.instance_data.data(),
+                needed,
+                b.binding,
+                "Instance Storage Buffer"
+            ).buffer;
+
+            b.buffer_capacity = needed;
+
+        } else {
+            // just update contents
+            wgpuQueueWriteBuffer(
+                m_context.get_queue()->get_native_queue(),
+                b.instance_buffer, 
+                0,
+                b.instance_data.data(),
+                needed
+            );
+        }
+
+        // bind storage buffer
+        b.material->bind_storage_buffer(b.group, b.binding, b.instance_buffer);
+
+        // pipeline + mesh
+        auto pipe = b.material->get_pipeline();
+    
+        pipe->bind(m_current_pass);
+
+        b.material->bind(m_current_pass);
+
+
+        auto const& vb = b.mesh->get_vertex_buffer();
+        auto const& ib = b.mesh->get_index_buffer();
+
+        wgpuRenderPassEncoderSetVertexBuffer(
+            m_current_pass, 0, vb.buffer, 0, vb.size
+        );
+        wgpuRenderPassEncoderSetIndexBuffer(
+            m_current_pass, ib.buffer, ib.format, 0, ib.size
+        );
+
+        // draw N instances in one call
+        wgpuRenderPassEncoderDrawIndexed(
+            m_current_pass,
+            b.mesh->get_index_count(),
+            b.instance_count,
+            0,0,0
+        );
+        m_stats.draw_calls++;
+        m_stats.mesh_count  += 1;
+        m_stats.vertex_count += b.mesh->get_vertex_count() * b.instance_count;
+        m_stats.index_count  += b.mesh->get_index_count()  * b.instance_count;
+    }
+
+    // 2) clear batches
+    m_draw_batches.clear();
+
+    // 3) end the pass
     RendererCommand::end_render_pass(m_queue);
     m_current_pass = nullptr;
 }
 
-void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material_instance, const glm::mat4& transform) {
+void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material, const void* instance, u32 i_size, u32 binding, u32 group) {
     if (!m_current_pass) return;
 
-    // TODO: Set view projection matrix from m_scene_data->camera
-    // This will require changes in material/shader system
-    // For now, the user example doesn't use a camera matrix
+    for (auto& b : m_draw_batches) {
+        if (b.mesh == mesh
+         && b.material == material
+         && b.binding == binding
+         && b.group == group
+         && b.instance_stride == i_size)
+        {
+            // append raw bytes
+            const u8* src = (const u8*) instance;
+            b.instance_data.insert(
+              b.instance_data.end(),
+              src, src + i_size
+            );
+            b.instance_count++;
+            return;
+        }
+    }
 
-    material_instance->get_pipeline()->bind(m_current_pass);
-
-    const auto& vb = mesh->get_vertex_buffer();
-    const auto& ib = mesh->get_index_buffer();
-
-    wgpuRenderPassEncoderSetVertexBuffer(
-        m_current_pass, 
-        0, 
-        vb.buffer, 
-        0, 
-        vb.size
-    );
-
-    wgpuRenderPassEncoderSetIndexBuffer(
-        m_current_pass,
-        ib.buffer,
-        WGPUIndexFormat_Uint32,
-        0,
-        ib.size
-    );
-
-    material_instance->bind(m_current_pass);
-
-    wgpuRenderPassEncoderDrawIndexed(
-        m_current_pass, 
-        mesh->get_index_count(), 
-        1, 
-        0, 
-        0,
-        0
-    );
-
-    m_stats.draw_calls++;
-    m_stats.mesh_count++;
-    m_stats.vertex_count += mesh->get_vertex_count();
-    m_stats.index_count += mesh->get_index_count();
+    DrawBatch nb;
+    nb.mesh            = mesh;
+    nb.material        = material;
+    nb.binding         = binding;
+    nb.group           = group;
+    nb.instance_stride = i_size;
+    nb.instance_count  = 1;
+    nb.instance_data.resize(i_size);
+    memcpy(nb.instance_data.data(), instance, i_size);
+    nb.instance_buffer     = nullptr;
+    nb.buffer_capacity     = 0;
+    m_draw_batches.push_back(nb);
 }
 
 

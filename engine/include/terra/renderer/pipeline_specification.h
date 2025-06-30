@@ -17,7 +17,13 @@ struct VertexBufferLayoutSpec {
     std::vector<VertexAttributeSpec> attributes;
 };
 
-struct UniformSpec {
+struct StorageBufferSpec {
+    u32 binding;
+    u64 size;
+    WGPUShaderStage visibility;
+};
+
+struct UniformBufferSpec {
     u32 binding;
     u64 size;
     WGPUShaderStage visibility;
@@ -29,7 +35,9 @@ struct PipelineSpecification {
     WGPUTextureFormat surface_format;
     std::vector<VertexBufferLayoutSpec> vertex_buffers;
 
-    std::vector<UniformSpec> uniforms;
+    std::vector<UniformBufferSpec> uniforms;
+    std::vector<StorageBufferSpec> storages;    // ← new
+
 
     WGPUTextureView depth_view;
     WGPUTextureFormat depth_format;
