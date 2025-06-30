@@ -15,7 +15,6 @@ struct alignas(16) UniformBlock {
     glm::mat4 u_view;
     glm::mat4 u_proj;
     float u_time;
-    float u_aspect_ratio;
 };
 
 struct alignas(16) InstanceBlock {
@@ -33,13 +32,11 @@ void ExampleLayer::on_attach() {
     float height = terra::Application::get().get_window().get_height();
     float aspect_ratio = width / height;
 
-
-    // m_camera = terra::create_scope<terra::OrthographicCamera>(-1.6f, 1.6f, -0.9f, 0.9f);
     m_camera = terra::create_scope<terra::PerspectiveCamera>(
-        45.0f,                      // Field of view in degrees
-        aspect_ratio,              // width / height
-        0.1f,                      // Near plane
-        100.0f                     // Far plane
+        45.0f,                        // Field of view in degrees
+        aspect_ratio,               // width / height
+        0.1f,                 // Near plane
+        100.0f                   // Far plane
     );
     
     m_mesh = terra::Mesh::from_file("objects/pyramid.txt");
@@ -82,8 +79,7 @@ void ExampleLayer::on_attach() {
 
     terra::u64 pipeline_id = terra::RendererAPI::create_pipeline(spec);
 
-    auto pipeline = terra::RendererAPI::get_pipeline(pipeline_id); // optional, mostly internal
-
+    auto pipeline = terra::RendererAPI::get_pipeline(pipeline_id);
 
     m_material_instance = m_material->create_instance(pipeline.get());
 }
@@ -115,17 +111,12 @@ void ExampleLayer::on_update(terra::Timestep ts) {
         m_fps_frame_count = 0;
     }
 
-    float width = (float)terra::Application::get().get_window().get_width();
-    float height = (float)terra::Application::get().get_window().get_height();
-    float aspect_ratio = width / height;
-
     // float time = terra::Timer::elapsed();
 
     UniformBlock block;
     block.u_view = m_camera->get_view_matrix();
     block.u_proj = m_camera->get_projection_matrix();
-    block.u_time = m_cycle;
-    block.u_aspect_ratio = aspect_ratio;
+    block.u_time = ts.get_milliseconds();
 
     m_material_instance->set_parameter("ubo", &block, sizeof(UniformBlock));
 
@@ -134,10 +125,7 @@ void ExampleLayer::on_update(terra::Timestep ts) {
         InstanceBlock I1;
         I1.model = glm::translate(glm::mat4(1.0f), I1_pos);
         I1.color = I1_color;
-        terra::RendererAPI::submit(
-            m_mesh, m_material_instance, &I1,
-            sizeof(InstanceBlock), /*binding=*/0, /*group=*/1
-        );
+        terra::RendererAPI::submit(m_mesh, m_material_instance, I1, /*binding=*/0, /*group=*/1);
     }
 
     // ─── submit instance #2 ───
@@ -145,20 +133,14 @@ void ExampleLayer::on_update(terra::Timestep ts) {
         InstanceBlock I2;
         I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
         I2.color = I2_color;
-        terra::RendererAPI::submit(
-            m_mesh, m_material_instance, &I2,
-            sizeof(InstanceBlock), 0, 1
-        );
+        terra::RendererAPI::submit(m_mesh, m_material_instance, I2, 0, 1);
     }
 
     {
         InstanceBlock I2;
         I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
         I2.color = I2_color;
-        terra::RendererAPI::submit(
-            m_mesh_2, m_material_instance, &I2,
-            sizeof(InstanceBlock), 0, 1
-        );
+        terra::RendererAPI::submit(m_mesh_2, m_material_instance, I2, 0, 1);
     }
     
     terra::RendererAPI::end_scene();
@@ -179,11 +161,12 @@ void ExampleLayer::on_ui_render() {
         ImGui::DragFloat3("Inst1 Position", glm::value_ptr(I1_pos),   0.05f);
         ImGui::ColorEdit4("Inst1 Color",    glm::value_ptr(I1_color));
 
+        ImGui::Separator();
+
         // Instance #2 controls
         ImGui::DragFloat3("Inst2 Position", glm::value_ptr(I2_pos),   0.05f);
         ImGui::ColorEdit4("Inst2 Color",    glm::value_ptr(I2_color));
 
-        ImGui::DragFloat("Time", &m_cycle, 0.01f);
         ImGui::End();
     }
 
@@ -200,6 +183,51 @@ void ExampleLayer::on_ui_render() {
         ImGui::Text("Index Count: %u", stats.index_count);
         ImGui::End();
     }
+
+    ImGui::Begin("Camera Controls");
+
+    // Position
+    {
+        glm::vec3 pos = m_camera->get_position();
+        if (ImGui::DragFloat3("Position", glm::value_ptr(pos), 0.1f)) {
+            m_camera->set_position(pos);
+        }
+    }
+
+    // Rotation
+    {
+        glm::vec2 rot = m_camera->get_rotation(); // pitch, yaw
+        if (ImGui::DragFloat2("Rotation (Pitch/Yaw)", glm::value_ptr(rot), 1.0f)) {
+            m_camera->set_rotation(rot.x, rot.y);
+        }
+    }
+
+    // Projection params
+    {
+        float fov = m_camera->get_fov();
+        if (ImGui::DragFloat("FOV", &fov, 0.5f, 1.0f, 179.0f)) {
+            m_camera->set_fov(fov);
+        }
+
+        float aspect = m_camera->get_aspect_ratio();
+        // If you want to allow forcing aspect manually:
+        if (ImGui::DragFloat("Aspect Ratio", &aspect, 0.01f, 0.1f, 10.0f)) {
+            m_camera->set_aspect_ratio(aspect);
+        }
+
+        float nearp = m_camera->get_near_plane();
+        if (ImGui::DragFloat("Near Plane", &nearp, 0.01f, 0.01f, m_camera->get_far_plane() - 0.01f)) {
+            m_camera->set_near_plane(nearp);
+        }
+
+        float farp = m_camera->get_far_plane();
+        if (ImGui::DragFloat("Far Plane", &farp, 0.1f, m_camera->get_near_plane() + 0.1f, 1000.0f)) {
+            m_camera->set_far_plane(farp);
+        }
+    }
+
+    ImGui::End();
+
 
 }
 

@@ -48,20 +48,11 @@ fn vs_main(in: VertexInput) -> VertexOutput {
     let instance = instances[in.instance_idx];
 
     // Animate using time (e.g., rotating model)
-    let angle = ubo.u_time;
-    let alpha = cos(angle);
-    let beta = sin(angle);
-    let rotated = vec3f(
-        in.position.x,
-        alpha * in.position.y + beta * in.position.z,
-        alpha * in.position.z - beta * in.position.y,
-    );
+    let world = instance.model * vec4f(in.position, 1.0);
+    // standard MVP
+    let clip  = ubo.u_proj * ubo.u_view * world;
 
-    let pos = vec4f(rotated.x, rotated.y * ubo.u_aspect_ratio, rotated.z * 0.5 + 0.5, 1.0);
-
-    let world_pos = instance.model * pos;
-
-    out.position = world_pos;
+    out.position = clip;
 
     // Pass through colors
     out.v_color = in.color;

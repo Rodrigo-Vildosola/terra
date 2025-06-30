@@ -37,14 +37,15 @@ public:
     static void begin_scene(const Camera& camera);
     static void end_scene();
 
-    static void submit(
-        const ref<Mesh>& mesh,
-        const ref<MaterialInstance>& material,
-        const void* instance,
-        u32 size,
-        u32 binding,
-        u32 group
-    );
+    template<typename T>
+    static void submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material, const T& instance, u32 binding, u32 group) {
+
+        // auto const& sp = material->get_storage_param(name);
+
+        static_assert(std::is_trivially_copyable_v<T>, "Instance type must be POD");
+    
+        s_renderer->submit(mesh, material, &instance, sizeof(T), binding, group);
+    }
     
     static WebGPUContext& get_context();
     static WGPURenderPassEncoder get_current_pass_encoder();

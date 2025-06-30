@@ -24,6 +24,15 @@ public:
         update_projection_matrix();
     }
 
+    // new projection setters/getters
+    void set_near_plane(f32 n)   { m_near = n; update_projection_matrix(); }
+    void set_far_plane (f32 f)   { m_far  = f; update_projection_matrix(); }
+    void set_aspect_ratio(f32 a) { m_aspect = a; update_projection_matrix(); }
+
+    f32 get_near_plane()  const { return m_near; }
+    f32 get_far_plane()   const { return m_far; }
+    f32 get_aspect_ratio()const { return m_aspect; }
+
 private:
     glm::vec3 m_position = { 0.0f, 0.0f, 3.0f };
     glm::vec3 m_forward = { 0.0f, 0.0f, -1.0f };
