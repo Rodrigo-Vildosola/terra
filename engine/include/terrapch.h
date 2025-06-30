@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <functional>
 #include <sstream>
@@ -15,4 +16,4 @@
 #include "terra/core/logger.h"
 #include "terra/core/timer.h"
 
-#include <webgpu/webgpu.hpp>
+#include <webgpu/webgpu_cpp.h>

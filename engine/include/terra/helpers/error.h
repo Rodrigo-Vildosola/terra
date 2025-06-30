@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <webgpu/webgpu.h>
 #include "terra/core/logger.h"
 
 #define WGPU_PUSH_ERROR_SCOPE(dev) wgpuDevicePushErrorScope((dev), WGPUErrorFilter_Validation)

@@ -1,7 +1,7 @@
 // terra_format.h
 #pragma once
-#include <webgpu/webgpu.h>
 
+#include "terrapch.h"
 
 namespace terra {
 

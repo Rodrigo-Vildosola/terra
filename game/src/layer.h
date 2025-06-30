@@ -1,8 +1,6 @@
 #pragma once
 
 #include <terra/terra.h>
-#include "terra/renderer/orthographic_camera.h"
-#include "terra/renderer/perspective_camera.h"
 
 class ExampleLayer : public terra::Layer
 {

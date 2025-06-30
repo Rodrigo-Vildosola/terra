@@ -1,10 +1,8 @@
 #pragma once
 
-#include <sstream>
-#include <functional>
+#include "terrapch.h"
 #include "terra/core/base.h"
 #include "terra/events/event.h"
-#include "webgpu/webgpu.hpp"
 
 namespace terra {
 

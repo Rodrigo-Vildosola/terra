@@ -10,7 +10,6 @@
 #include "terra/events/event.h"
 #include "terra/events/application_event.h"
 
-#include "terra/renderer/renderer_api.h"
 #include <glm/glm.hpp>
 
 #include "terra/ui/imgui_layer.h"

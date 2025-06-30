@@ -1,4 +1,5 @@
 
+#include "terra/core/logger.h"
 #include "terrapch.h"
 
 #include "terra/core/context/context_utils.h"
@@ -27,7 +28,7 @@ void fetch_buffer_data_sync(WGPUInstance instance, WGPUBuffer bufferB, std::func
 		if (status == WGPUMapAsyncStatus_Success) {
 			context.result = true;
 		} else {
-			std::cout << "Could not map buffer B! Status: " << status << ", message: " << message.data << std::endl;
+			TR_CORE_ERROR("Could not map buffer B! Status: {}, message: {}", (u32) status, message.data);
 		}
 	};
 

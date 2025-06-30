@@ -1,7 +1,6 @@
 #pragma once
 
 #include "terrapch.h"
-#include <webgpu/webgpu.hpp>
 
 namespace terra {
 

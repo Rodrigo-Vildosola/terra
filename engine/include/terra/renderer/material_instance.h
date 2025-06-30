@@ -1,8 +1,6 @@
 #pragma once
 
 #include "terrapch.h"
-
-#include <webgpu/webgpu.hpp>
 #include "terra/renderer/pipeline.h"
 #include "terra/renderer/buffer.h"
 
