@@ -39,4 +39,20 @@ void PerspectiveCamera::update_projection_matrix() {
     m_projection_matrix[1][1] *= -1.0f;
 }
 
+void PerspectiveCamera::move(const glm::vec3& local) {
+    glm::vec3 forward = get_forward();
+    glm::vec3 right = glm::normalize(glm::cross(forward, m_up));
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::vec3 world_offset =
+        right * local.x +
+        up * local.y +
+        forward * local.z;
+
+    m_position += world_offset;
+    update_view_matrix();
+}
+
+
+
 } // namespace terra

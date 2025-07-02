@@ -30,10 +30,10 @@ struct MaterialParam {
     std::vector<u8> data;
     u32 binding;
     u64 size;
-    WGPUShaderStage visibility;
+    wgpu::ShaderStage visibility;
     
     MaterialParam() = default;
-    MaterialParam(MaterialParamType t, u32 bind, u64 sz, WGPUShaderStage vis)
+    MaterialParam(MaterialParamType t, u32 bind, u64 sz, wgpu::ShaderStage vis)
         : type(t), binding(bind), size(sz), visibility(vis) {}
 };
 
@@ -72,10 +72,10 @@ public:
     void set_parameter_binding(const std::string& name, u32 binding);
     
     // Binding
-    void bind(WGPURenderPassEncoder pass_encoder);
-    WGPUBindGroup get_bind_group(u32 index = 0) const;
+    void bind(wgpu::RenderPassEncoder pass_encoder);
+    wgpu::BindGroup get_bind_group(u32 index = 0) const;
 
-    void bind_storage_buffer(u32 group, u32 binding, WGPUBuffer buffer);
+    void bind_storage_buffer(u32 group, u32 binding, wgpu::Buffer buffer);
     
     // Material properties
     void set_name(const std::string& name) { m_name = name; }
@@ -99,9 +99,9 @@ private:
     std::unordered_map<u32, MaterialParam> m_parameters;
     std::unordered_map<std::string, u32> m_parameter_bindings;
 
-    WGPUBindGroup m_bind_group = nullptr;
+    wgpu::BindGroup m_bind_group = nullptr;
 
-    std::unordered_map<u32, WGPUBindGroup> m_storage_bind_groups;
+    std::unordered_map<u32, wgpu::BindGroup> m_storage_bind_groups;
 
     void create_uniform_buffers();
     void create_bind_group();

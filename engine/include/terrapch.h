@@ -17,3 +17,5 @@
 #include "terra/core/timer.h"
 
 #include <webgpu/webgpu_cpp.h>
+#include <webgpu/webgpu_cpp_print.h>
+#include <dawn/webgpu_fmt_formatters.h>

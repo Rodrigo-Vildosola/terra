@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <webgpu/webgpu_cpp_print.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 

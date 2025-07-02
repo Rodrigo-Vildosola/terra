@@ -31,7 +31,7 @@ public:
         const std::string& name, 
         u32 binding, 
         MaterialParamType type, 
-        WGPUShaderStage visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment
+        wgpu::ShaderStage visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment
     );
     
     // Get parameter information
@@ -53,7 +53,7 @@ private:
     struct ParameterDefinition {
         u32 binding;
         MaterialParamType type;
-        WGPUShaderStage visibility;
+        wgpu::ShaderStage visibility;
         std::vector<u8> default_value;
     };
     

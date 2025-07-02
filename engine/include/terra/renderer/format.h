@@ -25,26 +25,26 @@ enum class VertexStepMode {
     Instance
 };
 
-inline WGPUVertexFormat to_wgpu(VertexFormat fmt) {
+inline wgpu::VertexFormat to_wgpu(VertexFormat fmt) {
     switch (fmt) {
-        case VertexFormat::Float32x2: return WGPUVertexFormat_Float32x2;
-        case VertexFormat::Float32x3: return WGPUVertexFormat_Float32x3;
-        case VertexFormat::Float32x4: return WGPUVertexFormat_Float32x4;
-        case VertexFormat::Uint32:    return WGPUVertexFormat_Uint32;
-        default:                      return WGPUVertexFormat_Uint32;
+        case VertexFormat::Float32x2: return wgpu::VertexFormat::Float32x2;
+        case VertexFormat::Float32x3: return wgpu::VertexFormat::Float32x3;
+        case VertexFormat::Float32x4: return wgpu::VertexFormat::Float32x4;
+        case VertexFormat::Uint32:    return wgpu::VertexFormat::Uint32;
+        default:                      return wgpu::VertexFormat::Uint32;
     }
 }
 
-inline WGPUVertexStepMode to_wgpu(VertexStepMode step) {
+inline wgpu::VertexStepMode to_wgpu(VertexStepMode step) {
     return step == VertexStepMode::Vertex
-        ? WGPUVertexStepMode_Vertex
-        : WGPUVertexStepMode_Instance;
+        ? wgpu::VertexStepMode::Vertex
+        : wgpu::VertexStepMode::Instance;
 }
 
-inline WGPUShaderStage to_wgpu(ShaderStage stage) {
-    WGPUShaderStage flags = 0;
-    if ((int)stage & (int)ShaderStage::Vertex)   flags |= WGPUShaderStage_Vertex;
-    if ((int)stage & (int)ShaderStage::Fragment) flags |= WGPUShaderStage_Fragment;
+inline wgpu::ShaderStage to_wgpu(ShaderStage stage) {
+    wgpu::ShaderStage flags;
+    if ((u32)stage & (u32)ShaderStage::Vertex)   flags |= wgpu::ShaderStage::Vertex;
+    if ((u32)stage & (u32)ShaderStage::Fragment) flags |= wgpu::ShaderStage::Fragment;
     return flags;
 }
 

@@ -64,7 +64,7 @@ WebGPUContext& RendererAPI::get_context() {
     return *s_data->context;
 }
 
-WGPURenderPassEncoder RendererAPI::get_current_pass_encoder() {
+wgpu::RenderPassEncoder RendererAPI::get_current_pass_encoder() {
     return s_renderer->get_current_pass_encoder();
 }
 

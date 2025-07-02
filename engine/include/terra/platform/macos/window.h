@@ -22,6 +22,8 @@ namespace terra {
 
 		std::pair<u32, u32> get_framebuffer_size() const override;
 
+		glm::vec2 get_mouse_position() const override;
+
 
 		// Window attributes
 		inline void set_event_cb(const EventCallbackFn& callback) override { m_data.event_cb = callback; }
@@ -29,7 +31,7 @@ namespace terra {
 		bool is_vsync() const override;
 
 		inline virtual void* get_native_window() const override { return m_window; }
-		inline virtual WGPUSurface get_surface(WGPUInstance wgpu_instance) const override;
+		inline virtual wgpu::Surface get_surface(wgpu::Instance wgpu_instance) const override;
 
 	private:
 		virtual void init(const WindowProps& props);

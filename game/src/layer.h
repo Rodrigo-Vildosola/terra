@@ -35,4 +35,12 @@ private:
 
     float m_displayed_fps = 0.0f;
     float m_displayed_frame_time = 0.0f;
+
+	glm::vec2 m_last_mouse_position = {};
+	bool m_mouse_dragging = false;
+
+	bool m_keys[512] = {}; // Keyboard state array
+	float m_camera_speed = 5.0f;  // units per second
+	float m_mouse_sensitivity = 0.1f;
+
 };

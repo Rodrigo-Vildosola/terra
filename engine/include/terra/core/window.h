@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #include "terrapch.h"
 #include "terra/core/base.h"
 #include "terra/events/event.h"
@@ -33,6 +34,9 @@ namespace terra {
 
 		virtual std::pair<u32, u32> get_framebuffer_size() const = 0;
 
+		virtual glm::vec2 get_mouse_position() const = 0;
+
+
 
 		// Window attributes
 		virtual void set_event_cb(const EventCallbackFn& callback) = 0;
@@ -41,7 +45,7 @@ namespace terra {
 
 		virtual void* get_native_window() const = 0;
 
-		virtual WGPUSurface get_surface(WGPUInstance wgpu_instance) const = 0;
+		virtual wgpu::Surface get_surface(wgpu::Instance wgpu_instance) const = 0;
 
 
 		static scope<Window> create(const WindowProps& props = WindowProps());

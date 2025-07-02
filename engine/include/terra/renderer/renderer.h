@@ -76,7 +76,7 @@ public:
     ref<Pipeline> get_pipeline(u64 id) const;
 
 
-    WGPURenderPassEncoder get_current_pass_encoder() const { return m_current_pass; }
+    wgpu::RenderPassEncoder get_current_pass_encoder() const { return m_current_pass; }
     
     const RendererStats& get_stats() const { return m_stats; }
     RendererStats& get_stats_mutable() { return m_stats; }
@@ -97,7 +97,7 @@ private:
         u32 binding = 0;
         u32 group = 1;
 
-        WGPUBuffer instance_buffer;
+        wgpu::Buffer instance_buffer;
         u64       buffer_capacity = 0;
     };
 
@@ -106,14 +106,12 @@ private:
     WebGPUContext&   m_context;
     CommandQueue&    m_queue;
 
-    // holds the surface‐texture alive until present()
-    WGPUSurfaceTexture m_surface_texture{};
-    WGPUTextureView    m_target_texture_view{};
+    wgpu::TextureView    m_target_texture_view{};
 
-    WGPUTextureView    m_depth_texture_view{};
-    WGPUTextureFormat  m_depth_texture_format = WGPUTextureFormat_Depth24Plus;
+    wgpu::TextureView    m_depth_texture_view{};
+    wgpu::TextureFormat  m_depth_texture_format = wgpu::TextureFormat::Depth24Plus;
 
-    WGPURenderPassEncoder m_current_pass = nullptr;
+    wgpu::RenderPassEncoder m_current_pass = nullptr;
 
     std::vector<scope<RenderPass>> m_render_passes;
 
@@ -122,7 +120,7 @@ private:
     std::unordered_map<u64, ref<Pipeline>> m_pipeline_cache;
     u64 m_next_pipeline_id = 1;
 
-    WGPUColor m_clear_color;
+    wgpu::Color m_clear_color;
 
 };
 

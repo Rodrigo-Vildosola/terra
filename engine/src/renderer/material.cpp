@@ -44,7 +44,7 @@ ref<MaterialInstance> Material::create_instance(Pipeline* pipeline) {
     return instance;
 }
 
-void Material::define_parameter(const std::string& name, u32 binding, MaterialParamType type, WGPUShaderStage visibility) {
+void Material::define_parameter(const std::string& name, u32 binding, MaterialParamType type, wgpu::ShaderStage visibility) {
     ParameterDefinition def;
     def.binding = binding;
     def.type = type;

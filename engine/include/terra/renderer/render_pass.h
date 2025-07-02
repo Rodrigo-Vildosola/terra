@@ -8,12 +8,12 @@ namespace terra {
 class CommandQueue;
 
 struct RenderPassAttachment {
-    WGPUTextureView view = nullptr;
+    wgpu::TextureView view = nullptr;
 
-    WGPULoadOp load_op = WGPULoadOp_Clear;
-    WGPUStoreOp store_op = WGPUStoreOp_Store;
+    wgpu::LoadOp load_op = wgpu::LoadOp::Clear;
+    wgpu::StoreOp store_op = wgpu::StoreOp::Store;
 
-    WGPUColor clear_color = {0.0f, 0.0f, 0.0f, 1.0f}; // Used for color
+    wgpu::Color clear_color = {0.0f, 0.0f, 0.0f, 1.0f}; // Used for color
     float clear_depth = 1.0f;                        // Used for depth
     uint32_t clear_stencil = 0;                      // Optional
 
@@ -35,7 +35,7 @@ public:
     void begin();
     void end();
 
-    WGPURenderPassEncoder get_encoder() const { return m_encoder; }
+    wgpu::RenderPassEncoder get_encoder() const { return m_encoder; }
 
     void add_dependency(RenderPass* dependency);
     const std::vector<RenderPass*>& get_dependencies() const { return m_dependencies; }
@@ -44,7 +44,7 @@ public:
 private:
     RenderPassDesc m_desc;
     CommandQueue& m_queue;
-    WGPURenderPassEncoder m_encoder = nullptr;
+    wgpu::RenderPassEncoder m_encoder = nullptr;
     std::vector<RenderPass*> m_dependencies;
 };
 

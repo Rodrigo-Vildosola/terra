@@ -13,9 +13,9 @@ public:
     Pipeline(WebGPUContext& context, const PipelineSpecification& spec);
     ~Pipeline();
 
-    void bind(WGPURenderPassEncoder encoder) const;
+    void bind(wgpu::RenderPassEncoder encoder) const;
 
-    WGPUBindGroupLayout get_bind_group_layout(u32 index = 0) const {
+    wgpu::BindGroupLayout get_bind_group_layout(u32 index = 0) const {
         TR_CORE_ASSERT(index < m_bind_group_layouts.size(), "Invalid bind group layout index");
         return m_bind_group_layouts[index];
     }
@@ -29,9 +29,9 @@ private:
 
     WebGPUContext& m_context;
 
-    WGPURenderPipeline m_pipeline;
-    WGPUPipelineLayout m_layout;
-    std::vector<WGPUBindGroupLayout> m_bind_group_layouts;
+    wgpu::RenderPipeline m_pipeline;
+    wgpu::PipelineLayout m_layout;
+    std::vector<wgpu::BindGroupLayout> m_bind_group_layouts;
 
 };
 

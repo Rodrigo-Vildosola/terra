@@ -49,7 +49,7 @@ public:
     inline Window& get_window() const { return *m_window; }
     scope<WebGPUContext>& get_context() { return m_context; }
 
-    WGPUDevice get_device() { return m_context->get_native_device(); }
+    wgpu::Device get_device() { return m_context->get_native_device(); }
 
 
 private:

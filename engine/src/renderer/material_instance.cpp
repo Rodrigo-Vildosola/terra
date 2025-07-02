@@ -3,6 +3,7 @@
 #include "terra/renderer/buffer.h"
 #include "terra/core/assert.h"
 #include "terra/core/logger.h"
+#include <cstddef>
 
 namespace terra {
 
@@ -12,11 +13,7 @@ MaterialInstance::MaterialInstance(WebGPUContext& context, Pipeline* pipeline)
     create_bind_group();
 }
 
-MaterialInstance::~MaterialInstance() {
-    if (m_bind_group) {
-        wgpuBindGroupRelease(m_bind_group);
-    }
-}
+MaterialInstance::~MaterialInstance() {}
 
 void MaterialInstance::create_uniform_buffers() {
     const auto& spec = m_pipeline->get_specification();
@@ -43,12 +40,12 @@ void MaterialInstance::create_uniform_buffers() {
 }
 
 void MaterialInstance::create_bind_group() {
-    std::vector<WGPUBindGroupEntry> entries;
+    std::vector<wgpu::BindGroupEntry> entries;
 
     for (size_t i = 0; i < m_uniforms.size(); ++i) {
         const auto& ub = m_uniforms[i];
 
-        WGPUBindGroupEntry entry = WGPU_BIND_GROUP_ENTRY_INIT;
+        wgpu::BindGroupEntry entry = {};
         entry.binding = ub.binding;
         entry.buffer  = ub.buffer;
         entry.offset  = 0;
@@ -56,33 +53,37 @@ void MaterialInstance::create_bind_group() {
         entries.push_back(entry);
     }
 
-    WGPUBindGroupDescriptor desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+    wgpu::BindGroupDescriptor desc = {};
     desc.layout = m_pipeline->get_bind_group_layout();
     desc.entryCount = (u32) entries.size();
     desc.entries = entries.data();
 
-    m_bind_group = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
+
+    auto device = m_context.get_native_device();
+
+    m_bind_group = device.CreateBindGroup(&desc);
 }
 
-void MaterialInstance::bind_storage_buffer(u32 group, u32 binding, WGPUBuffer buffer) {
+void MaterialInstance::bind_storage_buffer(u32 group, u32 binding, wgpu::Buffer buffer) {
     // 1) Prepare the single entry
-    WGPUBindGroupEntry entry{};
-    entry.binding         = binding;
-    entry.buffer = buffer;
-    entry.offset = 0;
-    entry.size   = WGPU_WHOLE_SIZE;
+    wgpu::BindGroupEntry entry{};
+    entry.binding = binding;
+    entry.buffer  = buffer;
+    entry.offset  = 0;
+    entry.size    = WGPU_WHOLE_SIZE;
 
     // 2) Descriptor pointing to the pipeline’s layout for this group
-    WGPUBindGroupDescriptor desc{};
+    wgpu::BindGroupDescriptor desc{};
     desc.layout     = m_pipeline->get_bind_group_layout(group);
     desc.entryCount = 1;
     desc.entries    = &entry;
 
     // 3) (Re)create and cache the bind group
-    if (auto it = m_storage_bind_groups.find(group); it != m_storage_bind_groups.end()) {
-        wgpuBindGroupRelease(it->second);
-    }
-    m_storage_bind_groups[group] = wgpuDeviceCreateBindGroup(m_context.get_native_device(), &desc);
+    // if (auto it = m_storage_bind_groups.find(group); it != m_storage_bind_groups.end()) {
+    //     wgpuBindGroupRelease(it->second);
+    // }
+
+    m_storage_bind_groups[group] = m_context.get_native_device().CreateBindGroup(&desc);
 }
 
 void MaterialInstance::set_uniform_data(u32 binding_index, const void* data, u64 size) {
@@ -171,17 +172,18 @@ void MaterialInstance::set_parameter_binding(const std::string& name, u32 bindin
     m_parameter_bindings[name] = binding;
 }
 
-void MaterialInstance::bind(WGPURenderPassEncoder pass_encoder) {
+void MaterialInstance::bind(wgpu::RenderPassEncoder pass_encoder) {
     // bind group 0: all uniforms / textures
-    wgpuRenderPassEncoderSetBindGroup(pass_encoder, 0, m_bind_group, 0, nullptr);
+
+    pass_encoder.SetBindGroup(0, m_bind_group, 0, nullptr);
 
     // bind group 1..N: any storage buffers the client added
     for (auto& [group, bg] : m_storage_bind_groups) {
-        wgpuRenderPassEncoderSetBindGroup(pass_encoder, group, bg, 0, nullptr);
+        pass_encoder.SetBindGroup(group, bg, 0, nullptr);
     }
 }
 
-WGPUBindGroup MaterialInstance::get_bind_group(u32 index) const {
+wgpu::BindGroup MaterialInstance::get_bind_group(u32 index) const {
     TR_CORE_ASSERT(index == 0, "Only one bind group currently supported");
     return m_bind_group;
 }
@@ -202,11 +204,12 @@ void MaterialInstance::update_uniform_buffer(u32 binding_index) {
     const auto& ub = m_uniforms[binding_index];
 
     if (!param.data.empty()) {
-        wgpuQueueWriteBuffer(
-            m_context.get_queue()->get_native_queue(),
-            ub.buffer,
-            0,
-            param.data.data(),
+        const auto& queue = m_context.get_queue()->get_native_queue();
+
+        queue.WriteBuffer(
+            ub.buffer, 
+            0, 
+            param.data.data(), 
             param.data.size()
         );
     }

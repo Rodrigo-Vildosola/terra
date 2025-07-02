@@ -24,10 +24,10 @@
     // You must define: terra::request_userdata<bool> my_result;
 #define WGPU_POP_ERROR_SCOPE_CAPTURE_BOOL(dev, ptr_result)              \
     do {                                                                \
-        WGPUPopErrorScopeCallbackInfo _cb = WGPU_POP_ERROR_SCOPE_CALLBACK_INFO_INIT; \
-        _cb.mode = WGPUCallbackMode_AllowSpontaneous;                   \
+        wgpu::PopErrorScopeCallbackInfo _cb = {}; \
+        _cb.mode = wgpu::CallbackMode::AllowSpontaneous;                   \
         _cb.userdata1 = (ptr_result);                                   \
-        _cb.callback = +[](WGPUPopErrorScopeStatus status,              \
+        _cb.callback = +[](wgpu::PopErrorScopeStatus status,              \
                            WGPUErrorType type,                          \
                            WGPUStringView msg,                          \
                            void* user1, void*) {                         \
@@ -42,5 +42,5 @@
                     std::string_view(msg.data, msg.length));           \
             }                                                           \
         };                                                              \
-        wgpuDevicePopErrorScope((dev), _cb);                           \
+        dev.PopErrorScope(_cb);                                         \
     } while (0)

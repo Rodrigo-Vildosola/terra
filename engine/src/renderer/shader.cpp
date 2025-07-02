@@ -6,35 +6,49 @@
 
 namespace terra {
 
-Shader::~Shader() {
-  if (m_module) {
-    wgpuShaderModuleRelease(m_module);
-    m_module = nullptr;
-  }
-}
+Shader::~Shader() {}
 
 Shader Shader::create_from_wgsl(WebGPUContext& ctx, std::string_view source, std::string_view label) {
-  // 1 Prepare WGSL descriptor
-  WGPUShaderSourceWGSL wgsl_desc = WGPU_SHADER_SOURCE_WGSL_INIT;
-  wgsl_desc.code = to_wgpu_string_view(source);
+    const auto& device = ctx.get_native_device();
 
-  WGPUShaderModuleDescriptor desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
-  desc.nextInChain = &wgsl_desc.chain;
-  desc.label       = to_wgpu_string_view(label);
+    // 1 Prepare WGSL descriptor
+    wgpu::ShaderSourceWGSL wgsl_desc = {};
+    wgsl_desc.code = to_wgpu_string_view(source);
 
-  // 2 Error‐scope around compilation
-  request_userdata<bool> compile_ok;
+    wgpu::ShaderModuleDescriptor desc = {};
+    desc.nextInChain = &wgsl_desc;
+    desc.label       = to_wgpu_string_view(label);
 
-  WGPU_PUSH_ERROR_SCOPE(ctx.get_native_device());
-  WGPUShaderModule module = wgpuDeviceCreateShaderModule(ctx.get_native_device(), &desc);
-  WGPU_POP_ERROR_SCOPE_CAPTURE_BOOL(ctx.get_native_device(), &compile_ok);
+    // 2 Error‐scope around compilation
+    request_userdata<bool> compile_ok;
 
-  if (!compile_ok.result) {
-    TR_CORE_ERROR("Shader “{}” failed to compile", label);
-    // You can choose to throw, or continue with a null module:
-  }
+    // WGPU_PUSH_ERROR_SCOPE(device);
+    device.PushErrorScope(wgpu::ErrorFilter::Validation);
 
-  return Shader(module, std::string(label));
+    wgpu::ShaderModule module = device.CreateShaderModule(&desc);
+
+    device.PopErrorScope(
+        wgpu::CallbackMode::AllowSpontaneous, 
+        [&compile_ok](wgpu::PopErrorScopeStatus status, wgpu::ErrorType error_type, wgpu::StringView message) {
+            compile_ok.request_ended = true;
+            if (status == wgpu::PopErrorScopeStatus::Success && error_type == wgpu::ErrorType::NoError) {
+                compile_ok.result = true;
+                TR_CORE_TRACE("WGPU: Shader compiled successfully.");
+            } else {
+                compile_ok.result = false;
+                TR_CORE_ERROR("WGPU validation failed: {}", std::string_view(message.data, message.length));
+            }
+        }
+    );
+    
+    // WGPU_POP_ERROR_SCOPE_CAPTURE_BOOL(device, &compile_ok);
+
+    if (!compile_ok.result) {
+        TR_CORE_ERROR("Shader “{}” failed to compile", label);
+        // You can choose to throw, or continue with a null module:
+    }
+
+    return Shader(module, std::string(label));
 }
 
 
@@ -57,9 +71,6 @@ Shader::Shader(Shader&& other) noexcept
 
 Shader& Shader::operator=(Shader&& other) noexcept {
     if (this != &other) {
-        if (m_module) {
-            wgpuShaderModuleRelease(m_module);
-        }
         m_module = other.m_module;
         m_source = std::move(other.m_source);
         label = std::move(other.label);

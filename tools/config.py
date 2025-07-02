@@ -8,7 +8,7 @@ EDITOR_NAME = "lithos"
 
 # Build
 BUILD_DIR = ".build"
-CXX_STANDARD = 20
+CXX_STANDARD = 23
 
 # Feature flags
 ENABLE_ASSERTS = True

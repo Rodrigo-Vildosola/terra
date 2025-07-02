@@ -48,7 +48,7 @@ public:
     }
     
     static WebGPUContext& get_context();
-    static WGPURenderPassEncoder get_current_pass_encoder();
+    static wgpu::RenderPassEncoder get_current_pass_encoder();
 
     static const RendererStats& get_stats();
     static RendererStats& get_stats_mutable();

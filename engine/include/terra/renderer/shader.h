@@ -24,8 +24,8 @@ public:
     Shader& operator=(const Shader&) = delete;
 
 
-    /// The raw WGPUShaderModule; for pipeline creation only.
-    WGPUShaderModule module() const { return m_module; }
+    /// The raw wgpu::ShaderModule; for pipeline creation only.
+    wgpu::ShaderModule module() const { return m_module; }
 
     /// Debug labels
     const std::string& source() const { return m_source; }
@@ -35,7 +35,7 @@ public:
     std::string      fragment_entry = "fs_main";
 
 private:
-    Shader(WGPUShaderModule module, std::string label,
+    Shader(wgpu::ShaderModule module, std::string label,
            std::string source = {}, std::string vertex_entry = "vs_main", std::string fragment_entry = "fs_main")
         : m_module(module)
         , label(std::move(label))
@@ -43,7 +43,7 @@ private:
         , vertex_entry(std::move(vertex_entry))
         , fragment_entry(std::move(fragment_entry)) {}
 
-    WGPUShaderModule m_module;
+    wgpu::ShaderModule m_module;
 
     std::string      m_source;
 

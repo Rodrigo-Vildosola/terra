@@ -21,15 +21,15 @@ public:
     void init(Window* window_handle);
     void swap_buffers();
 
-    WGPUDevice get_native_device() { return m_device; }
-    WGPUInstance get_native_instance() { return m_instance; }
+    wgpu::Device get_native_device() { return m_device; }
+    wgpu::Instance get_native_instance() { return m_instance; }
     CommandQueue* get_queue() { return m_queue.get(); }
 
-    std::pair<WGPUSurfaceTexture, WGPUTextureView> get_next_surface_view();
+    wgpu::TextureView get_next_surface_view();
 
-    void configure_surface(WGPUTextureFormat preferred_format);
+    void configure_surface(wgpu::TextureFormat preferred_format);
 
-    WGPUTextureFormat get_preferred_format() const { return m_surface_format; }
+    wgpu::TextureFormat get_preferred_format() const { return m_surface_format; }
 
     std::pair<u32, u32> get_framebuffer_size();
 
@@ -39,11 +39,11 @@ private:
     Window* m_window_handle = nullptr;
     ContextProps m_props;
     
-    WGPUInstance m_instance = nullptr;
-    // WGPUAdapter m_adapter = nullptr;
-    WGPUDevice  m_device = nullptr;
-    WGPUSurface m_surface = nullptr;
-    WGPUTextureFormat m_surface_format = WGPUTextureFormat_Undefined;
+    wgpu::Instance m_instance = nullptr;
+    wgpu::Device  m_device = nullptr;
+    wgpu::Surface m_surface = nullptr;
+
+    wgpu::TextureFormat m_surface_format = wgpu::TextureFormat::Undefined;
 
     scope<CommandQueue> m_queue;
 

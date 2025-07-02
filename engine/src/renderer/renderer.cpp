@@ -19,7 +19,7 @@ Renderer::~Renderer() {
 }
 
 void Renderer::init() {
-    m_depth_texture_format = WGPUTextureFormat_Depth24Plus;
+    m_depth_texture_format = wgpu::TextureFormat::Depth24Plus;
 
     auto [fb_width, fb_height] = m_context.get_framebuffer_size();
 
@@ -53,7 +53,7 @@ ref<Pipeline> Renderer::get_pipeline(u64 id) const {
 
 void Renderer::begin_frame() {
     m_stats.reset();
-    std::tie(m_surface_texture, m_target_texture_view) = m_context.get_next_surface_view();
+    m_target_texture_view = m_context.get_next_surface_view();
 }
 
 void Renderer::begin_scene(const Camera& camera) {
@@ -65,16 +65,16 @@ void Renderer::begin_scene(const Camera& camera) {
     // Color attachment
     RenderPassAttachment color_attachment;
     color_attachment.view = m_target_texture_view;
-    color_attachment.load_op = WGPULoadOp_Clear;
-    color_attachment.store_op = WGPUStoreOp_Store;
+    color_attachment.load_op = wgpu::LoadOp::Clear;
+    color_attachment.store_op = wgpu::StoreOp::Store;
     color_attachment.clear_color = m_clear_color;
     scene_pass.color_attachments.push_back(color_attachment);
 
     // Depth attachment
     RenderPassAttachment depth_attachment;
     depth_attachment.view = m_depth_texture_view;
-    depth_attachment.load_op = WGPULoadOp_Clear;
-    depth_attachment.store_op = WGPUStoreOp_Store;
+    depth_attachment.load_op = wgpu::LoadOp::Clear;
+    depth_attachment.store_op = wgpu::StoreOp::Store;
     depth_attachment.clear_depth = 1.0f;
     depth_attachment.read_only_depth = false;
     scene_pass.depth_stencil_attachment = depth_attachment;
@@ -92,7 +92,7 @@ void Renderer::end_scene() {
         u64 needed = b.instance_data.size();
         // allocate or resize
         if (!b.instance_buffer || needed > b.buffer_capacity) {
-            if (b.instance_buffer) wgpuBufferRelease(b.instance_buffer);
+            // if (b.instance_buffer) wgpuBufferRelease(b.instance_buffer);
 
             b.instance_buffer = Buffer::create_storage_buffer(
                 m_context,
@@ -105,14 +105,8 @@ void Renderer::end_scene() {
             b.buffer_capacity = needed;
 
         } else {
+            m_queue.get_native_queue().WriteBuffer(b.instance_buffer, 0, b.instance_data.data(), needed);
             // just update contents
-            wgpuQueueWriteBuffer(
-                m_context.get_queue()->get_native_queue(),
-                b.instance_buffer, 
-                0,
-                b.instance_data.data(),
-                needed
-            );
         }
 
         // bind storage buffer
@@ -129,20 +123,12 @@ void Renderer::end_scene() {
         auto const& vb = b.mesh->get_vertex_buffer();
         auto const& ib = b.mesh->get_index_buffer();
 
-        wgpuRenderPassEncoderSetVertexBuffer(
-            m_current_pass, 0, vb.buffer, 0, vb.size
-        );
-        wgpuRenderPassEncoderSetIndexBuffer(
-            m_current_pass, ib.buffer, ib.format, 0, ib.size
-        );
+        m_current_pass.SetVertexBuffer(0, vb.buffer, 0, vb.size);
 
-        // draw N instances in one call
-        wgpuRenderPassEncoderDrawIndexed(
-            m_current_pass,
-            b.mesh->get_index_count(),
-            b.instance_count,
-            0,0,0
-        );
+        m_current_pass.SetIndexBuffer(ib.buffer, ib.format, 0, ib.size);
+
+        m_current_pass.DrawIndexed(b.mesh->get_index_count(), b.instance_count, 0, 0, 0);
+
         m_stats.draw_calls++;
         m_stats.mesh_count  += 1;
         m_stats.vertex_count += b.mesh->get_vertex_count() * b.instance_count;
@@ -201,8 +187,8 @@ void Renderer::begin_ui_pass() {
     // Only color, no depth
     RenderPassAttachment color_attachment;
     color_attachment.view = m_target_texture_view;
-    color_attachment.load_op = WGPULoadOp_Load;
-    color_attachment.store_op = WGPUStoreOp_Store;
+    color_attachment.load_op = wgpu::LoadOp::Load;
+    color_attachment.store_op = wgpu::StoreOp::Store;
     ui_pass.color_attachments.push_back(color_attachment);
 
     m_current_pass = RendererCommand::begin_render_pass(m_queue, ui_pass);
@@ -236,25 +222,20 @@ RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
 void Renderer::on_resize(u32 width, u32 height) {
     TR_CORE_INFO("Resizing renderer to {}x{}", width, height);
 
-    // Recreate depth texture
-    if (m_depth_texture_view) {
-        wgpuTextureViewRelease(m_depth_texture_view);
-        m_depth_texture_view = nullptr;
-    }
+    const auto& device = m_context.get_native_device();
 
-    WGPUTextureDescriptor depth_texture_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
-    depth_texture_desc.label = "Z Buffer"_wgpu;
-    depth_texture_desc.usage = WGPUTextureUsage_RenderAttachment;
+    wgpu::TextureDescriptor depth_texture_desc = {};
+    depth_texture_desc.label = "Z Buffer";
+    depth_texture_desc.usage = wgpu::TextureUsage::RenderAttachment;
     depth_texture_desc.size = { width, height, 1 };
     depth_texture_desc.format = m_depth_texture_format;
     
-    WGPUTexture depth_texture = wgpuDeviceCreateTexture(m_context.get_native_device(), &depth_texture_desc);
-    m_depth_texture_view = wgpuTextureCreateView(depth_texture, nullptr);
-    wgpuTextureRelease(depth_texture);
+    wgpu::Texture depth_texture = device.CreateTexture(&depth_texture_desc);
+
+    m_depth_texture_view = depth_texture.CreateView();
 }
 
 void Renderer::invalidate_surface_view() {
-    m_surface_texture.texture = nullptr;
     m_target_texture_view = nullptr;
 }
 

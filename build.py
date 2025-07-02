@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 import subprocess
 import shutil
 import sys
@@ -6,6 +7,10 @@ import os
 import logging
 
 import tools.config as config
+import tools.fmtgen as fmtgen
+
+WEBGPU_CPP_PRINT_PATH = Path(".build/_deps/dawn-7187-macos-aarch64-release-src/include/dawn/webgpu_cpp_print.h")
+FORMATTER_OUTPUT_PATH = Path("engine/include/terra/helpers/webgpu_fmt_formatters.h")
 
 REQUIRED_DEPS = [
     "external/stb",
@@ -98,6 +103,10 @@ def build(parallel=True, verbose=False):
         build_cmd += ["--parallel", str(os.cpu_count())]
     if verbose:
         build_cmd += ["--verbose"]
+
+    if not fmtgen.generate_fmt_formatters(WEBGPU_CPP_PRINT_PATH, FORMATTER_OUTPUT_PATH):
+        logging.warning("Failed to generate WebGPU formatters.")
+
     run_cmd(build_cmd)
 
 def clean():

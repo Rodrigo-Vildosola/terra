@@ -3,7 +3,7 @@
 
 namespace terra {
 
-WGPURenderPassEncoder RendererCommand::begin_render_pass(CommandQueue& q, const RenderPassDesc& desc) {
+wgpu::RenderPassEncoder RendererCommand::begin_render_pass(CommandQueue& q, const RenderPassDesc& desc) {
     q.begin_frame(desc.name);
     q.add_marker("Begin Render Pass");
     return q.create_render_pass(desc);

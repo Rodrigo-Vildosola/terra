@@ -25,8 +25,8 @@ namespace terra {
 		// shutdown();
 	}
 
-	WGPUSurface MacOSWindow::get_surface(WGPUInstance wgpu_instance) const {
-		return glfwCreateWindowWGPUSurface(wgpu_instance, m_window);
+	wgpu::Surface MacOSWindow::get_surface(wgpu::Instance wgpu_instance) const {
+		return glfwCreateWindowWGPUSurface(wgpu_instance.Get(), m_window);
 	}
 
 	void MacOSWindow::init(const WindowProps& props)
@@ -179,7 +179,13 @@ namespace terra {
 	std::pair<u32, u32> MacOSWindow::get_framebuffer_size() const {
 		int width, height;
 		glfwGetFramebufferSize(m_window, &width, &height);
-		return { (u32)width, (u32)height };
+		return { (u32) width, (u32) height };
+	}
+
+	glm::vec2 MacOSWindow::get_mouse_position() const {
+		double x, y;
+		glfwGetCursorPos(m_window, &x, &y);
+		return { (f32) x, (f32) y };
 	}
 
 

@@ -52,8 +52,8 @@ void UILayer::on_attach() {
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOther(window, true);
     ImGui_ImplWGPU_InitInfo info = {};
-    info.Device = app.get_device();
-    info.RenderTargetFormat = app.get_context()->get_preferred_format();
+    info.Device = app.get_device().Get();
+    info.RenderTargetFormat = (WGPUTextureFormat) app.get_context()->get_preferred_format();
 
     ImGui_ImplWGPU_Init(&info);
 }
@@ -98,10 +98,10 @@ void UILayer::end() {
 
     // Rendering
     ImGui::Render();
-    auto pass_encoder = RendererAPI::get_current_pass_encoder();
+    const auto& pass_encoder = RendererAPI::get_current_pass_encoder();
 
     if (pass_encoder) {
-        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass_encoder);
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass_encoder.Get());
     }
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

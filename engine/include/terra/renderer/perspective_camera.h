@@ -33,6 +33,8 @@ public:
     f32 get_far_plane()   const { return m_far; }
     f32 get_aspect_ratio()const { return m_aspect; }
 
+    void move(const glm::vec3& local); 
+
 private:
     glm::vec3 m_position = { 0.0f, 0.0f, 3.0f };
     glm::vec3 m_forward = { 0.0f, 0.0f, -1.0f };

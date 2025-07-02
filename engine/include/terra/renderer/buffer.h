@@ -7,28 +7,28 @@
 namespace terra {
 
 struct UniformBuffer {
-    WGPUBuffer buffer = nullptr;
+    wgpu::Buffer buffer = nullptr;
     u64 size = 0;
     u32 binding = 0;
     const char* label = "Uniform Buffer";
 };
 
 struct VertexBuffer {
-    WGPUBuffer buffer = nullptr;
+    wgpu::Buffer buffer = nullptr;
     u64 size = 0;
     u32 slot = 0; // Index to bind the vertex buffer (setVertexBuffer)
     const char* label = "Vertex Buffer";
 };
 
 struct IndexBuffer {
-    WGPUBuffer buffer = nullptr;
+    wgpu::Buffer buffer = nullptr;
     u64 size = 0;
-    WGPUIndexFormat format = WGPUIndexFormat_Uint32;
+    wgpu::IndexFormat format = wgpu::IndexFormat::Uint32;
     const char* label = "Index Buffer";
 };
 
 struct StorageBuffer {
-    WGPUBuffer buffer = nullptr;
+    wgpu::Buffer buffer = nullptr;
     u64 size = 0;
     u32 binding = 0;
     const char* label = "Storage Buffer";
@@ -37,15 +37,15 @@ struct StorageBuffer {
 
 class Buffer {
 public:
-    static void example(WGPUInstance instance, WGPUDevice device, WGPUQueue queue);
+    static void example(wgpu::Instance instance, wgpu::Device device, wgpu::Queue queue);
 
 
-    static WGPUBuffer create(
-        WGPUDevice device,
-        WGPUQueue queue,
+    static wgpu::Buffer create(
+        wgpu::Device device,
+        wgpu::Queue queue,
         const void* data,
         size_t size,
-        WGPUBufferUsage usage,
+        wgpu::BufferUsage usage,
         const char* label = "Unnamed Buffer"
     );
 
@@ -69,7 +69,7 @@ public:
         WebGPUContext& ctx,
         const void* data,
         u64 size,
-        WGPUIndexFormat format = WGPUIndexFormat_Uint32,
+        wgpu::IndexFormat format = wgpu::IndexFormat::Uint32,
         const char* label = "Index Buffer"
     );
 
@@ -82,6 +82,6 @@ public:
     );
 };
 
-void fetch_buffer_data_sync(WGPUInstance instance, WGPUBuffer buffer, std::function<void(const void*)> process_buffer_data);
+void fetch_buffer_data_sync(wgpu::Instance instance, wgpu::Buffer buffer, std::function<void(const void*)> process_buffer_data);
 
 }

@@ -12,71 +12,73 @@
 
 namespace terra {
 
-void fetch_buffer_data_sync(WGPUInstance instance, WGPUBuffer bufferB, std::function<void (const void *)> process_buffer_data) {
+void fetch_buffer_data_sync(wgpu::Instance instance, wgpu::Buffer bufferB, std::function<void (const void *)> process_buffer_data) {
 	// Context passed to `onBufferBMapped` through theuserdata pointer:
 
-    request_userdata<bool> on_buffer_mapped_context;
+    request_userdata<bool> user_data;
 
     auto on_buffer_mapped = [](
-		WGPUMapAsyncStatus status,
-		WGPUStringView message,
-		void* userdata1,
-		void* /* userdata2 */
-	) {
-		request_userdata<bool>& context = *reinterpret_cast<request_userdata<bool>*>(userdata1);
-		context.request_ended = true;
-		if (status == WGPUMapAsyncStatus_Success) {
-			context.result = true;
-		} else {
-			TR_CORE_ERROR("Could not map buffer B! Status: {}, message: {}", (u32) status, message.data);
-		}
-	};
+        wgpu::MapAsyncStatus status,
+        wgpu::StringView message,
+        terra::request_userdata<bool>* user_data
+    ) {
+        user_data->request_ended = true;
+        if (status == wgpu::MapAsyncStatus::Success) {
+            user_data->result = true;
+        } else {
+            TR_CORE_ERROR("Could not map buffer B! Status: {}, message: {}", (u32)status, message.data);
+        }
+    };
 
-    WGPUBufferMapCallbackInfo callback_info = WGPU_BUFFER_MAP_CALLBACK_INFO_INIT;
-    callback_info.mode = WGPUCallbackMode_AllowProcessEvents;
-	callback_info.callback = on_buffer_mapped;
-	callback_info.userdata1 = &on_buffer_mapped_context;
-
-    wgpuBufferMapAsync(
-		bufferB,
-		WGPUMapMode_Read,
+    bufferB.MapAsync(
+        wgpu::MapMode::Read,
 		0, // offset
 		WGPU_WHOLE_MAP_SIZE,
-		callback_info
-	);
+        wgpu::CallbackMode::AllowProcessEvents,
+        on_buffer_mapped,
+        &user_data
+    );
 
-    wgpuInstanceProcessEvents(instance);
-	while (!on_buffer_mapped_context.request_ended) {
+    // wgpuBufferMapAsync(
+	// 	bufferB,
+	// 	wgpu::MapMode::Read,
+	// 	0, // offset
+	// 	WGPU_WHOLE_MAP_SIZE,
+	// 	callback_info
+	// );
+
+    instance.ProcessEvents();
+	while (!user_data.request_ended) {
 		sleep_for_ms(200);
-		wgpuInstanceProcessEvents(instance);
+		instance.ProcessEvents();
 	}
 	
-	if (on_buffer_mapped_context.result) {
-		const void* buffer_data = wgpuBufferGetConstMappedRange(bufferB, 0, WGPU_WHOLE_MAP_SIZE);
+	if (user_data.result) {
+        const void* buffer_data = bufferB.GetConstMappedRange(0, WGPU_WHOLE_MAP_SIZE);
 		process_buffer_data(buffer_data);
 	}
 
 }
 
-WGPUBuffer Buffer::create(WGPUDevice device, WGPUQueue queue, const void *data, size_t size, WGPUBufferUsage usage, const char* label) {
-    WGPUBufferDescriptor desc = WGPU_BUFFER_DESCRIPTOR_INIT;
+wgpu::Buffer Buffer::create(wgpu::Device device, wgpu::Queue queue, const void *data, size_t size, wgpu::BufferUsage usage, const char* label) {
+    wgpu::BufferDescriptor desc = {};
     desc.size = size;
     desc.usage = usage;
     desc.mappedAtCreation = false;
-    desc.label = label ? to_wgpu_string_view(label) : "Unnamed Buffer"_wgpu;
+    desc.label = label ? label : "Unnamed Buffer";
 
-    WGPUBuffer buffer = wgpuDeviceCreateBuffer(device, &desc);
+    wgpu::Buffer buffer = device.CreateBuffer(&desc);
 
     if (data) {
-        wgpuQueueWriteBuffer(queue, buffer, 0, data, size);
+        queue.WriteBuffer(buffer, 0, data, size);
     }
 
     return buffer;
 }
 
 UniformBuffer Buffer::create_uniform_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 binding, const char* label) {
-    WGPUDevice device = ctx.get_native_device();
-    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+    wgpu::Device device = ctx.get_native_device();
+    wgpu::Queue queue = ctx.get_queue()->get_native_queue();
 
     UniformBuffer ub;
     ub.size = size;
@@ -87,7 +89,7 @@ UniformBuffer Buffer::create_uniform_buffer(WebGPUContext& ctx, const void* data
         queue, 
         data, 
         size, 
-        WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, 
+        wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst, 
         label
     );
 
@@ -95,8 +97,8 @@ UniformBuffer Buffer::create_uniform_buffer(WebGPUContext& ctx, const void* data
 }
 
 VertexBuffer Buffer::create_vertex_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 slot, const char* label) {
-    WGPUDevice device = ctx.get_native_device();
-    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+    wgpu::Device device = ctx.get_native_device();
+    wgpu::Queue queue = ctx.get_queue()->get_native_queue();
 
     VertexBuffer vb;
     vb.size = size;
@@ -107,16 +109,16 @@ VertexBuffer Buffer::create_vertex_buffer(WebGPUContext& ctx, const void* data, 
         queue, 
         data, 
         size, 
-        WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, 
+        wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst, 
         label
     );
 
     return vb;
 }
 
-IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u64 size, WGPUIndexFormat format, const char* label) {
-    WGPUDevice device = ctx.get_native_device();
-    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u64 size, wgpu::IndexFormat format, const char* label) {
+    wgpu::Device device = ctx.get_native_device();
+    wgpu::Queue queue = ctx.get_queue()->get_native_queue();
 
     IndexBuffer ib;
     ib.size = size;
@@ -127,7 +129,7 @@ IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u6
         queue, 
         data, 
         size, 
-        WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst, 
+        wgpu::BufferUsage::Index | wgpu::BufferUsage::CopyDst, 
         label
     );
 
@@ -135,8 +137,8 @@ IndexBuffer Buffer::create_index_buffer(WebGPUContext& ctx, const void* data, u6
 }
 
 StorageBuffer Buffer::create_storage_buffer(WebGPUContext& ctx, const void* data, u64 size, u32 binding, const char* label) {
-    WGPUDevice device = ctx.get_native_device();
-    WGPUQueue queue = ctx.get_queue()->get_native_queue();
+    wgpu::Device device = ctx.get_native_device();
+    wgpu::Queue queue = ctx.get_queue()->get_native_queue();
 
     StorageBuffer sb;
     sb.size = size;
@@ -147,7 +149,7 @@ StorageBuffer Buffer::create_storage_buffer(WebGPUContext& ctx, const void* data
         queue,
         data,
         size,
-        WGPUBufferUsage_Storage | WGPUBufferUsage_CopyDst,
+        wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst,
         label
     );
 
@@ -155,33 +157,31 @@ StorageBuffer Buffer::create_storage_buffer(WebGPUContext& ctx, const void* data
 }
 
 
-void Buffer::example(WGPUInstance instance, WGPUDevice device, WGPUQueue queue) {
-    WGPUBufferDescriptor buffer_desc = WGPU_BUFFER_DESCRIPTOR_INIT;
+void Buffer::example(wgpu::Instance instance, wgpu::Device device, wgpu::Queue queue) {
+    wgpu::BufferDescriptor buffer_desc = {};
     buffer_desc.nextInChain = nullptr;
-    buffer_desc.label = "Example Buffer"_wgpu;
-    buffer_desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_CopySrc;
+    buffer_desc.label = "Example Buffer";
+    buffer_desc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::CopySrc;
     buffer_desc.size = 16;
     buffer_desc.mappedAtCreation = false;
     
-    WGPUBuffer buffer1 = wgpuDeviceCreateBuffer(device, &buffer_desc);
+    wgpu::Buffer buffer1 = device.CreateBuffer(&buffer_desc);
 
-    buffer_desc.label = "Example Buffer 2"_wgpu;
-    buffer_desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_MapRead;
-    WGPUBuffer buffer2 = wgpuDeviceCreateBuffer(device, &buffer_desc);
+    buffer_desc.label = "Example Buffer 2";
+    buffer_desc.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead;
+    wgpu::Buffer buffer2 = device.CreateBuffer(&buffer_desc);
 
     std::vector<uint8_t> numbers(16);
     for (uint8_t i = 0; i < 16; ++i) numbers[i] = i;
 
-    wgpuQueueWriteBuffer(queue, buffer1, 0, numbers.data(), numbers.size());
+    queue.WriteBuffer(buffer1, 0, numbers.data(), numbers.size());
 
-    WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
+    wgpu::CommandEncoder encoder = device.CreateCommandEncoder(nullptr);
 
-    wgpuCommandEncoderCopyBufferToBuffer(encoder, buffer1, 0, buffer2, 0, 16);
+    encoder.CopyBufferToBuffer(buffer1, 0, buffer2, 0, 16);
 
-    WGPUCommandBuffer command = wgpuCommandEncoderFinish(encoder, nullptr);
-    wgpuCommandEncoderRelease(encoder);
-    wgpuQueueSubmit(queue, 1, &command);
-    wgpuCommandBufferRelease(command);
+    wgpu::CommandBuffer command = encoder.Finish();
+    queue.Submit(1, &command);
 
     fetch_buffer_data_sync(
         instance,  // assumes you have a helper or store instance
@@ -194,10 +194,6 @@ void Buffer::example(WGPUInstance instance, WGPUDevice device, WGPUQueue queue) 
             }
         }
     );
-
-    wgpuBufferRelease(buffer1);
-    wgpuBufferRelease(buffer2);
-
 }
 
 }
