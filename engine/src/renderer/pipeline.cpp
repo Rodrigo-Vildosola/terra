@@ -1,5 +1,6 @@
 #include "terra/renderer/pipeline.h"
 #include "terra/core/logger.h"
+#include "terra/debug/profiler.h"
 #include "terra/helpers/error.h"
 #include "terra/helpers/string.h"
 #include "terra/helpers/user_data.h"
@@ -20,6 +21,8 @@ Pipeline::~Pipeline() {
 }
 
 void Pipeline::bind(wgpu::RenderPassEncoder render_pass) const {
+	PROFILE_FUNCTION();
+
     if (!m_pipeline) {
         TR_CORE_ERROR("Tried to bind a null pipeline!");
         return;
@@ -30,6 +33,8 @@ void Pipeline::bind(wgpu::RenderPassEncoder render_pass) const {
 
 
 void Pipeline::create_pipeline(const PipelineSpecification& spec) {
+	PROFILE_FUNCTION();
+
 	const auto& device = m_context.get_native_device();
 
 	std::vector<wgpu::VertexAttribute> 		flat_attributes;

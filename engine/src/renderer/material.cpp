@@ -1,3 +1,4 @@
+#include "terra/debug/profiler.h"
 #include "terrapch.h"
 #include "terra/core/assert.h"
 #include "terra/renderer/material.h"
@@ -10,6 +11,8 @@ Material::Material(WebGPUContext& context, const std::string& name)
 }
 
 ref<MaterialInstance> Material::create_instance(Pipeline* pipeline) {
+    PROFILE_FUNCTION();
+
     const auto& pipeline_spec = pipeline->get_specification();
     
     // Optionally check compatibility

@@ -1,11 +1,14 @@
 #include "terra/core/context/context_utils.h"
 #include "terra/core/context/macros.h"
+#include "terra/debug/profiler.h"
 #include "terra/helpers/user_data.h"
 
 namespace terra {
 
 
 void wgpu_poll_events(wgpu::Device device, bool yield_to_browser) {
+    PROFILE_FUNCTION();
+
     #if defined(WEBGPU_BACKEND_DAWN)
         device.Tick();
     #elif defined(WEBGPU_BACKEND_wgpu::)

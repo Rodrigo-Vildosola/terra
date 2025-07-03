@@ -1,3 +1,4 @@
+#include "terra/debug/profiler.h"
 #include "terrapch.h"
 #include "terra/platform/macos/window.h"
 
@@ -163,17 +164,10 @@ namespace terra {
 		}
 	}
 
-	void MacOSWindow::on_update()
-	{
-		// int win_w, win_h;
-		// int fb_w, fb_h;
-		// glfwGetWindowSize(m_window, &win_w, &win_h);
-		// glfwGetFramebufferSize(m_window, &fb_w, &fb_h);
-
-		// TR_CORE_INFO("Window size = {}x{}, Framebuffer size = {}x{}", win_w, win_h, fb_w, fb_h);
+	void MacOSWindow::on_update() {
+		PROFILE_FUNCTION();
 
         glfwPollEvents();
-        // m_context->swap_buffers();
 	}
 
 	std::pair<u32, u32> MacOSWindow::get_framebuffer_size() const {

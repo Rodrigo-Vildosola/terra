@@ -5,7 +5,7 @@
 
 #include "terra/renderer/renderer_api.h"
 #include "terra/core/window.h"
-#include <cassert>
+#include "terra/debug/profiler.h"
 
 namespace terra {
 
@@ -14,6 +14,8 @@ Application* Application::s_instance = nullptr;
 Application::Application(const std::string& name, CommandLineArgs args)
     : m_command_line_args(args)
 {
+    PROFILE_FUNCTION();
+
     TR_CORE_ASSERT(!s_instance, "Application already exists!");
     s_instance = this;
 
@@ -34,6 +36,7 @@ Application::Application(const std::string& name, CommandLineArgs args)
 }
 
 Application::~Application() {
+    PROFILE_FUNCTION();
     TR_CORE_INFO("Shutting down Terra Engine...");
     RendererAPI::shutdown();
     m_window.reset();
@@ -66,6 +69,7 @@ void Application::on_event(Event& e)
 
 
 void Application::run() {
+    PROFILE_FUNCTION();
     Timer::init();
 
     const Timestep fixed_dt(1.0f / 60.0f);
@@ -74,6 +78,8 @@ void Application::run() {
     // render loop
     // -----------
     while (m_running) {
+        PROFILE_SCOPE("Render loop");
+
         f32 time = Timer::elapsed();
         Timestep timestep = time - m_last_frame_time;
         m_last_frame_time = time;
@@ -89,15 +95,17 @@ void Application::run() {
         RendererAPI::begin_frame();
 
         if (!m_minimized) {
-            for (Layer* layer : m_layer_stack)
+            for (Layer* layer : m_layer_stack) {
                 layer->on_update(timestep);
+            }
         }
 
         #if !defined(TR_RELEASE)
             RendererAPI::begin_ui_pass();
             m_ui_layer->begin();
-            for (Layer* layer : m_layer_stack)
+            for (Layer* layer : m_layer_stack) {
                 layer->on_ui_render();
+            }
             m_ui_layer->end();
             RendererAPI::end_ui_pass();
 		#endif
@@ -118,6 +126,7 @@ void Application::close() {
 
 
 bool Application::on_window_resize(WindowResizeEvent& e) {
+    PROFILE_FUNCTION();
     if (e.get_width() == 0 || e.get_height() == 0)
     {
         m_minimized = true;

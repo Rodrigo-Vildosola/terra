@@ -1,5 +1,6 @@
 #include "layer.h"
 #include "terra/core/application.h"
+#include "terra/debug/profiler.h"
 #include "terra/renderer/renderer_api.h"
 #include "terra/renderer/orthographic_camera.h"
 #include "terra/renderer/perspective_camera.h"
@@ -11,21 +12,13 @@
 #include <imgui.h> // if you're using ImGui (optional)
 #include <glm/gtc/type_ptr.hpp>
 
-struct alignas(16) UniformBlock {
-    glm::mat4 u_view;
-    glm::mat4 u_proj;
-    float u_time;
-};
-
-struct alignas(16) InstanceBlock {
-    glm::mat4 model;   // 64 bytes
-    glm::vec4 color;   // 16 bytes
-};
 
 ExampleLayer::ExampleLayer()
     : Layer("ExampleLayer") {}
 
 void ExampleLayer::on_attach() {
+    PROFILE_FUNCTION();
+
     TR_INFO("ExampleLayer attached");
 
     float width = terra::Application::get().get_window().get_width();
@@ -82,6 +75,9 @@ void ExampleLayer::on_attach() {
     auto pipeline = terra::RendererAPI::get_pipeline(pipeline_id);
 
     m_material_instance = m_material->create_instance(pipeline.get());
+
+    generate_pyramid_grid(100, 100, 1.5f); // 10,000 pyramids
+
 }
 
 void ExampleLayer::on_detach() {
@@ -95,6 +91,8 @@ static glm::vec3 I2_pos   = {  1.5f, 0.0f, -2.5f };
 static glm::vec4 I2_color = { 0.2f, 0.2f, 1.0f, 1.0f };
 
 void ExampleLayer::on_update(terra::Timestep ts) {
+
+    PROFILE_FUNCTION();
 
     terra::RendererAPI::clear_color(0.1f, 0.1f, 0.1f, 1.0f);
     terra::RendererAPI::begin_scene(*m_camera);
@@ -133,36 +131,49 @@ void ExampleLayer::on_update(terra::Timestep ts) {
 
 
     // float time = terra::Timer::elapsed();
-
-    UniformBlock block;
-    block.u_view = m_camera->get_view_matrix();
-    block.u_proj = m_camera->get_projection_matrix();
-    block.u_time = ts.get_milliseconds();
-
-    m_material_instance->set_parameter("ubo", &block, sizeof(UniformBlock));
-
-    // ─── submit instance #1 ───
     {
-        InstanceBlock I1;
-        I1.model = glm::translate(glm::mat4(1.0f), I1_pos);
-        I1.color = I1_color;
-        terra::RendererAPI::submit(m_mesh, m_material_instance, I1, /*binding=*/0, /*group=*/1);
+        PROFILE_SCOPE("Uniform Creation");
+        UniformBlock block;
+        block.u_view = m_camera->get_view_matrix();
+        block.u_proj = m_camera->get_projection_matrix();
+        block.u_time = ts.get_milliseconds();
+
+        m_material_instance->set_parameter("ubo", &block, sizeof(UniformBlock));
     }
 
-    // ─── submit instance #2 ───
-    {
-        InstanceBlock I2;
-        I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
-        I2.color = I2_color;
-        terra::RendererAPI::submit(m_mesh, m_material_instance, I2, 0, 1);
+    for (const auto& instance : m_instances) {
+        terra::RendererAPI::submit(m_mesh, m_material_instance, instance, 0, 1);
     }
 
-    {
-        InstanceBlock I2;
-        I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
-        I2.color = I2_color;
-        terra::RendererAPI::submit(m_mesh_2, m_material_instance, I2, 0, 1);
-    }
+
+    // // ─── submit instance #1 ───
+    // {
+    //     PROFILE_SCOPE("Instance 1 Submit");
+
+    //     InstanceBlock I1;
+    //     I1.model = glm::translate(glm::mat4(1.0f), I1_pos);
+    //     I1.color = I1_color;
+    //     terra::RendererAPI::submit(m_mesh, m_material_instance, I1, /*binding=*/0, /*group=*/1);
+    // }
+
+    // // ─── submit instance #2 ───
+    // {
+    //     PROFILE_SCOPE("Instance 2 Submit");
+
+    //     InstanceBlock I2;
+    //     I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
+    //     I2.color = I2_color;
+    //     terra::RendererAPI::submit(m_mesh, m_material_instance, I2, 0, 1);
+    // }
+
+    // {
+    //     PROFILE_SCOPE("Instance 3 Submit");
+
+    //     InstanceBlock I2;
+    //     I2.model = glm::translate(glm::mat4(1.0f), I2_pos);
+    //     I2.color = I2_color;
+    //     terra::RendererAPI::submit(m_mesh_2, m_material_instance, I2, 0, 1);
+    // }
     
     terra::RendererAPI::end_scene();
 
@@ -186,11 +197,13 @@ void ExampleLayer::on_update(terra::Timestep ts) {
 }
 
 void ExampleLayer::on_physics_update(terra::Timestep fixed_ts) {
+    PROFILE_FUNCTION();
 
 }
 
 
 void ExampleLayer::on_ui_render() {
+    PROFILE_FUNCTION();
 
     {
         ImGui::Begin("Instance Controls");
@@ -270,6 +283,8 @@ void ExampleLayer::on_ui_render() {
 }
 
 void ExampleLayer::on_event(terra::Event& event) {
+    PROFILE_FUNCTION();
+
     using namespace terra;
 
     EventDispatcher dispatcher(event);

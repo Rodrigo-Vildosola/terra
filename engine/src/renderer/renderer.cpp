@@ -1,6 +1,7 @@
 #include "terra/core/assert.h"
 #include "terra/core/base.h"
 #include "terra/core/logger.h"
+#include "terra/debug/profiler.h"
 #include "terrapch.h"
 
 #include "terra/resources/resource_manager.h"
@@ -27,6 +28,8 @@ void Renderer::init() {
 }
 
 u64 Renderer::create_pipeline(const PipelineSpecification& spec) {
+    PROFILE_FUNCTION();
+
     // You could hash the spec if you want deduplication (optional)
     u64 id = m_next_pipeline_id++;
 
@@ -52,11 +55,15 @@ ref<Pipeline> Renderer::get_pipeline(u64 id) const {
 }
 
 void Renderer::begin_frame() {
+    PROFILE_FUNCTION();
+
     m_stats.reset();
     m_target_texture_view = m_context.get_next_surface_view();
 }
 
 void Renderer::begin_scene(const Camera& camera) {
+    PROFILE_FUNCTION();
+
     m_scene_data->camera = &camera;
 
     RenderPassDesc scene_pass;
@@ -85,6 +92,8 @@ void Renderer::begin_scene(const Camera& camera) {
 }
 
 void Renderer::end_scene() {
+    PROFILE_FUNCTION();
+
     // 1) For each batch, update (or allocate) its GPU buffer & draw
     for (auto& b : m_draw_batches) {
         if (b.instance_count == 0) continue;
@@ -112,13 +121,7 @@ void Renderer::end_scene() {
         // bind storage buffer
         b.material->bind_storage_buffer(b.group, b.binding, b.instance_buffer);
 
-        // pipeline + mesh
-        auto pipe = b.material->get_pipeline();
-    
-        pipe->bind(m_current_pass);
-
         b.material->bind(m_current_pass);
-
 
         auto const& vb = b.mesh->get_vertex_buffer();
         auto const& ib = b.mesh->get_index_buffer();
@@ -144,6 +147,8 @@ void Renderer::end_scene() {
 }
 
 void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material, const void* instance, u32 i_size, u32 binding, u32 group) {
+    PROFILE_FUNCTION();
+
     if (!m_current_pass) return;
 
     for (auto& b : m_draw_batches) {
@@ -156,8 +161,8 @@ void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& materi
             // append raw bytes
             const u8* src = (const u8*) instance;
             b.instance_data.insert(
-              b.instance_data.end(),
-              src, src + i_size
+                b.instance_data.end(),
+                src, src + i_size
             );
             b.instance_count++;
             return;
@@ -180,6 +185,8 @@ void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& materi
 
 
 void Renderer::begin_ui_pass() {
+    PROFILE_FUNCTION();
+
     // load what we just drew, draw UI on top
     RenderPassDesc ui_pass;
     ui_pass.name = "UIPass";
@@ -195,17 +202,23 @@ void Renderer::begin_ui_pass() {
 }
 
 void Renderer::end_ui_pass() {
+    PROFILE_FUNCTION();
+
     RendererCommand::end_render_pass(m_queue);
     m_current_pass = nullptr;
 }
 
 void Renderer::end_frame() {
+    PROFILE_FUNCTION();
+
     m_context.swap_buffers();
     m_queue.poll(false);
 }
 
 
 void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
+    PROFILE_FUNCTION();
+
     m_clear_color = {
         .r = r,
         .g = g,
@@ -214,10 +227,10 @@ void Renderer::clear_color(f32 r, f32 g, f32 b, f32 a) {
     };
 }
 
-RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
-    m_render_passes.push_back(create_scope<RenderPass>(desc, m_queue));
-    return m_render_passes.back().get();
-}
+// RenderPass* Renderer::create_render_pass(const RenderPassDesc& desc) {
+//     m_render_passes.push_back(create_scope<RenderPass>(desc, m_queue));
+//     return m_render_passes.back().get();
+// }
 
 void Renderer::on_resize(u32 width, u32 height) {
     TR_CORE_INFO("Resizing renderer to {}x{}", width, height);

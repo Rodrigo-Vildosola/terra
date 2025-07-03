@@ -1,5 +1,6 @@
 
 
+#include "terra/debug/profiler.h"
 #include "terra/helpers/user_data.h"
 #include "terrapch.h"
 
@@ -89,7 +90,7 @@ void WebGPUContext::configure_surface(wgpu::TextureFormat preferred_format) {
     config.usage        = wgpu::TextureUsage::RenderAttachment;
     config.width        = fb_width;
     config.height       = fb_height;
-    config.presentMode  = wgpu::PresentMode::Fifo;
+    config.presentMode  = wgpu::PresentMode::Immediate;
     config.alphaMode    = wgpu::CompositeAlphaMode::Auto;
     config.viewFormatCount = 0;
     config.viewFormats     = nullptr;
@@ -100,9 +101,16 @@ void WebGPUContext::configure_surface(wgpu::TextureFormat preferred_format) {
 }
 
 wgpu::TextureView WebGPUContext::get_next_surface_view() {
+    PROFILE_FUNCTION();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
     wgpu::SurfaceTexture surface_texture = {};
-    m_surface.GetCurrentTexture(&surface_texture);
-    // wgpuSurfaceGetCurrentTexture(m_surface, &surface_texture);
+
+    {
+        PROFILE_SCOPE("Getting Current Texture");
+        m_surface.GetCurrentTexture(&surface_texture);
+    }
 
 	if (surface_texture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
 		surface_texture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
@@ -124,9 +132,14 @@ wgpu::TextureView WebGPUContext::get_next_surface_view() {
     view_desc.arrayLayerCount = 1;
     view_desc.aspect = wgpu::TextureAspect::All;
 
-    wgpu::TextureView texture_view = surface_texture.texture.CreateView(&view_desc);
+    {
+        PROFILE_SCOPE("Creating Texture View");
+        wgpu::TextureView texture_view = surface_texture.texture.CreateView(&view_desc);
+        return texture_view;
 
-    return texture_view;
+    }
+
+    // return texture_view;
 
 }
 
@@ -136,6 +149,8 @@ std::pair<u32, u32> WebGPUContext::get_framebuffer_size() {
 
 
 void WebGPUContext::swap_buffers() {
+    PROFILE_FUNCTION();
+
 	// Present logic would go here
 	// In a real app, you'd acquire the next texture and render to it
 	m_surface.Present(); // Add this here

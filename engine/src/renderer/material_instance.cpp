@@ -1,5 +1,6 @@
 #include "terra/renderer/material_instance.h"
 #include "terra/core/context/command_queue.h"
+#include "terra/debug/profiler.h"
 #include "terra/renderer/buffer.h"
 #include "terra/core/assert.h"
 #include "terra/core/logger.h"
@@ -16,6 +17,8 @@ MaterialInstance::MaterialInstance(WebGPUContext& context, Pipeline* pipeline)
 MaterialInstance::~MaterialInstance() {}
 
 void MaterialInstance::create_uniform_buffers() {
+    PROFILE_FUNCTION();
+
     const auto& spec = m_pipeline->get_specification();
 
     for (const auto& uniform : spec.uniforms) {
@@ -40,6 +43,8 @@ void MaterialInstance::create_uniform_buffers() {
 }
 
 void MaterialInstance::create_bind_group() {
+    PROFILE_FUNCTION();
+
     std::vector<wgpu::BindGroupEntry> entries;
 
     for (size_t i = 0; i < m_uniforms.size(); ++i) {
@@ -65,6 +70,8 @@ void MaterialInstance::create_bind_group() {
 }
 
 void MaterialInstance::bind_storage_buffer(u32 group, u32 binding, wgpu::Buffer buffer) {
+    PROFILE_FUNCTION();
+
     // 1) Prepare the single entry
     wgpu::BindGroupEntry entry{};
     entry.binding = binding;
@@ -77,11 +84,6 @@ void MaterialInstance::bind_storage_buffer(u32 group, u32 binding, wgpu::Buffer 
     desc.layout     = m_pipeline->get_bind_group_layout(group);
     desc.entryCount = 1;
     desc.entries    = &entry;
-
-    // 3) (Re)create and cache the bind group
-    // if (auto it = m_storage_bind_groups.find(group); it != m_storage_bind_groups.end()) {
-    //     wgpuBindGroupRelease(it->second);
-    // }
 
     m_storage_bind_groups[group] = m_context.get_native_device().CreateBindGroup(&desc);
 }
@@ -172,14 +174,18 @@ void MaterialInstance::set_parameter_binding(const std::string& name, u32 bindin
     m_parameter_bindings[name] = binding;
 }
 
-void MaterialInstance::bind(wgpu::RenderPassEncoder pass_encoder) {
+void MaterialInstance::bind(wgpu::RenderPassEncoder render_pass) {
+    PROFILE_FUNCTION();
+
     // bind group 0: all uniforms / textures
 
-    pass_encoder.SetBindGroup(0, m_bind_group, 0, nullptr);
+	m_pipeline->bind(render_pass);
+
+    render_pass.SetBindGroup(0, m_bind_group, 0, nullptr);
 
     // bind group 1..N: any storage buffers the client added
     for (auto& [group, bg] : m_storage_bind_groups) {
-        pass_encoder.SetBindGroup(group, bg, 0, nullptr);
+        render_pass.SetBindGroup(group, bg, 0, nullptr);
     }
 }
 

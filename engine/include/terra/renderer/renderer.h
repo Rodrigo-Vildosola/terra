@@ -69,8 +69,8 @@ public:
     void on_resize(u32 width, u32 height);
 
     // RenderPass management
-    RenderPass* create_render_pass(const RenderPassDesc& desc);
-    const std::vector<std::unique_ptr<RenderPass>>& get_render_passes() const { return m_render_passes; }
+    // RenderPass* create_render_pass(const RenderPassDesc& desc);
+    // const std::vector<std::unique_ptr<RenderPass>>& get_render_passes() const { return m_render_passes; }
 
     u64 create_pipeline(const PipelineSpecification& spec);
     ref<Pipeline> get_pipeline(u64 id) const;
@@ -113,7 +113,7 @@ private:
 
     wgpu::RenderPassEncoder m_current_pass = nullptr;
 
-    std::vector<scope<RenderPass>> m_render_passes;
+    // std::vector<scope<RenderPass>> m_render_passes;
 
     RendererStats m_stats;
 

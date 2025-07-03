@@ -1,5 +1,6 @@
 #include "terra/core/context/command_queue.h"
 #include "terra/core/context/context_utils.h"
+#include "terra/debug/profiler.h"
 #include "terra/renderer/render_pass.h"
 #include "terra/helpers/string.h"
 
@@ -23,6 +24,8 @@ void CommandQueue::init(const wgpu::Device device) {
 
 
 void CommandQueue::begin_frame(std::string_view label) {
+    PROFILE_FUNCTION();
+
     TR_CORE_ASSERT(!m_frame_active, "Command encoder already active!");
 
     wgpu::CommandEncoderDescriptor desc = {};
@@ -119,6 +122,8 @@ void CommandQueue::add_marker(std::string_view label) {
 
 
 void CommandQueue::poll([[maybe_unused]] bool yield_to_browser) {
+    PROFILE_FUNCTION();
+
     wgpu_poll_events(m_device, false);
 }
 
