@@ -147,8 +147,6 @@ void Renderer::end_scene() {
 }
 
 void Renderer::submit(const ref<Mesh>& mesh, const ref<MaterialInstance>& material, const void* instance, u32 i_size, u32 binding, u32 group) {
-    PROFILE_FUNCTION();
-
     if (!m_current_pass) return;
 
     for (auto& b : m_draw_batches) {

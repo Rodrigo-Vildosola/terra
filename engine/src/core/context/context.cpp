@@ -90,7 +90,7 @@ void WebGPUContext::configure_surface(wgpu::TextureFormat preferred_format) {
     config.usage        = wgpu::TextureUsage::RenderAttachment;
     config.width        = fb_width;
     config.height       = fb_height;
-    config.presentMode  = wgpu::PresentMode::Immediate;
+    config.presentMode  = wgpu::PresentMode::Fifo;
     config.alphaMode    = wgpu::CompositeAlphaMode::Auto;
     config.viewFormatCount = 0;
     config.viewFormats     = nullptr;

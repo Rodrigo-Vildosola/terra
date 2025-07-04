@@ -158,6 +158,8 @@ namespace Profiler {
         std::mutex mutex;
         InstrumentationSession* current_session;
         std::ofstream output_stream;
+        std::vector<ProfileResult> m_results;
+
     };
 
     class InstrumentationTimer

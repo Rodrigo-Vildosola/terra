@@ -48,9 +48,9 @@ ref<Material> RendererAPI::create_material(const std::string& name, const ref<Sh
     return mat;
 }
 
-ref<Mesh> RendererAPI::create_mesh(const std::vector<Vertex>& vertices, const std::vector<u32>& indices) {
-    return create_ref<Mesh>(vertices, indices);
-}
+// ref<Mesh> RendererAPI::create_mesh(const std::vector<Vertex>& vertices, const std::vector<u32>& indices) {
+//     return create_ref<Mesh>(vertices, indices);
+// }
 
 void RendererAPI::begin_scene(const Camera& camera) {
     s_renderer->begin_scene(camera);

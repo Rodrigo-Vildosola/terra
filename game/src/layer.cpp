@@ -47,13 +47,7 @@ void ExampleLayer::on_attach() {
     terra::PipelineSpecification spec;
     spec.shader = m_shader;
 
-    terra::VertexBufferLayoutSpec vb;
-    vb.stride = sizeof(terra::Vertex);
-    vb.step_mode = wgpu::VertexStepMode::Vertex;
-    vb.attributes = {
-        { 0, wgpu::VertexFormat::Float32x3, offsetof(terra::Vertex, position) },
-        { 1, wgpu::VertexFormat::Float32x3, offsetof(terra::Vertex, color) },
-    };
+    terra::VertexBufferLayoutSpec vb = terra::Mesh::get_default_layout();
     spec.vertex_buffers.push_back(vb);
 
     terra::UniformBufferSpec ubo_spec;
@@ -83,12 +77,6 @@ void ExampleLayer::on_attach() {
 void ExampleLayer::on_detach() {
     TR_INFO("ExampleLayer detached");
 }
-
-static glm::vec3 I1_pos   = { 0.0f, 0.0f, 0.0f };
-static glm::vec4 I1_color = { 0.2f, 0.8f, 0.2f, 1.0f };
-
-static glm::vec3 I2_pos   = {  1.5f, 0.0f, -2.5f };
-static glm::vec4 I2_color = { 0.2f, 0.2f, 1.0f, 1.0f };
 
 void ExampleLayer::on_update(terra::Timestep ts) {
 
@@ -141,8 +129,12 @@ void ExampleLayer::on_update(terra::Timestep ts) {
         m_material_instance->set_parameter("ubo", &block, sizeof(UniformBlock));
     }
 
-    for (const auto& instance : m_instances) {
-        terra::RendererAPI::submit(m_mesh, m_material_instance, instance, 0, 1);
+    {
+        PROFILE_SCOPE("Instances Submit");
+
+        for (const auto& instance : m_instances) {
+            terra::RendererAPI::submit(m_mesh, m_material_instance, instance, 0, 1);
+        }
     }
 
 
@@ -188,7 +180,7 @@ void ExampleLayer::on_update(terra::Timestep ts) {
         float pitch = -delta.y * m_mouse_sensitivity;
 
         glm::vec2 rot = m_camera->get_rotation();
-        rot.x += pitch;
+        rot.x -= pitch;
         rot.y += yaw;
         m_camera->set_rotation(rot.x, rot.y);
     }
@@ -197,29 +189,20 @@ void ExampleLayer::on_update(terra::Timestep ts) {
 }
 
 void ExampleLayer::on_physics_update(terra::Timestep fixed_ts) {
-    PROFILE_FUNCTION();
+    PROFILE_SCOPE("Updating Pyramids");
+
+    float t = terra::Timer::elapsed();
+    for (auto& instance : m_instances) {
+        glm::vec3 pos = glm::vec3(instance.model[3]);
+        float wave = sin(t + pos.x * 0.1f + pos.z * 0.1f);
+        instance.model = glm::translate(glm::mat4(1.0f), pos + glm::vec3(0.0f, wave * 0.5f, 0.0f));
+    }
 
 }
 
 
 void ExampleLayer::on_ui_render() {
     PROFILE_FUNCTION();
-
-    {
-        ImGui::Begin("Instance Controls");
-
-        // Instance #1 controls
-        ImGui::DragFloat3("Inst1 Position", glm::value_ptr(I1_pos),   0.05f);
-        ImGui::ColorEdit4("Inst1 Color",    glm::value_ptr(I1_color));
-
-        ImGui::Separator();
-
-        // Instance #2 controls
-        ImGui::DragFloat3("Inst2 Position", glm::value_ptr(I2_pos),   0.05f);
-        ImGui::ColorEdit4("Inst2 Color",    glm::value_ptr(I2_color));
-
-        ImGui::End();
-    }
 
     {
         const auto& stats = terra::RendererAPI::get_stats();
@@ -316,7 +299,7 @@ void ExampleLayer::on_event(terra::Event& event) {
     });
 
     dispatcher.dispatch<MouseButtonPressedEvent>([&](MouseButtonPressedEvent& e) {
-        if (e.get_mouse_button() == Mouse::ButtonRight) {
+        if (e.get_mouse_button() == Mouse::ButtonLeft) {
             m_mouse_dragging = true;
             m_last_mouse_position = terra::Application::get().get_window().get_mouse_position();
         }
@@ -324,7 +307,7 @@ void ExampleLayer::on_event(terra::Event& event) {
     });
 
     dispatcher.dispatch<MouseButtonReleasedEvent>([&](MouseButtonReleasedEvent& e) {
-        if (e.get_mouse_button() == Mouse::ButtonRight) {
+        if (e.get_mouse_button() == Mouse::ButtonLeft) {
             m_mouse_dragging = false;
         }
         return false;
