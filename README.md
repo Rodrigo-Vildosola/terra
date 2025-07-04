@@ -63,16 +63,6 @@ To check dependencies, build, and run the game in one go.
 
 Terra uses the [**WebGPU-distribution**](https://github.com/eliemichel/WebGPU-distribution) system by [@eliemichel](https://github.com/eliemichel) to simplify native WebGPU integration with CMake:
 
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/eliemichel/LearnWebGPU/main/images/webgpu-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/eliemichel/LearnWebGPU/main/images/webgpu-light.svg">
-    <img alt="WebGPU Logo" src="images/webgpu-dark.svg" width="200">
-  </picture>
-
-<a href="https://github.com/eliemichel/WebGPU-distribution">WebGPU-distribution</a>  |  <a href="https://github.com/eliemichel/WebGPU-Cpp">WebGPU-C++</a>  |  <a href="https://github.com/eliemichel/glfw3webgpu">glfw3webgpu</a> <br/> <a href="https://discord.gg/2Tar4Kt564"> <img src="https://img.shields.io/static/v1?label=Discord&message=Join%20us!&color=blue&logo=discord&logoColor=white" alt="Discord | Join us!"/> </a>
-
-</div>
 
 > Terra explicitly uses the **Dawn** backend with **precompiled binaries**, though source builds are supported.
 
